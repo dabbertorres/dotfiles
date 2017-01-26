@@ -2,6 +2,9 @@
 set exrc
 set secure
 
+" runtime paths
+set runtimepath=~/.vimrc,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,~/.vim/after
+
 " indentation
 filetype indent plugin on
 set autoindent
@@ -38,4 +41,8 @@ set hlsearch
 " keybindings
 map Y y$
 nnoremap <C-L> :nohl<CR><C-L>
+
+" latex stuff
+set grepprg=grep\ -nH\ $*
+let g:tex_flavor = "latex"
 
