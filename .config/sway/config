@@ -1,61 +1,38 @@
-# Default config for sway
-#
-# Copy this to ~/.config/sway/config and edit it to your liking.
-#
-# Read `man 5 sway` for a complete reference.
-
 ### Variables
-#
-# Logo key. Use Mod1 for Alt.
-set $mod Mod4
-# Home row direction keys, like vim
-set $left Left
-set $down Down
-set $up Up
-set $right Right
+    # "key" key
+    set $mod Mod4
 
-# Your preferred terminal emulator
-set $term lxterminal
+    # direction keys
+    set $left Left
+    set $down Down
+    set $up Up
+    set $right Right
 
-# Your preferred application launcher
-set $menu dmenu_run
+    # terminal emulator
+    set $term lxterminal
+
+    # application launcher
+    set $menu dmenu_run
 
 ### Output configuration
-output * bg /home/alec/Pictures/Wallpapers/hld.jpg fill
+    # wallpaper
+    output * bg /home/alec/Pictures/Wallpapers/hld.jpg fill
 
 ### Input configuration
-#
-# Example configuration:
-#
-#   input "2:14:SynPS/2_Synaptics_TouchPad" {
-#       dwt enabled
-#       tap enabled
-#       natural_scroll enabled
-#       middle_emulation enabled
-#   }
-#
-# You can get the names of your inputs by running: swaymsg -t get_inputs
-# The escape symbol "\" has to be removed.
-# Read `man 5 sway-input` for more information about this section.
+    # I got none
 
-### Key bindings
-#
-# Basics:
-#
-    # start a terminal
+### General key bindings
+    # gimme terminal
     bindsym $mod+Return exec $term
 
     # kill focused window
     bindsym $mod+Shift+q kill
 
-    # start your launcher
+    # run application launcher
     bindsym $mod+d exec $menu
 
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
-    # Despite the name, also works for non-floating windows.
-    # Change normal to inverse to use left mouse button for resizing and right
-    # mouse button for dragging.
     floating_modifier $mod normal
 
     # reload the configuration file
@@ -63,16 +40,15 @@ output * bg /home/alec/Pictures/Wallpapers/hld.jpg fill
 
     # exit sway (logs you out of your wayland session)
     bindsym $mod+Shift+e exit
-#
-# Moving around:
-#
+
+### Moving around key bindings
     # Move your focus around
     bindsym $mod+$left focus left
     bindsym $mod+$down focus down
     bindsym $mod+$up focus up
     bindsym $mod+$right focus right
 
-    # _move_ the focused window with the same, but add Shift
+    # move the focused window
     bindsym $mod+Shift+$left move left
     bindsym $mod+Shift+$down move down
     bindsym $mod+Shift+$up move up
@@ -80,10 +56,9 @@ output * bg /home/alec/Pictures/Wallpapers/hld.jpg fill
 
     # jump to urgent window
     bindsym $mod+x [urgent=latest] focus
-#
-# Workspaces:
-#
-    # switch to workspace
+
+### Workspace key bindings
+    # goto workspace
     bindsym $mod+1 workspace 1
     bindsym $mod+2 workspace 2
     bindsym $mod+3 workspace 3
@@ -94,7 +69,8 @@ output * bg /home/alec/Pictures/Wallpapers/hld.jpg fill
     bindsym $mod+8 workspace 8
     bindsym $mod+9 workspace 9
     bindsym $mod+0 workspace 10
-    # move focused container to workspace
+    
+    # move stuff to workspace
     bindsym $mod+Shift+1 move container to workspace 1
     bindsym $mod+Shift+2 move container to workspace 2
     bindsym $mod+Shift+3 move container to workspace 3
@@ -105,80 +81,58 @@ output * bg /home/alec/Pictures/Wallpapers/hld.jpg fill
     bindsym $mod+Shift+8 move container to workspace 8
     bindsym $mod+Shift+9 move container to workspace 9
     bindsym $mod+Shift+0 move container to workspace 10
-    # Note: workspaces can have any name you want, not just numbers.
-    # We just use 1-10 as the default.
-#
-# Layout stuff:
-#
-    # You can "split" the current object of your focus with
-    # $mod+h or $mod+v, for horizontal and vertical splits
-    # respectively.
+
+### Layout key bindings
+    # You can "split" the current object of your focus
+    # horizontal
     bindsym $mod+h splith
+    # vertical
     bindsym $mod+v splitv
 
-    # Switch the current container between different layout styles
+    # Switch layout style
     bindsym $mod+s layout stacking
     bindsym $mod+w layout tabbed
     bindsym $mod+e layout toggle split
 
-    # Make the current focus fullscreen
+    # go fullscreen
     bindsym $mod+f fullscreen
 
-    # Toggle the current focus between tiling and floating mode
+    # tiling/floating mode toggle
     bindsym $mod+Shift+space floating toggle
 
-    # Swap focus between the tiling area and the floating area
+    # tiling/floating focus toggle
     bindsym $mod+space focus mode_toggle
 
-    # move focus to the parent container
+    # focus the parent
     bindsym $mod+a focus parent
-#
-# Scratchpad:
-#
-    # Sway has a "scratchpad", which is a bag of holding for windows.
-    # You can send windows there and get them back later.
 
-    # Move the currently focused window to the scratchpad
+### Scratchpad keybindings
+    # send to scratchpad
     bindsym $mod+Shift+minus move scratchpad
 
     # Show the next scratchpad window or hide the focused scratchpad window.
     # If there are multiple scratchpad windows, this command cycles through them.
     bindsym $mod+minus scratchpad show
 
-# Volume Keys
-bindsym XF86AudioRaiseVolume exec pactl set-sink-volume 0 +5%
-bindsym XF86AudioLowerVolume exec pactl set-sink-volume 0 -5%
-bindsym XF86AudioMute exec pactl set-sink-mute 0 toggle
+### Manual sizing key bindings
+    mode "resize" {
+        bindsym $left resize shrink width 10 px or 10 ppt
+        bindsym $down resize grow height 10 px or 10 ppt
+        bindsym $up resize shrink height 10 px or 10 ppt
+        bindsym $right resize grow width 10 px or 10 ppt
 
-#
-# Resizing containers:
-#
-mode "resize" {
-    # left will shrink the containers width
-    # right will grow the containers width
-    # up will shrink the containers height
-    # down will grow the containers height
-    bindsym $left resize shrink width 10 px or 10 ppt
-    bindsym $down resize grow height 10 px or 10 ppt
-    bindsym $up resize shrink height 10 px or 10 ppt
-    bindsym $right resize grow width 10 px or 10 ppt
+        # I'm done sizing stuff
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+    }
+    bindsym $mod+r mode "resize"
 
-    # ditto, with arrow keys
-    bindsym Left resize shrink width 10 px or 10 ppt
-    bindsym Down resize grow height 10 px or 10 ppt
-    bindsym Up resize shrink height 10 px or 10 ppt
-    bindsym Right resize grow width 10 px or 10 ppt
+### Volume Key bindings
+    bindsym XF86AudioRaiseVolume exec pactl set-sink-volume 0 +5%
+    bindsym XF86AudioLowerVolume exec pactl set-sink-volume 0 -5%
+    bindsym XF86AudioMute exec pactl set-sink-mute 0 toggle
 
-    # return to default mode
-    bindsym Return mode "default"
-    bindsym Escape mode "default"
-}
-bindsym $mod+r mode "resize"
-
-#
-# Status Bar:
-#
-# Read `man 5 sway-bar` for more information about this section.
+### Status Bar:
 bar {
     status_command i3status
     position top
@@ -190,4 +144,3 @@ bar {
 }
 
 include __SYSCONFDIR__/sway/config.d/*
-
