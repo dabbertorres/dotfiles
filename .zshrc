@@ -14,7 +14,7 @@ compinit
 # End of lines added by compinstall
 
 # display current path in prompt
-export PS1="[%20<...<%~%<<] $ "
+export PS1="[%40<...<%~%<<] $ "
 
 # key bindings
 bindkey "${terminfo[khome]}" beginning-of-line
@@ -27,11 +27,8 @@ bindkey "^[[1;5D" backward-word
 # aliases
 alias cl=clear
 alias ls='ls --color=auto'
-#alias pacman='pacman --color=auto'
-#alias pacaur='pacaur --color=auto'
-alias grep='grep --color=always'
+alias grep='grep --color=auto'
 
 # env vars
 EDITOR=vim
 VISUAL=vim
-
