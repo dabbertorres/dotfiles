@@ -1,0 +1,44 @@
+general {
+        colors = true
+        interval = 5
+}
+
+order += "disk /"
+order += "wireless wlan0"
+order += "battery 0"
+order += "volume master"
+order += "tztime local"
+
+wireless wlan0 {
+        format_up = "W: (%quality at %essid, %bitrate) %ip"
+        format_down = "W: down"
+}
+
+battery 0 {
+        format = "%status %percentage %remaining"
+        format_down = "No battery"
+        status_chr = "CHR"
+        status_bat = "BAT"
+        status_full = "FUL"
+        hide_seconds = true
+        integer_battery_capacity = true
+        path = "/sys/class/power_supply/BAT%d/uevent"
+        low_threshold = 10
+}
+
+volume master {
+    format = "VOL %volume"
+    format_muted = "VOL MUT"
+    device = "default"
+    mixer = "Master"
+    mixer_idx = 0
+}
+
+tztime local {
+        format = "%Y-%m-%d %I:%M %P"
+}
+
+disk "/" {
+        format = "%free"
+}
+
