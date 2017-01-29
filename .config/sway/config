@@ -143,4 +143,9 @@ bar {
     }
 }
 
+### Executables
+exec-always --no-startup-id /usr/bin/clipit
+
+
 include __SYSCONFDIR__/sway/config.d/*
+

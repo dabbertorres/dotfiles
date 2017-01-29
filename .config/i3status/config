@@ -1,10 +1,11 @@
 general {
         colors = true
-        interval = 5
+        interval = 15
 }
 
 order += "disk /"
-order += "wireless wlan0"
+#order += "wireless wlan0"
+order += "wireless wlp58s0"
 order += "battery 0"
 order += "volume master"
 order += "tztime local"
@@ -12,6 +13,11 @@ order += "tztime local"
 wireless wlan0 {
         format_up = "W: (%quality at %essid, %bitrate) %ip"
         format_down = "W: down"
+}
+
+wireless wlp58s0 {
+    format_up = "W: (%quality at %essid, %bitrate) %ip"
+    format_down = "W: down"
 }
 
 battery 0 {
