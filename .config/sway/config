@@ -1,3 +1,6 @@
+### focus
+
+
 ### Variables
     # "key" key
     set $mod Mod4
@@ -12,18 +15,18 @@
     set $term lxterminal
 
     # application launcher
-    set $menu dmenu_run
+    set $menu sway-dmenu-desktop
 
 ### Output configuration
     # wallpaper
-    output * bg /home/alec/Pictures/Wallpapers/hld.jpg fill
+    output * bg /home/alec/Pictures/Wallpapers/hld.png fill
 
 ### Input configuration
     # I got none
 
 ### General key bindings
     # gimme terminal
-    bindsym $mod+Return exec $term
+    bindsym $mod+t exec $term
 
     # kill focused window
     bindsym $mod+Shift+q kill
@@ -37,9 +40,10 @@
 
     # reload the configuration file
     bindsym $mod+Shift+c reload
-
-    # exit sway (logs you out of your wayland session)
-    bindsym $mod+Shift+e exit
+    
+    # screenshots
+    bindsym Print exec --no-startup-id swaygrab ~/Pictures/screenshots/"$(date +%Y-%m-%d-%H-%M-%S)".png
+    bindsym Alt+Print exec --no-startup-id swaygrab -f ~/Pictures/screenshots/"$(date +%Y-%m-%d-%H-%M-%S)".png
 
 ### Moving around key bindings
     # Move your focus around
@@ -83,7 +87,6 @@
     bindsym $mod+Shift+0 move container to workspace 10
 
 ### Layout key bindings
-    # You can "split" the current object of your focus
     # horizontal
     bindsym $mod+h splith
     # vertical
@@ -98,10 +101,10 @@
     bindsym $mod+f fullscreen
 
     # tiling/floating mode toggle
-    bindsym $mod+Shift+space floating toggle
+    bindsym $mod+Shift+Space floating toggle
 
     # tiling/floating focus toggle
-    bindsym $mod+space focus mode_toggle
+    bindsym $mod+Space focus mode_toggle
 
     # focus the parent
     bindsym $mod+a focus parent
@@ -112,7 +115,7 @@
 
     # Show the next scratchpad window or hide the focused scratchpad window.
     # If there are multiple scratchpad windows, this command cycles through them.
-    bindsym $mod+minus scratchpad show
+    bindsym $mod+Minus scratchpad show
 
 ### Manual sizing key bindings
     mode "resize" {
@@ -143,9 +146,24 @@ bar {
     }
 }
 
-### Executables
-exec-always --no-startup-id /usr/bin/clipit
+### Locking/Suspending/Shutdown/etc
+set $locker swaylock -s fill -i /home/alec/Pictures/Wallpapers/hld.png
 
+set $mode_system System (L) lock, (Shift+L) logout, (S) suspend, (H) hibernate, (R) reboot, (Shift+S) shutdown
+mode "$mode_system" {
+    bindsym l exec --no-startup-id $locker, mode "default"
+    bindsym Shift+l exit, mode "default"
+    bindsym s exec --no-startup-id $locker && systemctl suspend, mode "default"
+    bindsym h exec --no-startup-id $locker && systemctl hibernate, mode "default"
+    bindsym r exec --no-startup-id systemctl reboot, mode "default"
+    bindsym Shift+s exec --no-startup-id systemctl poweroff -i, mode "default"
+
+    bindsym return mode "default"
+    bindsym escape mode "default"
+}
+bindsym $mod+shift+delete mode "$mode_system"
+
+### Executables
 
 include __SYSCONFDIR__/sway/config.d/*
 

@@ -28,7 +28,9 @@ bindkey "^[[1;5D" backward-word
 alias cl=clear
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
+alias bins='pacman -Ql | grep'
 
 # env vars
-EDITOR=vim
-VISUAL=vim
+EDITOR=nvim
+VISUAL=nvim
+

@@ -1,9 +1,10 @@
 general {
         colors = true
-        interval = 15
+        interval = 7
 }
 
 order += "disk /"
+order += "disk /home"
 #order += "wireless wlan0"
 order += "wireless wlp58s0"
 order += "battery 0"
@@ -11,8 +12,8 @@ order += "volume master"
 order += "tztime local"
 
 wireless wlan0 {
-        format_up = "W: (%quality at %essid, %bitrate) %ip"
-        format_down = "W: down"
+    format_up = "W: (%quality at %essid, %bitrate) %ip"
+    format_down = "W: down"
 }
 
 wireless wlp58s0 {
@@ -21,15 +22,15 @@ wireless wlp58s0 {
 }
 
 battery 0 {
-        format = "%status %percentage %remaining"
-        format_down = "No battery"
-        status_chr = "CHR"
-        status_bat = "BAT"
-        status_full = "FUL"
-        hide_seconds = true
-        integer_battery_capacity = true
-        path = "/sys/class/power_supply/BAT%d/uevent"
-        low_threshold = 10
+    format = "%status %percentage %remaining"
+    format_down = "No battery"
+    status_chr = "CHR"
+    status_bat = "BAT"
+    status_full = "FUL"
+    hide_seconds = true
+    integer_battery_capacity = true
+    path = "/sys/class/power_supply/BAT%d/uevent"
+    low_threshold = 10
 }
 
 volume master {
@@ -41,10 +42,14 @@ volume master {
 }
 
 tztime local {
-        format = "%Y-%m-%d %I:%M %P"
+    format = "%Y-%m-%d %I:%M %P"
 }
 
 disk "/" {
-        format = "%free"
+    format = "/: %free"
+}
+
+disk "/home" {
+    format = "/home: %free"
 }
 

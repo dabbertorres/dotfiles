@@ -14,6 +14,7 @@ set tabstop=4
 set expandtab
 
 " syntax
+filetype on
 syntax on
 
 " auto complete
