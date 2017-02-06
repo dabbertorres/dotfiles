@@ -31,6 +31,7 @@ alias grep='grep --color=auto'
 alias bins='pacman -Ql | grep'
 
 # env vars
-EDITOR=nvim
-VISUAL=nvim
+export EDITOR=vim
+export VISUAL=vim
+export _JAVA_AWT_WM_NONREPARENTING=1
 
