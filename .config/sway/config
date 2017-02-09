@@ -1,6 +1,3 @@
-### focus
-
-
 ### Variables
     # "key" key
     set $mod Mod4
@@ -22,7 +19,10 @@
     output * bg /home/alec/Pictures/Wallpapers/hld.png fill
 
 ### Input configuration
-    # I got none
+    input 2:1:PS2_Synaptics_TouchPad {
+        tap enabled
+        natural_scroll enabled
+    }
 
 ### General key bindings
     # gimme terminal
