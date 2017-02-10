@@ -28,6 +28,7 @@ battery 0 {
     status_bat = "BAT"
     status_full = "FUL"
     hide_seconds = true
+    low_threshold = 15
     integer_battery_capacity = true
     path = "/sys/class/power_supply/BAT%d/uevent"
     low_threshold = 10
