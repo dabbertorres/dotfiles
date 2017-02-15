@@ -164,6 +164,8 @@ mode "$mode_system" {
 bindsym $mod+shift+delete mode "$mode_system"
 
 ### Executables
+exec --no-startup-id pcmanfm -d
 
+# include any secondary extra config files 
 include __SYSCONFDIR__/sway/config.d/*
 
