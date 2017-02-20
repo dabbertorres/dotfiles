@@ -43,7 +43,12 @@ set hlsearch
 map Y y$
 nnoremap <C-L> :nohl<CR><C-L>
 
+"" stuff specific to certain filetypes
+
 " latex stuff
 set grepprg=grep\ -nH\ $*
 let g:tex_flavor = "latex"
+
+" make
+autocmd FileType make setlocal noexpandtab
 
