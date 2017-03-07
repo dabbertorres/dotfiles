@@ -20,6 +20,14 @@ syntax on
 " auto complete
 set wildmenu
 
+" tabs!
+command! -complete=file -nargs=1 Te tabedit <args>
+nnoremap <silent> <A-Left> :tabprevious<CR>
+nnoremap <silent> <A-Right> :tabnext<CR>
+
+nnoremap <silent> <C-A-Left> :execute 'silent! tabmove ' . (tabpagenr() - 2)<CR>
+nnoremap <silent> <C-A-Right> :execute 'silent! tabmove ' . (tabpagenr() + 1)<CR>
+
 " usability
 set ignorecase
 set smartcase
@@ -29,8 +37,11 @@ set showcmd
 set laststatus=2
 set confirm
 set ruler
+
+" unset visualbell terminal code
 set visualbell
-set t_vb= " unset visualbell terminal code
+set t_vb= 
+
 set mouse=a
 set cmdheight=2
 set number
@@ -42,8 +53,6 @@ set hlsearch
 " keybindings
 map Y y$
 nnoremap <C-L> :nohl<CR><C-L>
-
-"" stuff specific to certain filetypes
 
 " latex stuff
 set grepprg=grep\ -nH\ $*

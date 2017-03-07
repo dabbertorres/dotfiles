@@ -26,7 +26,7 @@
 
 ### General key bindings
     # gimme terminal
-    bindsym $mod+t exec $term
+    bindsym $mod+Return exec $term
 
     # kill focused window
     bindsym $mod+Shift+q kill
@@ -153,8 +153,8 @@ set $mode_system System (L) lock, (Shift+L) logout, (S) suspend, (H) hibernate, 
 mode "$mode_system" {
     bindsym l exec --no-startup-id $locker, mode "default"
     bindsym Shift+l exit, mode "default"
-    bindsym s exec --no-startup-id $locker && systemctl suspend, mode "default"
-    bindsym h exec --no-startup-id $locker && systemctl hibernate, mode "default"
+    bindsym s exec --no-startup-id systemctl suspend, mode "default"
+    bindsym h exec --no-startup-id systemctl hibernate, mode "default"
     bindsym r exec --no-startup-id systemctl reboot, mode "default"
     bindsym Shift+s exec --no-startup-id systemctl poweroff -i, mode "default"
 
