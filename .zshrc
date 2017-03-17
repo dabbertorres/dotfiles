@@ -29,9 +29,12 @@ alias cl=clear
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias bins='pacman -Ql | grep'
+alias chmod='chmod --preserve-root'
+alias vim='vim -p'
 
 # env vars
 export EDITOR=vim
 export VISUAL=vim
 export _JAVA_AWT_WM_NONREPARENTING=1
+export PATH=$PATH:~/.local/bin
 
