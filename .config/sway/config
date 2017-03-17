@@ -12,7 +12,7 @@
     set $term lxterminal
 
     # application launcher
-    set $menu sway-dmenu-desktop
+    set $menu dmenu_run
 
 ### Output configuration
     # wallpaper
@@ -23,6 +23,12 @@
         tap enabled
         natural_scroll enabled
     }
+
+### Floating windows
+    floating_minimum_size 360 x 240
+
+    # Java Swing isn't very good at sizing
+    for_window [class="Structorizer"] floating_minimum_size 480 x 360
 
 ### General key bindings
     # gimme terminal
@@ -137,6 +143,7 @@
 
 ### Status Bar:
 bar {
+    #tray_output primary
     status_command i3status
     position top
     colors {
