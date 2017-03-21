@@ -30,6 +30,9 @@
     # Java Swing isn't very good at sizing
     for_window [class="Structorizer"] floating_minimum_size 480 x 360
 
+    # open/save file prompts need to be bigger
+    for_window [title="Open File"] floating_minimum_size 720 x 480
+
 ### General key bindings
     # gimme terminal
     bindsym $mod+Return exec $term
@@ -146,6 +149,7 @@ bar {
     #tray_output primary
     status_command i3status
     position top
+    font pango: Awesome, DejaVu Sans Mono 10
     colors {
         statusline #ffffff
         background #323232

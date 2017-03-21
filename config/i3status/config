@@ -1,42 +1,39 @@
 general {
-        colors = true
-        interval = 5
+    colors = true
+    color_good = "#00ff00"
+    color_degraded = "#ffff00"
+    color_bad = "#ff0000"
+    interval = 5
 }
 
 order += "disk /"
 order += "disk /home"
-#order += "wireless wlan0"
-order += "wireless wlp58s0"
+order += "wireless _first_"
 order += "battery 0"
 order += "volume master"
 order += "tztime local"
 
-wireless wlan0 {
-    format_up = "W: (%quality at %essid, %bitrate) %ip"
-    format_down = "W: down"
-}
-
-wireless wlp58s0 {
-    format_up = "W: (%quality at %essid, %bitrate) %ip"
-    format_down = "W: down"
+wireless _first_ {
+    format_up   = "  %essid -%quality - %bitrate - %ip"
+    format_down = ""
+    min_width = 335
 }
 
 battery 0 {
     format = "%status %percentage %remaining"
-    format_down = "No battery"
-    status_chr = "CHR"
-    status_bat = "BAT"
-    status_full = "FUL"
+    status_chr = ""
+    status_bat = ""
+    status_full = ""
     hide_seconds = true
-    low_threshold = 15
     integer_battery_capacity = true
     path = "/sys/class/power_supply/BAT%d/uevent"
-    low_threshold = 10
+    threshold_type = "percentage"
+    low_threshold = 20
 }
 
 volume master {
-    format = "VOL %volume"
-    format_muted = "VOL MUT"
+    format       = "  %volume"
+    format_muted = "    %volume"
     device = "default"
     mixer = "Master"
     mixer_idx = 0
