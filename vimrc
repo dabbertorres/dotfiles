@@ -56,6 +56,7 @@ let g:nerdtree_tabs_open_on_console_startup = 0
 
 " YouCompleteMe
 let g:ycm_auto_trigger = 1
+let g:ycm_confirm_extra_conf = 0
 
 " syntastic
 set statusline+=%#warningmsg#

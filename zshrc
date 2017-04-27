@@ -37,4 +37,6 @@ export EDITOR=vim
 export VISUAL=vim
 export _JAVA_AWT_WM_NONREPARENTING=1
 export PATH=$PATH:~/.local/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 export TERM=xterm-256color
+

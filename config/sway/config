@@ -12,7 +12,7 @@
     set $term lxterminal
 
     # application launcher
-    set $menu dmenu_run
+    set $menu dmenu_run -i
 
 ### Output configuration
     # wallpaper
@@ -140,9 +140,9 @@
     bindsym $mod+r mode "resize"
 
 ### Volume Key bindings
-    bindsym XF86AudioRaiseVolume exec pactl set-sink-volume 0 +5%
-    bindsym XF86AudioLowerVolume exec pactl set-sink-volume 0 -5%
-    bindsym XF86AudioMute exec pactl set-sink-mute 0 toggle
+    bindsym XF86AudioRaiseVolume exec ponymix increase 2%
+    bindsym XF86AudioLowerVolume exec ponymix decrease 2%
+    bindsym XF86AudioMute exec ponymix toggle
 
 ### Status Bar:
 bar {
