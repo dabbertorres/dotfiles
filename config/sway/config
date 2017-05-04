@@ -16,7 +16,7 @@
 
 ### Output configuration
     # wallpaper
-    output * bg /home/alec/Pictures/Wallpapers/hld.png fill
+    output * bg /home/alec/Pictures/Wallpapers/iamroot.jpg fill
 
 ### Input configuration
     input 2:1:PS2_Synaptics_TouchPad {
@@ -153,7 +153,7 @@ bar {
     colors {
         statusline #ffffff
         background #323232
-        inactive_workspace #32323200 #32323200 #5c5c5c
+        inactive_workspace #32323200 #32323200 #acacac
     }
 }
 
