@@ -80,30 +80,32 @@ let g:rehash256 = 1
 "let g:go_highlight_operators = 1
 "let g:go_highlight_build_constraints = 1
 
+"
 " keybindings
-map Y y$
-nmap <F8> :TagbarToggle<CR>
-map <F7> :NERDTreeToggle<CR>
-noremap <F4> :set hlsearch! hlsearch?<CR>
+"
 
-" custom commands
+" block folding, if folded, toggles, if not, folds
+nmap <silent> <F2> @=(foldlevel('.') ? 'za' : 'zfa}')<Cr>
+
+" list of stuff in the file!
+nmap <F8> :TagbarToggle<CR> 
+
+" filesystem/project view!
+nmap <F7> :NERDTreeToggle<CR>
+
+" format the whole file
+nmap <F4> mzgg=G`z
 
 " auto complete
 set wildmenu
-
-" switch windows
-nmap <silent> <A-Left> :wincmd h<CR>
-nmap <silent> <A-Right> :wincmd l<CR>
-nmap <silent> <A-Up> :wincmd k<CR>
-nmap <silent> <A-Down> :wincmd j<CR>
 
 " switch tabs
 nnoremap <silent> <A-Left> :tabprevious<CR>
 nnoremap <silent> <A-Right> :tabnext<CR>
 
 " move tabs around
-nnoremap <silent> <C-A-Left> :execute 'silent! tabmove ' . (tabpagenr() - 2)<CR>
-nnoremap <silent> <C-A-Right> :execute 'silent! tabmove ' . (tabpagenr() + 1)<CR>
+nnoremap <silent> <C-A-Left> :-tabmove<CR>
+nnoremap <silent> <C-A-Right> :+tabmove<CR>
 
 " usability
 set ignorecase
