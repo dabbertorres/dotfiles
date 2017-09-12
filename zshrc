@@ -31,12 +31,19 @@ alias grep='grep --color=auto'
 alias bins='pacman -Ql | grep'
 alias chmod='chmod --preserve-root'
 alias vim='vim -p'
+alias docker='sudo docker'
 
 # env vars
 export EDITOR=vim
 export VISUAL=vim
 export _JAVA_AWT_WM_NONREPARENTING=1
+export TERM=xterm-256color
+export GOPATH=~/Code/Go
 export PATH=$PATH:~/.local/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-export TERM=xterm-256color
+export WINEDEBUG=-all
+
+# helper functions
+wifi_connect() { nmcli --ask d w c }
+go_exec() { $GOPATH/bin/$1 }
 
