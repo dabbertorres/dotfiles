@@ -13,6 +13,9 @@ Plugin 'scrooloose/nerdtree'
 Plugin 'jistr/vim-nerdtree-tabs'
 Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'airblade/vim-gitgutter'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
+Plugin 'ctrlpvim/ctrlp.vim'
 
 " text completion
 Plugin 'Valloric/YouCompleteMe'
@@ -33,6 +36,12 @@ Plugin 'fatih/vim-go'
 " color schemes
 Plugin 'tomasr/molokai'
 Plugin 'nanotech/jellybeans.vim'
+
+" quality of life
+Plugin 'jwhitley/vim-matchit'
+
+" Obey editorconfig settings
+Plugin 'editorconfig/editorconfig-vim'
 
 call vundle#end()
 
@@ -55,8 +64,10 @@ set expandtab
 let g:nerdtree_tabs_open_on_console_startup = 0
 
 " YouCompleteMe
+let g:ycm_key_invoke_completion = '<C-Space>'
 let g:ycm_auto_trigger = 1
 let g:ycm_confirm_extra_conf = 0
+let g:ycm_rust_src_path = '~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src'
 
 " syntastic
 set statusline+=%#warningmsg#
@@ -68,24 +79,37 @@ let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 
+" airline
+let g:airline#extensions#tabline#enabled = 1
+
+" ctrlp
+let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
+
 " color scheme
 let g:jellybeans_overrides = { 'background': { 'ctermbg': 'none', '256ctermbg': 'none' } }
 let g:molokai_original = 1
 let g:rehash256 = 1
 
 " syntax highlighting
-"let g:go_highlight_functions = 1
-"let g:go_highlight_methods = 1
-"let g:go_highlight_structs = 1
-"let g:go_highlight_operators = 1
-"let g:go_highlight_build_constraints = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_structs = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_build_constraints = 1
+
+"
+" commands
+"
+
+" if forgot to open vim as sudo, save as sudo, and reload the (now changed) file
+cnoremap sudow w !sudo tee % > /dev/null <CR> :e!<CR>
 
 "
 " keybindings
 "
 
 " block folding, if folded, toggles, if not, folds
-nmap <silent> <F2> @=(foldlevel('.') ? 'za' : 'zfa}')<Cr>
+nmap <silent> <F2> @=(foldlevel('.') ? 'za' : 'zfa}')<CR>
 
 " list of stuff in the file!
 nmap <F8> :TagbarToggle<CR> 
@@ -94,10 +118,20 @@ nmap <F8> :TagbarToggle<CR>
 nmap <F7> :NERDTreeToggle<CR>
 
 " format the whole file
-nmap <F4> mzgg=G`z
+nmap <F5> mzgg=G`z
+
+" unhighlight search results
+noremap <silent> <F4> :noh<CR>
+
+" add a new line, but stay in normal mode
+nnoremap <C-o> o<Esc>
 
 " auto complete
 set wildmenu
+
+" switch buffers
+nnoremap <silent> <A-S-Left> :bp<CR>
+nnoremap <silent> <A-S-Right> :bn<CR>
 
 " switch tabs
 nnoremap <silent> <A-Left> :tabprevious<CR>
@@ -139,6 +173,7 @@ autocmd FileType make setlocal noexpandtab
 " C++ template implementation files syntax highlighting
 augroup filetypedetect
     au BufRead,BufNewFile *.tpp setfiletype cpp
+    au BufRead,BufNewFile *.tmpl setfiletype cpp
 augroup END
 
 " Nim goto definition support
@@ -149,4 +184,3 @@ fun! JumpToDef()
         exe "norm! \<C-]>"
     endif
 endf
-
