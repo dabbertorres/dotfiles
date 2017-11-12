@@ -20,8 +20,7 @@ Plugin 'vim-airline/vim-airline-themes'
 Plugin 'ctrlpvim/ctrlp.vim'
 
 " text completion
-Plugin 'Valloric/YouCompleteMe'
-Plugin 'rdnetto/YCM-Generator'
+Plugin 'maralla/completor.vim'
 Plugin 'Raimondi/delimitMate'
 
 " syntax checking
@@ -50,6 +49,8 @@ call vundle#end()
 " basic sanity
 filetype indent plugin on
 syntax on
+set ttimeoutlen=50
+set encoding=utf-8
 
 " allow for project-specific vim config settings
 set exrc
@@ -61,6 +62,29 @@ let g:molokai_original=1
 let g:rehash256=1
 colorscheme molokai
 
+" usability
+set ignorecase
+set smartcase
+set backspace=indent,eol,start
+set nostartofline
+set showcmd
+set laststatus=2
+set confirm
+set ruler
+set wildmenu
+
+" unset visualbell terminal code
+set visualbell
+set t_vb=
+
+set mouse=a
+set cmdheight=2
+set number
+set pastetoggle=<F11>
+
+" searching
+set hlsearch
+
 " indentation
 set autoindent
 set shiftwidth=4
@@ -71,11 +95,10 @@ set expandtab
 " NERD tree
 let g:nerdtree_tabs_open_on_console_startup=0
 
-" YouCompleteMe
-let g:ycm_key_invoke_completion='<C-Space>'
-let g:ycm_auto_trigger=1
-let g:ycm_confirm_extra_conf=0
-let g:ycm_rust_src_path='~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src'
+" completor.vim
+let g:completor_racer_binary = '/usr/bin/racer'
+let g:completor_clang_binary = '/usr/bin/clang'
+let g:completor_gocode_binary = $GOPATH.'/bin/gocode'
 
 " syntastic
 set statusline+=%#warningmsg#
@@ -99,6 +122,15 @@ let g:go_highlight_methods=1
 let g:go_highlight_structs=1
 let g:go_highlight_operators=1
 let g:go_highlight_build_constraints=1
+
+" make actually uses tabs, so don't turn tabs to spaces
+autocmd FileType make setlocal noexpandtab
+
+" C++ template implementation files syntax highlighting
+augroup filetypedetect
+    au BufRead,BufNewFile *.tpp setfiletype cpp
+    au BufRead,BufNewFile *.tmpl setfiletype cpp
+augroup END
 
 "
 " commands
@@ -129,9 +161,6 @@ noremap <silent> <F4> :noh<CR>
 " add a new line, but stay in normal mode
 nnoremap <C-o> o<Esc>
 
-" auto complete
-set wildmenu
-
 " switch buffers
 nnoremap <silent> <A-S-Left> :bp<CR>
 nnoremap <silent> <A-S-Right> :bn<CR>
@@ -147,34 +176,8 @@ nnoremap <silent> <C-A-Right> :+tabmove<CR>
 " toggle paste mode
 map <F11> :set invpaste<CR>
 
-" usability
-set ignorecase
-set smartcase
-set backspace=indent,eol,start
-set nostartofline
-set showcmd
-set laststatus=2
-set confirm
-set ruler
-
-" unset visualbell terminal code
-set visualbell
-set t_vb=
-
-set mouse=a
-set cmdheight=2
-set number
-set pastetoggle=<F11>
-
-" searching
-set hlsearch
-
-" make actually uses tabs, so don't turn tabs to spaces
-autocmd FileType make setlocal noexpandtab
-
-" C++ template implementation files syntax highlighting
-augroup filetypedetect
-        au BufRead,BufNewFile *.tpp setfiletype cpp
-        au BufRead,BufNewFile *.tmpl setfiletype cpp
-augroup END
+" text completion
+inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+inoremap <expr> <CR> pumvisible() ? "\<C-y>\<cr>" : "\<CR>"
 
