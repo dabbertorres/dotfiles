@@ -13,8 +13,15 @@ autoload -Uz compinit
 compinit
 # End of lines added by compinstall
 
-# display current path in prompt
-export PS1="[%40<...<%~%<<] $ "
+# themes
+autoload -Uz promptinit
+promptinit
+prompt walters
+
+# completion settings
+setopt complete_aliases
+setopt prompt_subst
+autoload -Uz vcs_info
 
 # key bindings
 bindkey "${terminfo[khome]}" beginning-of-line

@@ -1,6 +1,8 @@
 set nocompatible
 filetype off
 
+set rtp+=~/.vim/bundle/Vundle.vim
+
 " set up Vundle plugin management
 call vundle#begin()
 
@@ -53,6 +55,12 @@ syntax on
 set exrc
 set secure
 
+" color scheme
+set background=dark
+let g:molokai_original=1
+let g:rehash256=1
+colorscheme molokai
+
 " indentation
 set autoindent
 set shiftwidth=4
@@ -61,41 +69,36 @@ set tabstop=4
 set expandtab
 
 " NERD tree
-let g:nerdtree_tabs_open_on_console_startup = 0
+let g:nerdtree_tabs_open_on_console_startup=0
 
 " YouCompleteMe
-let g:ycm_key_invoke_completion = '<C-Space>'
-let g:ycm_auto_trigger = 1
-let g:ycm_confirm_extra_conf = 0
-let g:ycm_rust_src_path = '~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src'
+let g:ycm_key_invoke_completion='<C-Space>'
+let g:ycm_auto_trigger=1
+let g:ycm_confirm_extra_conf=0
+let g:ycm_rust_src_path='~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src'
 
 " syntastic
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
 
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
+let g:syntastic_always_populate_loc_list=1
+let g:syntastic_auto_loc_list=1
+let g:syntastic_check_on_open=1
+let g:syntastic_check_on_wq=0
 
 " airline
-let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#enabled=1
 
 " ctrlp
-let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
-
-" color scheme
-let g:jellybeans_overrides = { 'background': { 'ctermbg': 'none', '256ctermbg': 'none' } }
-let g:molokai_original = 1
-let g:rehash256 = 1
+let g:ctrlp_user_command=['.git', 'cd %s && git ls-files -co --exclude-standard']
 
 " syntax highlighting
-let g:go_highlight_functions = 1
-let g:go_highlight_methods = 1
-let g:go_highlight_structs = 1
-let g:go_highlight_operators = 1
-let g:go_highlight_build_constraints = 1
+let g:go_highlight_functions=1
+let g:go_highlight_methods=1
+let g:go_highlight_structs=1
+let g:go_highlight_operators=1
+let g:go_highlight_build_constraints=1
 
 "
 " commands
@@ -141,6 +144,9 @@ nnoremap <silent> <A-Right> :tabnext<CR>
 nnoremap <silent> <C-A-Left> :-tabmove<CR>
 nnoremap <silent> <C-A-Right> :+tabmove<CR>
 
+" toggle paste mode
+map <F11> :set invpaste<CR>
+
 " usability
 set ignorecase
 set smartcase
@@ -153,7 +159,7 @@ set ruler
 
 " unset visualbell terminal code
 set visualbell
-set t_vb= 
+set t_vb=
 
 set mouse=a
 set cmdheight=2
@@ -163,24 +169,12 @@ set pastetoggle=<F11>
 " searching
 set hlsearch
 
-" latex stuff
-set grepprg=grep\ -nH\ $*
-let g:tex_flavor = "latex"
-
 " make actually uses tabs, so don't turn tabs to spaces
 autocmd FileType make setlocal noexpandtab
 
 " C++ template implementation files syntax highlighting
 augroup filetypedetect
-    au BufRead,BufNewFile *.tpp setfiletype cpp
-    au BufRead,BufNewFile *.tmpl setfiletype cpp
+        au BufRead,BufNewFile *.tpp setfiletype cpp
+        au BufRead,BufNewFile *.tmpl setfiletype cpp
 augroup END
 
-" Nim goto definition support
-fun! JumpToDef()
-    if exists("*GotoDefinition_" . &filetype)
-        call GotoDefinition_{&filetype}()
-    else
-        exe "norm! \<C-]>"
-    endif
-endf

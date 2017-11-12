@@ -9,7 +9,7 @@
     set $right Right
 
     # terminal emulator
-    set $term lxterminal
+    set $term termite
 
     # application launcher
     set $menu dmenu_run -i
