@@ -24,12 +24,8 @@ setopt prompt_subst
 autoload -Uz vcs_info
 
 # key bindings
-bindkey "${terminfo[khome]}" beginning-of-line
-bindkey "${terminfo[kend]}" end-of-line
-bindkey "^[[3~" delete-char
-bindkey "^[3;5~" delete-char
-bindkey "^[[1;5C" forward-word
-bindkey "^[[1;5D" backward-word
+bindkey "\e[H" beginning-of-line
+bindkey "\e[F" end-of-line
 
 # aliases
 alias cl=clear
