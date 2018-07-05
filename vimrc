@@ -1,50 +1,46 @@
-set nocompatible
-filetype off
-
-set rtp+=~/.vim/bundle/Vundle.vim
-
-" set up Vundle plugin management
-call vundle#begin()
-
-Plugin 'VundleVim/Vundle.vim'
+" plugins
+call plug#begin('~/.vim/plugged')
 
 " interface
-Plugin 'tpope/vim-fugitive'
-Plugin 'majutsushi/tagbar'
-Plugin 'scrooloose/nerdtree'
-Plugin 'jistr/vim-nerdtree-tabs'
-Plugin 'Xuyuanp/nerdtree-git-plugin'
-Plugin 'airblade/vim-gitgutter'
-Plugin 'vim-airline/vim-airline'
-Plugin 'vim-airline/vim-airline-themes'
-Plugin 'ctrlpvim/ctrlp.vim'
+Plug 'tpope/vim-fugitive'
+Plug 'majutsushi/tagbar'
+Plug 'airblade/vim-gitgutter'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'ctrlpvim/ctrlp.vim'
 
-" text completion
-Plugin 'maralla/completor.vim'
-Plugin 'Raimondi/delimitMate'
+" completion
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'zchee/deoplete-go', { 'do': 'make' }
+Plug 'zchee/deoplete-clang', { 'do': 'make' }
+Plug 'roxma/nvim-yarp'
+Plug 'roxma/vim-hug-neovim-rpc'
+Plug 'Raimondi/delimitMate'
 
 " syntax checking
-Plugin 'vim-syntastic/syntastic'
+Plug 'vim-syntastic/syntastic'
 
 " formatting
-Plugin 'godlygeek/tabular'
+Plug 'godlygeek/tabular'
+Plug 'tpope/vim-surround'
+Plug 'junegunn/vim-easy-align'
 
 " language specific
-Plugin 'rust-lang/rust.vim'
-Plugin 'zah/nim.vim'
-Plugin 'fatih/vim-go'
+Plug 'rust-lang/rust.vim'
+Plug 'fatih/vim-go', { 'do': ':GoInstallBinaries' }
+Plug 'nsf/gocode', { 'rtp': 'vim', 'do': '~/.vim/plugged/gocode/vim/symlink.sh' }
 
 " color schemes
-Plugin 'tomasr/molokai'
-Plugin 'nanotech/jellybeans.vim'
+Plug 'tomasr/molokai'
+Plug 'nanotech/jellybeans.vim'
 
 " quality of life
-Plugin 'jwhitley/vim-matchit'
+Plug 'jwhitley/vim-matchit'
 
 " Obey editorconfig settings
-Plugin 'editorconfig/editorconfig-vim'
+Plug 'editorconfig/editorconfig-vim'
 
-call vundle#end()
+call plug#end()
 
 " basic sanity
 filetype indent plugin on
@@ -57,9 +53,11 @@ set exrc
 set secure
 
 " color scheme
+if $TERM =~ "kitty"
+    let &t_ut=''
+endif
+
 set background=dark
-let g:molokai_original=1
-let g:rehash256=1
 colorscheme molokai
 
 " usability
@@ -72,6 +70,7 @@ set laststatus=2
 set confirm
 set ruler
 set wildmenu
+set scrolloff=5
 
 " unset visualbell terminal code
 set visualbell
@@ -92,13 +91,27 @@ set softtabstop=4
 set tabstop=4
 set expandtab
 
-" NERD tree
-let g:nerdtree_tabs_open_on_console_startup=0
+" python settings
+set pyxversion=3
 
-" completor.vim
-let g:completor_racer_binary = '/usr/bin/racer'
-let g:completor_clang_binary = '/usr/bin/clang'
-let g:completor_gocode_binary = $GOPATH.'/bin/gocode'
+" deoplete.nvim
+set completeopt+=noselect
+
+let g:deoplete#enable_at_startup = 1
+let g:deoplete#disable_auto_complete = 0
+let g:deoplete#complete_method = "omnifunc"
+let g:deoplete#enable_ignore_case = 1
+let g:deoplete#enable_refresh_always = 1
+
+let g:deoplete#sources#clang#libclang_path = '/usr/lib/libclang.so'
+let g:deoplete#sources#clang#clang_header = '/usr/include/clang'
+let g:deoplete#sources#clang#std = { 'c': 'c99', 'cpp': 'c++1z' }
+
+let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
+let g:deoplete#sources#go#sort_class = ['package', 'func', 'type', 'var', 'const']
+let g:deoplete#sources#go#pointer = 1
+let g:deoplete#sources#go#cgo = 1
+let g:deoplete#sources#go#cgo#libclang_path = '/usr/lib/libclang.so'
 
 " syntastic
 set statusline+=%#warningmsg#
@@ -109,6 +122,8 @@ let g:syntastic_always_populate_loc_list=1
 let g:syntastic_auto_loc_list=1
 let g:syntastic_check_on_open=1
 let g:syntastic_check_on_wq=0
+let g:syntastic_go_checkers = ['golint', 'govet']
+let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
 
 " airline
 let g:airline#extensions#tabline#enabled=1
@@ -149,17 +164,18 @@ nmap <silent> <F2> @=(foldlevel('.') ? 'za' : 'zfa}')<CR>
 " list of stuff in the file!
 nmap <F8> :TagbarToggle<CR> 
 
-" filesystem/project view!
-nmap <F7> :NERDTreeToggle<CR>
-
 " format the whole file
 nmap <F5> mzgg=G`z
 
-" unhighlight search results
-noremap <silent> <F4> :noh<CR>
+" easy align (visual, interactive)
+xmap ga <Plug>(EasyAlign)
+nmap ga <Plug>(EasyAlign)
+
+" clear last search
+noremap <silent> <C-_> :let @/ = ""<CR>
 
 " add a new line, but stay in normal mode
-nnoremap <C-o> o<Esc>
+nnoremap <silent> <C-o> o<Esc>
 
 " switch buffers
 nnoremap <silent> <A-S-Left> :bp<CR>
@@ -167,17 +183,19 @@ nnoremap <silent> <A-S-Right> :bn<CR>
 
 " switch tabs
 nnoremap <silent> <A-Left> :tabprevious<CR>
+nnoremap <silent> <M-h> :tabprevious<CR>
 nnoremap <silent> <A-Right> :tabnext<CR>
+nnoremap <silent> <M-l> :tabnext<CR>
 
 " move tabs around
 nnoremap <silent> <C-A-Left> :-tabmove<CR>
+nnoremap <silent> <C-M-h> :-tabmove<CR>
 nnoremap <silent> <C-A-Right> :+tabmove<CR>
-
-" toggle paste mode
-map <F11> :set invpaste<CR>
+nnoremap <silent> <C-M-l> :+tabmove<CR>
 
 " text completion
-inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
-inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-inoremap <expr> <CR> pumvisible() ? "\<C-y>\<cr>" : "\<CR>"
+inoremap <C-Space> <C-n>
+imap <C-@> <C-Space>
+inoremap <silent> <expr><Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <silent> <expr><S-Tab> pumvisible() ? "\<C-p>" : "\<C-p>"
 

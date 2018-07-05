@@ -26,6 +26,9 @@ autoload -Uz vcs_info
 # key bindings
 bindkey "\e[H" beginning-of-line
 bindkey "\e[F" end-of-line
+bindkey "\e[1;5D" backward-word
+bindkey "\e[1;5C" forward-word
+bindkey "\e[3~" delete-char
 
 # aliases
 alias cl=clear
@@ -33,7 +36,6 @@ alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias bins='pacman -Ql | grep'
 alias chmod='chmod --preserve-root'
-alias vim='vim -p'
 alias docker='sudo docker'
 
 # env vars
@@ -41,7 +43,7 @@ export EDITOR=vim
 export VISUAL=vim
 export _JAVA_AWT_WM_NONREPARENTING=1
 export GOPATH=~/Code/Go
-export PATH=$PATH:~/.local/bin
+export PATH=$PATH:~/.local/bin:$GOPATH/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
 # helper functions

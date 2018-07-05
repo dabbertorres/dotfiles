@@ -9,14 +9,14 @@
     set $right Right
 
     # terminal emulator
-    set $term termite
+    set $term kitty -1
 
     # application launcher
-    set $menu dmenu_run -i
+    set $menu dmenu_run -i -fn "pango:Font Awesome 11"
 
 ### Output configuration
-    # wallpaper
     output * bg /home/alec/Pictures/Wallpapers/iamroot.jpg fill
+    font pango:Noto Sans 11
 
 ### Input configuration
     input 2:1:PS2_Synaptics_TouchPad {
@@ -26,9 +26,6 @@
 
 ### Floating windows
     floating_minimum_size 360 x 240
-
-    # Java Swing isn't very good at sizing
-    for_window [class="Structorizer"] floating_minimum_size 480 x 360
 
     # open/save file prompts need to be bigger
     for_window [title="Open File"] floating_minimum_size 720 x 480
@@ -148,8 +145,9 @@
 bar {
     #tray_output primary
     status_command i3status
+    pango_markup enabled
     position top
-    font pango: Awesome, DejaVu Sans Mono 10
+    font pango:Font Awesome 11
     colors {
         statusline #ffffff
         background #323232
@@ -177,6 +175,7 @@ bindsym $mod+shift+delete mode "$mode_system"
 ### Executables
 exec --no-startup-id pcmanfm -d
 exec --no-startup-id redshift -m wayland
+exec --no-startup-id kitty -1 &
 
 # include any secondary extra config files 
 include __SYSCONFDIR__/sway/config.d/*
