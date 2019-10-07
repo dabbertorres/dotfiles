@@ -23,6 +23,7 @@ Plug 'w0rp/ale'
 
 " syntax support
 Plug 'tikhomirov/vim-glsl'
+Plug 'hashivim/vim-terraform'
 
 " formatting
 Plug 'tpope/vim-surround'
@@ -172,36 +173,53 @@ let g:ale_fix_on_save                     = 1
 let g:ale_set_quickfix                    = 1
 let g:ale_virtualtext_cursor              = 1
 let g:ale_warn_about_trailing_blank_lines = 0
+let g:ale_list_vertical                   = 1
 
 let g:ale_linters = {
-            \ 'python': ['flake8', 'mypy'],
             \ 'c': ['clang', 'clangd'],
             \ 'cpp': ['clang', 'clangd'],
-            \ 'cs': ['OmniSharp']
+            \ 'cs': ['OmniSharp'],
+            \ 'go': ['gofmt', 'golint', 'gopls', 'gotype'],
+            \ 'python': ['flake8', 'mypy'],
+            \ 'markdown': ['markdownlint'],
             \ }
 
 let g:ale_fixers = {
             \ '*': ['trim_whitespace'],
-            \ 'python': ['black', 'isort'],
             \ 'c': ['trim_whitespace', 'clang-format', 'clangtidy'],
-            \ 'cpp': ['trim_whitespace', 'clang-format', 'clangtidy']
+            \ 'cpp': ['trim_whitespace', 'clang-format', 'clangtidy'],
+            \ 'go': ['trim_whitespace', 'goimports'],
+            \ 'python': ['black', 'isort'],
+            \ 'markdown': ['prettier', 'remove_trailing_lines', 'textlint', 'trim_whitespace'],
             \ }
 
-let g:ale_c_parse_makefile         = 0
-let g:ale_c_parse_compile_commands = 1
-let g:ale_c_clang_executable       = '/usr/local/opt/llvm/bin/clang'
-let g:ale_c_clangd_executable      = '/usr/local/opt/llvm/bin/clangd'
-let g:ale_cpp_clang_executable     = '/usr/local/opt/llvm/bin/clang'
-let g:ale_cpp_clangd_executable    = '/usr/local/opt/llvm/bin/clangd'
-let g:ale_c_clang_options          = '-std=c11 -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
-let g:ale_cpp_clang_options        = '-std=c++17 -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
-let g:ale_c_clangd_options         = '-function-arg-placeholders -all-scopes-completion -pch-storage=memory -limit-results=50 -completion-style=detailed'
-let g:ale_cpp_clangd_options       = '-function-arg-placeholders -all-scopes-completion -pch-storage=memory -limit-results=50 -completion-style=detailed'
-let g:ale_python_flake8_options    = '--max-line-length=120'
-let g:ale_python_black_options     = '--line-length 120'
+let g:ale_c_parse_makefile           = 0
+let g:ale_c_parse_compile_commands   = 1
+let g:ale_c_clang_executable         = '/usr/local/opt/llvm/bin/clang'
+let g:ale_c_clangd_executable        = '/usr/local/opt/llvm/bin/clangd'
+let g:ale_c_clangformat_executable   = '/usr/local/opt/llvm/bin/clang-format'
+let g:ale_cpp_clang_executable       = '/usr/local/opt/llvm/bin/clang'
+let g:ale_cpp_clangd_executable      = '/usr/local/opt/llvm/bin/clangd'
+let g:ale_cpp_clangformat_executable = '/usr/local/opt/llvm/bin/clang-format'
+let g:ale_c_clang_options            = '-std=c11 -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+let g:ale_cpp_clang_options          = '-std=c++17 -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+let g:ale_c_clangd_options           = '-function-arg-placeholders -all-scopes-completion -pch-storage=memory -limit-results=50 -completion-style=detailed'
+let g:ale_cpp_clangd_options         = '-function-arg-placeholders -all-scopes-completion -pch-storage=memory -limit-results=50 -completion-style=detailed'
+let g:ale_python_flake8_options      = '--max-line-length=120'
+let g:ale_python_black_options       = '--line-length 120'
+
+let g:ale_markdown_redpen_options    = '--configuration ~/.config/redpen/config.xml'
 
 nmap <silent> <C-k> <Plug>(ale_previous_wrap)
 nmap <silent> <C-j> <Plug>(ale_next_wrap)
+
+" auto pairs
+let g:AutoPairsMultilineClose = 0
+
+" terraform
+let g:terrafor_align          = 1
+let g:terraform_fold_sections = 0
+let g:terraform_fmt_on_save   = 1
 
 " split-term
 let g:disable_key_mappings = 1
@@ -222,10 +240,11 @@ let g:go_highlight_build_constraints = 1
 let g:go_highlight_generate_tags     = 1
 let g:go_highlight_debug             = 1
 
-let g:go_fmt_command      = "goimports"
-let g:go_mod_fmt_autosave = 1
-let g:go_asmfmt_autosave  = 1
-let g:go_fmt_autosave     = 1
+let g:go_fmt_command       = "goimports"
+let g:go_fmt_autosave      = 0
+let g:go_fmt_fail_silently = 1
+let g:go_mod_fmt_autosave  = 0
+let g:go_asmfmt_autosave   = 0
 
 let g:go_metalinter_autosave        = 0
 let g:go_metaliner_enabled          = []
@@ -242,7 +261,7 @@ let g:go_gocode_propose_source   = 0
 
 " markdown preview
 let g:mkdp_auto_start = 0
-let g:mkdp_auto_close = 1
+let g:mkdp_auto_close = 0
 let g:mkdp_refresh_slow = 0
 let g:mkdp_command_for_global = 0
 let g:mkdp_open_to_the_world = 1
@@ -264,10 +283,10 @@ let g:prolog_swipl_timeout = 10
 
 """ status line, after plugins and such are setup
 
-let g:airline#extensions#ale#enabled     = 1
-let g:airline#extensions#coc#enabled     = 1
-let g:airline#extensions#tabline#enabled = 1
-let g:airline_theme                      = 'gruvbox'
+let g:airline#extensions#ale#enabled       = 1
+let g:airline#extensions#coc#enabled       = 0
+let g:airline#extensions#tabline#enabled   = 1
+let g:airline_theme                        = 'gruvbox'
 
 """ color scheme
 
@@ -355,6 +374,11 @@ augroup yaml_files
     au FileType yaml setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
 
+augroup json_files
+    autocmd!
+    au FileType json setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
 augroup xml_files
     autocmd!
     au FileType xml setlocal tabstop=2 softtabstop=2 shiftwidth=2
@@ -368,4 +392,9 @@ augroup END
 augroup docker_files
     autocmd!
     au BufRead,BufNewFile Dockerfile.* set syntax=Dockerfile
+augroup END
+
+augroup markdown_files
+    autocmd!
+    au FileType markdown setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
