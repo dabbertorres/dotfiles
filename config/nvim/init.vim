@@ -14,16 +14,19 @@ Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
 " completion
-"Plug 'Raimondi/delimitMate'
-Plug 'jiangmiao/auto-pairs'
+Plug 'Raimondi/delimitMate'
+"Plug 'jiangmiao/auto-pairs'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 " syntax check
-Plug 'w0rp/ale'
+Plug 'dense-analysis/ale'
 
 " syntax support
-Plug 'tikhomirov/vim-glsl'
-Plug 'hashivim/vim-terraform'
+"Plug 'tikhomirov/vim-glsl'
+"Plug 'hashivim/vim-terraform'
+"Plug 'tbastos/vim-lua'
+"Plug 'udalov/kotlin-vim'
+Plug 'sheerun/vim-polyglot'
 
 " formatting
 Plug 'tpope/vim-surround'
@@ -31,9 +34,11 @@ Plug 'junegunn/vim-easy-align'
 "Plug 'rhysd/vim-clang-format'
 
 " language tooling
-Plug 'rust-lang/rust.vim'
+"Plug 'rust-lang/rust.vim'
 Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 Plug 'OmniSharp/omnisharp-vim'
+Plug 'ziglang/zig.vim'
+Plug 'posva/vim-vue' " vue single-file components
 
 " color schemes
 Plug 'tomasr/molokai'
@@ -45,12 +50,17 @@ Plug 'jwhitley/vim-matchit'
 Plug 'tpope/vim-repeat'
 Plug 'vimlab/split-term.vim'
 Plug 'editorconfig/editorconfig-vim'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+Plug 'tpope/vim-abolish'
+Plug 'puremourning/vimspector'
 
 " extra helpers
 Plug 'kana/vim-operator-user'
 Plug 'Shougo/vimproc.vim', { 'do': 'make' }
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }}
 Plug 'wannesm/wmgraphviz.vim'
+Plug 'tpope/vim-eunuch'
 
 " myndshft config
 Plug 'https://bitbucket.org/myndshft/mynd-config-vim.git', { 'do': 'make' }
@@ -59,7 +69,7 @@ call plug#end()
 
 " basic sanity
 set ttimeoutlen=50
-set updatetime=300
+set updatetime=100
 set encoding=utf-8
 set clipboard+=unnamedplus
 let mapleader = "m"
@@ -77,6 +87,10 @@ set ruler
 set wildmenu
 set scrolloff=5
 set inccommand=nosplit
+
+" enable folding, but disable it by default
+set foldmethod=syntax
+set foldlevelstart=99
 
 " unset visualbell terminal code
 set visualbell
@@ -99,6 +113,8 @@ set expandtab
 set textwidth=0
 set wrap
 set breakindent
+set linebreak
+let g:vim_indent_cont = &shiftwidth
 
 " persistent undo
 set undofile
@@ -118,23 +134,38 @@ set nowritebackup
 set shortmess+=c
 set signcolumn=yes
 
-inoremap <silent> <expr><Tab>
-            \ pumvisible() ? "\<C-n>" :
+" netrw explorer
+let g:netrw_liststyle    = 3
+let g:netrw_banner       = 0
+let g:netrw_browse_split = 2
+let g:netrw_winsize      = 25
+let g:netrw_altv         = 1
+
+" If completion menu is visible, and only one item is left, select it.
+" Otherwise, move to the next item.
+" If completion menu is not visible, check if we should refresh the list.
+inoremap <silent><expr> <Tab>
+            \ pumvisible() ?
+            \ (len(complete_info().items) == 1 ? coc#_select_confirm() : "\<C-n>") :
             \ <SID>check_back_space() ? "\<TAB>" :
             \ coc#refresh()
-inoremap <silent> <expr><S-Tab> pumvisible() ? "\<C-p>" : "\<C-p>"
-inoremap <silent> <expr> <C-Space> coc#refresh()
+inoremap <silent><expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<C-p>"
 
 function! s:check_back_space() abort
     let col = col('.') - 1
     return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
+inoremap <silent><expr> <c-space> coc#refresh()
+
 " Remap keys for gotos
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
+nmap <silent> <leader>fa <Plug>(coc-codeaction)
+nmap <silent> <leader>la <Plug>(coc-codeaction-line)
+nmap <silent> <leader>ca <Plug>(coc-codelens-action)
 
 " Use K to show documentation in preview window
 nnoremap <silent> K :call <SID>show_documentation()<CR>
@@ -160,76 +191,207 @@ command! -nargs=0 Format :call CocAction('format')
 " use `:OR` for organize import of current buffer
 command! -nargs=0 OR :call CocAction('runCommand', 'editor.action.organizeImport')
 
+" generate a uuid
+command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen'), '\n$', '', '')
+
 " auto close scratch/preview window after completion
 autocmd InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
 
 " vim-lsp odd behavior workaround: https://github.com/dense-analysis/ale/issues/1212
 let g:lsp_diagnostics_echo_cursor = 0
 
+"
 " ale
+"
+
+" misc
+let g:ale_cache_executable_check_failures = 1
 let g:ale_completion_enabled              = 0
-let g:ale_sign_column_always              = 1
-let g:ale_fix_on_save                     = 1
-let g:ale_set_quickfix                    = 1
-let g:ale_virtualtext_cursor              = 1
 let g:ale_warn_about_trailing_blank_lines = 0
+let g:ale_sign_priority                   = 999
 let g:ale_list_vertical                   = 1
 
+" display
+let g:ale_sign_column_always     = 1
+let g:ale_virtualtext_cursor     = 1
+let g:ale_set_balloons           = 1
+let g:ale_cursor_detail          = 0
+let g:ale_sign_highlight_linenrs = 1
+let g:ale_set_highlights         = 1
+let g:ale_set_signs              = 1
+
+" lint/fix
+let g:ale_fix_on_save              = 1
+let g:ale_set_quickfix             = 1
+let g:ale_lint_on_text_changed     = 1
+let g:ale_lint_on_insert_leave     = 1
+let g:ale_lint_on_enter            = 1
+let g:ale_lint_on_save             = 1
+let g:ale_lint_on_filetype_changed = 1
+
 let g:ale_linters = {
-            \ 'c': ['clang', 'clangd'],
-            \ 'cpp': ['clang', 'clangd'],
-            \ 'cs': ['OmniSharp'],
-            \ 'go': ['gofmt', 'golint', 'gopls', 'gotype'],
-            \ 'python': ['flake8', 'mypy'],
-            \ 'markdown': ['markdownlint'],
-            \ }
+    \  'c': [
+    \    'clangd',
+    \  ],
+    \  'cpp': [
+    \     'clangd',
+    \  ],
+    \  'cs': [
+    \    'OmniSharp',
+    \  ],
+    \  'html': [
+    \    'htmlhint',
+    \  ],
+    \  'go': [
+    \    'gofmt',
+    \    'golint',
+    \    'gopls',
+    \    'gotype',
+    \  ],
+    \  'haskell': [
+    \    'hie',
+    \    'hlint',
+    \  ],
+    \  'java': [],
+    \  'kotlin': [
+    \    'languageserver',
+    \  ],
+    \  'python': [
+    \    'flake8',
+    \    'mypy',
+    \  ],
+    \  'markdown': [
+    \    'markdownlint',
+    \  ],
+    \  'ts': [
+    \    'prettier',
+    \    'tslint',
+    \  ],
+    \}
+
+let g:ale_linters_ignore =  {
+    \   'html': [
+    \     'proselint',
+    \   ],
+    \ }
 
 let g:ale_fixers = {
-            \ '*': ['trim_whitespace'],
-            \ 'c': ['trim_whitespace', 'clang-format', 'clangtidy'],
-            \ 'cpp': ['trim_whitespace', 'clang-format', 'clangtidy'],
-            \ 'go': ['trim_whitespace', 'goimports'],
-            \ 'python': ['black', 'isort'],
-            \ 'markdown': ['prettier', 'remove_trailing_lines', 'textlint', 'trim_whitespace'],
-            \ }
+    \  'c': [
+    \    'clang-format',
+    \    'trim_whitespace',
+    \  ],
+    \  'cpp': [
+    \    'clang-format',
+    \    'trim_whitespace',
+    \  ],
+    \  'cs': [
+    \    'uncrustify',
+    \    'trim_whitespace',
+    \  ],
+    \  'html': [
+    \    'html-beautify',
+    \    'trim_whitespace',
+    \    'remove_trailing_lines',
+    \  ],
+    \  'go': [
+    \    'goimports',
+    \    'trim_whitespace',
+    \  ],
+    \  'haskell': [
+    \    'hlint',
+    \    'trim_whitespace',
+    \  ],
+    \  'lua': [
+    \    'trim_whitespace',
+    \  ],
+    \  'kotlin': [
+    \    'ktlint',
+    \    'trim_whitespace',
+    \  ],
+    \  'python': [
+    \    'black',
+    \    'isort',
+    \  ],
+    \  'markdown': [
+    \    'prettier',
+    \    'remove_trailing_lines',
+    \    'textlint',
+    \    'trim_whitespace',
+    \  ],
+    \  'sql': [
+    \    'trim_whitespace',
+    \  ],
+    \  'ts': [
+    \    'prettier',
+    \    'tslint',
+    \    'remove_trailing_lines',
+    \    'trim_whitespace',
+    \  ],
+    \  'vim': [
+    \    'trim_whitespace',
+    \  ],
+    \  'vue': [
+    \    'prettier',
+    \    'trim_whitespace',
+    \  ],
+    \  'yaml': [
+    \    'trim_whitespace',
+    \  ]
+    \}
 
-let g:ale_c_parse_makefile           = 0
-let g:ale_c_parse_compile_commands   = 1
-let g:ale_c_clang_executable         = '/usr/local/opt/llvm/bin/clang'
-let g:ale_c_clangd_executable        = '/usr/local/opt/llvm/bin/clangd'
-let g:ale_c_clangformat_executable   = '/usr/local/opt/llvm/bin/clang-format'
-let g:ale_cpp_clang_executable       = '/usr/local/opt/llvm/bin/clang'
-let g:ale_cpp_clangd_executable      = '/usr/local/opt/llvm/bin/clangd'
-let g:ale_cpp_clangformat_executable = '/usr/local/opt/llvm/bin/clang-format'
-let g:ale_c_clang_options            = '-std=c11 -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
-let g:ale_cpp_clang_options          = '-std=c++17 -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
-let g:ale_c_clangd_options           = '-function-arg-placeholders -all-scopes-completion -pch-storage=memory -limit-results=50 -completion-style=detailed'
-let g:ale_cpp_clangd_options         = '-function-arg-placeholders -all-scopes-completion -pch-storage=memory -limit-results=50 -completion-style=detailed'
-let g:ale_python_flake8_options      = '--max-line-length=120'
-let g:ale_python_black_options       = '--line-length 120'
-
-let g:ale_markdown_redpen_options    = '--configuration ~/.config/redpen/config.xml'
+let g:ale_java_eclipselsp_executable       = '/Users/aleciverson/.config/coc/extensions/coc-java-data/server/plugins/org.eclipse.equinox.launcher_1.5.500.v20190715-1310.jar'
+let g:ale_java_eclipselsp_config_path      = '/Users/aleciverson/.config/coc/extensions/coc-java-data/server/config_mac/'
+let g:ale_c_parse_makefile                 = 0
+let g:ale_c_parse_compile_commands         = 1
+let g:ale_c_clang_executable               = '/usr/local/opt/llvm@10/bin/clang'
+let g:ale_c_clangd_executable              = '/usr/local/opt/llvm@10/bin/clangd'
+let g:ale_c_clangformat_executable         = '/usr/local/opt/llvm@10/bin/clang-format'
+let g:ale_cpp_clang_executable             = '/usr/local/opt/llvm@10/bin/clang'
+let g:ale_cpp_clangd_executable            = '/usr/local/opt/llvm@10/bin/clangd'
+let g:ale_cpp_clangformat_executable       = '/usr/local/opt/llvm@10/bin/clang-format'
+let g:ale_c_clang_options                  = '-std=c11 -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+let g:ale_cpp_clang_options                = '-std=c++2a -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/opt/llvm@10/include'
+let g:ale_c_clangd_options                 = '--function-arg-placeholders --all-scopes-completion --pch-storage=memory --limit-results=50 --completion-style=detailed --background-index'
+let g:ale_cpp_clangd_options               = '--function-arg-placeholders --all-scopes-completion --pch-storage=memory --limit-results=50 --completion-style=detailed --background-index'
+let g:ale_kotlin_languageserver_executable = '/Users/aleciverson/Code/kotlin/kotlin-language-server/server/build/install/server/bin/kotlin-language-server'
+let g:ale_python_flake8_options            = '--max-line-length=120'
+let g:ale_python_black_options             = '--line-length 120'
+let g:ale_markdown_redpen_options          = '--configuration ~/.config/redpen/config.xml'
 
 nmap <silent> <C-k> <Plug>(ale_previous_wrap)
 nmap <silent> <C-j> <Plug>(ale_next_wrap)
 
-" auto pairs
-let g:AutoPairsMultilineClose = 0
-
-" terraform
-let g:terrafor_align          = 1
-let g:terraform_fold_sections = 0
-let g:terraform_fmt_on_save   = 1
+let delimitMate_expand_cr = 1
 
 " split-term
 let g:disable_key_mappings = 1
 set splitbelow
 
+" fzf
+let g:fzf_buffers_jump = 1
+
+" terraform
+let g:terraform_align         = 1
+let g:terraform_fold_sections = 0
+let g:terraform_fmt_on_save   = 1
+
+"
+" C# / OmniSharp settings
+"
+let g:OmniSharp_server_stdio = 1
+
+"
+" zig settings
+"
+let g:zig_fmt_autosave = 0
+
 "
 " go settings
 "
 
-let g:go_fold_enable                 = []
+let g:go_def_mode                    = 'gopls'
+let g:go_info_mode                   = 'gopls'
+let g:go_fold_enable                 = ['block', 'import', 'varconst', 'package_comment']
 let g:go_highlight_functions         = 1
 let g:go_highlight_function_calls    = 1
 let g:go_highlight_methods           = 1
@@ -283,10 +445,11 @@ let g:prolog_swipl_timeout = 10
 
 """ status line, after plugins and such are setup
 
-let g:airline#extensions#ale#enabled       = 1
-let g:airline#extensions#coc#enabled       = 0
-let g:airline#extensions#tabline#enabled   = 1
-let g:airline_theme                        = 'gruvbox'
+let g:airline_exclude_preview            = 0
+let g:airline#extensions#ale#enabled     = 1
+let g:airline#extensions#coc#enabled     = 0
+let g:airline#extensions#tabline#enabled = 1
+let g:airline_theme                      = 'gruvbox'
 
 """ color scheme
 
@@ -294,6 +457,27 @@ let g:gruvbox_contrast_dark     = 'hard'
 let g:gruvbox_invert_signs      = 1
 let g:gruvbox_invert_tabline    = 1
 let g:gruvbox_improved_warnings = 1
+
+""" vimpsector
+
+let g:vimspector_base_dir = '/Users/aleciverson/.local/share/nvim/plugged/vimspector/gadgets/macos'
+
+" When stopping debugging, reset the view too
+function! s:stop_debugging()
+    call vimspector#Stop()
+    call vimspector#Reset()
+endfunction
+
+noremap <F3> :CocCommand java.debug.vimspector.start<CR>
+noremap <F4> :call <SID>stop_debugging()<CR>
+noremap <F5> <Plug>VimspectorContinue
+noremap <S-F5> <Plug>VimspectorRestart
+noremap <F6> <Plug>VimspectorPause
+noremap <F8> <Plug>VimspectorToggleBreakpoint
+noremap <S-F8> <Plug>VimspectorToggleConditionalBreakpoint
+noremap <F9> <Plug>VimspectorStepOver
+noremap <F10> <Plug>VimspectorStepInto
+noremap <F11> <Plug>VimspectorStepOut
 
 set termguicolors
 set background=dark
@@ -308,9 +492,6 @@ let &t_EI = "\<Esc>[2 q"
 " commands
 "
 
-" if forgot to open vim as sudo, save as sudo, and reload the (now changed) file
-command! Sudow w | !sudo tee % > /dev/null<CR> :e!
-
 " search for TODOs with ag
 set grepprg=ag
 command! Todo silent lgrep -i --ignore-dir=vendor/ '\/\/.*TODO.*' | lwindow
@@ -321,7 +502,7 @@ command! TodoE lclose
 command! Reloadrc silent :source ~/.config/nvim/init.vim | :AirlineRefresh
 
 " list of stuff in the file!
-nmap <F8> :TagbarToggle<CR>
+"nmap <F8> :TagbarToggle<CR>
 
 " easy align (visual, interactive)
 xmap ga <Plug>(EasyAlign)
@@ -338,6 +519,8 @@ nnoremap <silent> gB :bn<CR>
 nnoremap <silent> ght :-tabmove<CR>
 nnoremap <silent> glt :+tabmove<CR>
 
+"nnoremap ,f <Plug>(fzf-complete-file)
+
 " customize built-in terminal
 augroup terminal_buf
     autocmd!
@@ -346,6 +529,12 @@ augroup terminal_buf
     au TermOpen * tnoremap <buffer> <C-w>j <C-\><C-N><C-w>j
     au TermOpen * tnoremap <buffer> <C-w>k <C-\><C-N><C-w>k
     au TermOpen * tnoremap <buffer> <C-w>l <C-\><C-N><C-w>l
+    "
+    " let me move the terminal window without needing to 'escape' first
+    au TermOpen * tnoremap <buffer> <C-w>H <C-\><C-N><C-w>H
+    au TermOpen * tnoremap <buffer> <C-w>J <C-\><C-N><C-w>J
+    au TermOpen * tnoremap <buffer> <C-w>K <C-\><C-N><C-w>K
+    au TermOpen * tnoremap <buffer> <C-w>L <C-\><C-N><C-w>L
 
     " I'm not actually modifying a buffer
     au TermClose * call feedkeys('\<CR>')
@@ -355,18 +544,18 @@ augroup END
 
 augroup cpp_files
     autocmd!
-    "au FileType c,cpp ClangFormatAutoEnable
     au BufRead,BufNewFile *.tpp setfiletype cpp
     "au FileType c,cpp nnoremap gd :ALEGoToDefinitionInTab<CR>
 augroup END
 
-"augroup omnisharp_files
-"    autocmd!
-"    au CursorHold *.cs call OmniSharp#TypeLookupWithoutDocumentation()
-"    au InsertLeave *.cs :OmniSharpCodeFormat
-"    au InsertLeave *.cs call OmniSharp#HighlightBuffer()
-"    au FileType cs nnoremap <buffer> gd :OmniSharpGotoDefinition<CR>
-"augroup END
+augroup omnisharp_files
+    autocmd!
+    au CursorHold *.cs call OmniSharp#TypeLookupWithoutDocumentation()
+    au InsertLeave *.cs call OmniSharp#HighlightBuffer()
+    au BufWriteCmd,FileWriteCmd *.cs OmniSharpCodeFormat | w
+    au BufWriteCmd,FileWriteCmd *.cs OmniSharpFixUsings | w
+    au FileType cs nnoremap <buffer> gd :OmniSharpGotoDefinition<CR>
+augroup END
 
 augroup yaml_files
     autocmd!
@@ -384,6 +573,21 @@ augroup xml_files
     au FileType xml setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
 
+augroup html_files
+    autocmd!
+    au FileType html setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
+augroup vue_files
+    autocmd!
+    au FileType vue setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
+augroup typescript_files
+    autocmd!
+    au FileType typescript setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
 augroup make_files
     autocmd!
     au FileType make setlocal noexpandtab
@@ -397,4 +601,9 @@ augroup END
 augroup markdown_files
     autocmd!
     au FileType markdown setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
+augroup fsharp_files
+    autocmd!
+    au BufRead,BufNewFile *.fs set syntax=fsharp
 augroup END
