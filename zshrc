@@ -9,34 +9,46 @@ bindkey -v
 # The following lines were added by compinstall
 zstyle :compinstall filename '/Users/aleciverson/.zshrc'
 
+# TODO decide how I want to handle OSX vs Linux vs etc, basically "per machine" config
+
 export KEYTIMEOUT=1
 
 autoload -Uz compinit
 compinit
 # End of lines added by compinstall
 
-# themes
-#autoload -Uz promptinit
-#promptinit
-#prompt walters
+# env vars
+export EDITOR=nvim
+export VISUAL=nvim
+export SHELL=/usr/local/bin/zsh
+export _JAVA_AWT_WM_NONREPARENTING=1
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-14-openj9.jdk/Contents/Home
+export GOPATH=~/Code/Go
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+export DOTNET_CLI_TELEMETRY_OPTOUT=1
+export PATH=~/.local/bin:/usr/local/bin:$GOPATH/bin:/usr/local/opt/llvm/bin:/usr/local/opt/gcc/bin:/usr/local/opt/make/libexec/gnubin:/usr/local/opt/openssl/bin:/usr/local/Cellar/openjdk/13.0.2+8_2/bin:~/.dotnet/tools:$PATH
+
+# Since I want to use Homebrew Clang, I have to specify where the system root is, for finding system headers and libraries.
+# In order for Go to be able to compile C code, I need to set a few of its CGO_* env vars for it to work properly.
+export CGO_CFLAGS="-g -O2 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+export CGO_CPPFLAGS="-g -O2 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+export CGO_CXXFLAGS="-g -O2 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+
+# Neovim true color support
+export NVIM_TUI_ENABLE_TRUE_COLOR=1
+# Neovim cursor shape support
+export NVIM_TUI_ENABLE_CURSOR_SHAPE=1
 
 source ~/.zsh/zsh-git-prompt/zshrc.sh
 
-#function git-branch() { git rev-parse --abbrev-ref HEAD 2> /dev/null || true }
 function show-pwd() { echo "%F{green}%~%f" }
-function vim-mode() { echo "%F{yellow}[$1]%f" }
-
-### prompts
-# username@hostname (pwd) (git status)
-# >
-#PROMPT="%U%n@%m%u $(show-pwd) (%F{blue}$(git-branch)%f)
-#> "
-RPROMPT="$(vim-mode I)"
 
 function precmd {
     PROMPT="%U%n@%m%u $(show-pwd) $(git_super_status)
 > "
 }
+
+function vim-mode() { echo "%F{yellow}[$1]%f" }
 
 ### zsh line edit (zle) widget callbacks
 function zle-line-init zle-keymap-select {
@@ -48,8 +60,13 @@ function zle-line-init zle-keymap-select {
     RPROMPT="$(vim-mode $VIM_MODE)"
     zle reset-prompt
 }
-zle -N zle-line-init
-zle -N zle-keymap-select
+
+# don't enable zsh vim mode if we're running in a (neo)vim terminal:
+if [ -z ${VIM} ]; then
+    RPROMPT="$(vim-mode I)"
+    zle -N zle-line-init
+    zle -N zle-keymap-select
+fi
 
 ### completion settings
 setopt complete_aliases
@@ -67,22 +84,10 @@ bindkey "\^[3~" delete-char
 alias cl=clear
 alias ls='ls -G'
 alias grep='grep --color=auto'
-alias chmod='chmod --preserve-root'
+#alias chmod='chmod --preserve-root'
 alias vim=nvim
-
-# env vars
-export EDITOR=$(which nvim)
-export VISUAL=$(which nvim)
-export SHELL=$(which zsh)
-export _JAVA_AWT_WM_NONREPARENTING=1
-export GOPATH=~/Code/Go
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-export DOTNET_CLI_TELEMETRY_OPTOUT=1
-
-# Neovim true color support
-export NVIM_TUI_ENABLE_TRUE_COLOR=1
-# Neovim cursor shape support
-export NVIM_TUI_ENABLE_CURSOR_SHAPE=1
+# force using system python for lldb - avoids a python import error
+alias lldb='PATH=/usr/bin lldb'
 
 ### completion
 
@@ -97,6 +102,11 @@ if [ $commands[kubectl] ]; then
     source <(kubectl completion zsh)
 fi
 
+# helm auto completion
+if [ $commands[helm] ]; then
+    source <(helm completion zsh)
+fi
+
 ## kitty specific stuff
 if [ ${TERM} = 'xterm-kitty' ]; then
     alias icat='kitty +kitten icat'
@@ -104,7 +114,5 @@ if [ ${TERM} = 'xterm-kitty' ]; then
     kitty + complete setup zsh | source /dev/stdin
 fi
 
-export PATH=~/.local/bin:/usr/local/bin:$GOPATH/bin:$PATH
-if [ $(uname) = 'Darwin' ]; then
-    export PATH=/usr/local/opt/llvm/bin:/usr/local/opt/gcc/bin:/usr/local/opt/make/libexec/gnubin:/usr/local/opt/openssl/bin:$PATH
-fi
+source '/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc'
+source '/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc'
