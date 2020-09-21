@@ -35,10 +35,11 @@ Plug 'junegunn/vim-easy-align'
 
 " language tooling
 "Plug 'rust-lang/rust.vim'
-Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
-Plug 'OmniSharp/omnisharp-vim'
-Plug 'ziglang/zig.vim'
+"Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+"Plug 'OmniSharp/omnisharp-vim'
+"Plug 'ziglang/zig.vim'
 Plug 'posva/vim-vue' " vue single-file components
+"Plug 'davidhalter/jedi-vim'
 
 " color schemes
 Plug 'tomasr/molokai'
@@ -113,6 +114,8 @@ set expandtab
 set textwidth=0
 set wrap
 set breakindent
+"set breakindentopt=sbr,shift:4
+"set showbreak=>
 set linebreak
 let g:vim_indent_cont = &shiftwidth
 
@@ -285,6 +288,7 @@ let g:ale_fixers = {
     \    'trim_whitespace',
     \  ],
     \  'cs': [
+    \    'OmniSharp',
     \    'uncrustify',
     \    'trim_whitespace',
     \  ],
@@ -378,7 +382,13 @@ let g:terraform_fmt_on_save   = 1
 "
 " C# / OmniSharp settings
 "
-let g:OmniSharp_server_stdio = 1
+let g:OmniSharp_server_stdio  = 1
+let g:OmniSharp_selector_ui   = 'fzf'
+let g:OmniSharp_highlighting  = 3
+let g:OmniSharp_popup_options = {
+    \ 'winblend': 30,
+    \ 'winhl': 'Normal:Normal'
+    \}
 
 "
 " zig settings
@@ -499,10 +509,18 @@ command! TodoN lnext
 command! TodoP lprevious
 command! TodoE lclose
 
-command! Reloadrc silent :source ~/.config/nvim/init.vim | :AirlineRefresh
-
 " list of stuff in the file!
-"nmap <F8> :TagbarToggle<CR>
+let g:tagbar_zoomwidth = 0
+let g:tagbar_case_insensitive = 1
+let g:tagbar_show_linenumbers = 1
+let g:tagbar_autoshowtag = 0
+let g:tagbar_previewwin_pos = "rightbelow"
+let g:no_status_line = 1
+" auto-open Tagbar when opening a buffer containing a supported file type
+"autocmd BufEnter * nested :call tagbar#autoopen(0)
+nnoremap <F2> :TagbarToggle<CR>
+nnoremap gst :TagbarShowTag<CR>
+nnoremap st :TagbarOpen fj<CR>
 
 " easy align (visual, interactive)
 xmap ga <Plug>(EasyAlign)
@@ -520,6 +538,15 @@ nnoremap <silent> ght :-tabmove<CR>
 nnoremap <silent> glt :+tabmove<CR>
 
 "nnoremap ,f <Plug>(fzf-complete-file)
+
+function! s:trim_whitespace()
+    let l:winview = winsaveview()
+    silent! %s/\s\+$//e
+    call winrestview(l:winview)
+endfunction
+
+" trim trailing whitespace on write
+autocmd! BufWritePre * call <SID>trim_whitespace()
 
 " customize built-in terminal
 augroup terminal_buf
@@ -544,33 +571,61 @@ augroup END
 
 augroup cpp_files
     autocmd!
-    au BufRead,BufNewFile *.tpp setfiletype cpp
-    "au FileType c,cpp nnoremap gd :ALEGoToDefinitionInTab<CR>
+    au BufRead,BufNewFile *.tpp set filetype=cpp
 augroup END
 
-augroup omnisharp_files
+"augroup omnisharp_commands
+"  autocmd!
+"
+"  " Show type information automatically when the cursor stops moving.
+"  " Note that the type is echoed to the Vim command line, and will overwrite
+"  " any other messages in this space including e.g. ALE linting messages.
+"  autocmd CursorHold *.cs OmniSharpTypeLookup
+"
+"  " The following commands are contextual, based on the cursor position.
+"  autocmd FileType cs nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osfu <Plug>(omnisharp_find_usages)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osfi <Plug>(omnisharp_find_implementations)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>ospd <Plug>(omnisharp_preview_definition)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>ospi <Plug>(omnisharp_preview_implementations)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>ost <Plug>(omnisharp_type_lookup)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osd <Plug>(omnisharp_documentation)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osfs <Plug>(omnisharp_find_symbol)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osfx <Plug>(omnisharp_fix_usings)
+"  autocmd FileType cs nmap <silent> <buffer> <C-\> <Plug>(omnisharp_signature_help)
+"  autocmd FileType cs imap <silent> <buffer> <C-\> <Plug>(omnisharp_signature_help)
+"
+"  " Navigate up and down by method/property/field
+"  autocmd FileType cs nmap <silent> <buffer> [[ <Plug>(omnisharp_navigate_up)
+"  autocmd FileType cs nmap <silent> <buffer> ]] <Plug>(omnisharp_navigate_down)
+"  " Find all code errors/warnings for the current solution and populate the quickfix window
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osgcc <Plug>(omnisharp_global_code_check)
+"  " Contextual code actions (uses fzf, CtrlP or unite.vim when available)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osca <Plug>(omnisharp_code_actions)
+"  autocmd FileType cs xmap <silent> <buffer> <Leader>osca <Plug>(omnisharp_code_actions)
+"
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>os= <Plug>(omnisharp_code_format)
+"
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osnm <Plug>(omnisharp_rename)
+"
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osre <Plug>(omnisharp_restart_server)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>osst <Plug>(omnisharp_start_server)
+"  autocmd FileType cs nmap <silent> <buffer> <Leader>ossp <Plug>(omnisharp_stop_server)
+"augroup END
+
+augroup docker_files
     autocmd!
-    au CursorHold *.cs call OmniSharp#TypeLookupWithoutDocumentation()
-    au InsertLeave *.cs call OmniSharp#HighlightBuffer()
-    au BufWriteCmd,FileWriteCmd *.cs OmniSharpCodeFormat | w
-    au BufWriteCmd,FileWriteCmd *.cs OmniSharpFixUsings | w
-    au FileType cs nnoremap <buffer> gd :OmniSharpGotoDefinition<CR>
+    au BufRead,BufNewFile Dockerfile.* set filetype=Dockerfile
 augroup END
 
-augroup yaml_files
+augroup fsharp_files
     autocmd!
-    au BufRead,BufNewFile *.yml setfiletype yaml
-    au FileType yaml setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au BufRead,BufNewFile *.fs set filetype=fsharp
 augroup END
 
-augroup json_files
+augroup go_files
     autocmd!
-    au FileType json setlocal tabstop=2 softtabstop=2 shiftwidth=2
-augroup END
-
-augroup xml_files
-    autocmd!
-    au FileType xml setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au BufRead,BufNewFile go.mod set filetype=gomod
 augroup END
 
 augroup html_files
@@ -578,14 +633,14 @@ augroup html_files
     au FileType html setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
 
-augroup vue_files
+augroup java_files
     autocmd!
-    au FileType vue setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType java setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
 
-augroup typescript_files
+augroup json_files
     autocmd!
-    au FileType typescript setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType json setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
 
 augroup make_files
@@ -593,17 +648,33 @@ augroup make_files
     au FileType make setlocal noexpandtab
 augroup END
 
-augroup docker_files
-    autocmd!
-    au BufRead,BufNewFile Dockerfile.* set syntax=Dockerfile
-augroup END
-
 augroup markdown_files
     autocmd!
     au FileType markdown setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
 
-augroup fsharp_files
+augroup svelte_files
     autocmd!
-    au BufRead,BufNewFile *.fs set syntax=fsharp
+    au FileType svelte setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
+augroup typescript_files
+    autocmd!
+    au FileType typescript setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
+augroup vue_files
+    autocmd!
+    au FileType vue setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
+augroup xml_files
+    autocmd!
+    au FileType xml setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
+augroup yaml_files
+    autocmd!
+    au BufRead,BufNewFile *.yml setfiletype yaml
+    au FileType yaml setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
