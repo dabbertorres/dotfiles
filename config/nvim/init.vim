@@ -9,6 +9,7 @@ call plug#begin('~/.local/share/nvim/plugged')
 
 " interface
 Plug 'mhinz/vim-signify'
+Plug 'rhysd/git-messenger.vim'
 Plug 'majutsushi/tagbar'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
@@ -39,6 +40,7 @@ Plug 'junegunn/vim-easy-align'
 "Plug 'OmniSharp/omnisharp-vim'
 "Plug 'ziglang/zig.vim'
 Plug 'posva/vim-vue' " vue single-file components
+Plug 'jackguo380/vim-lsp-cxx-highlight' " semantic highlighting for C, C++, etc
 "Plug 'davidhalter/jedi-vim'
 
 " color schemes
@@ -55,6 +57,7 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-abolish'
 Plug 'puremourning/vimspector'
+Plug 'sebdah/vim-delve'
 
 " extra helpers
 Plug 'kana/vim-operator-user'
@@ -63,17 +66,19 @@ Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }}
 Plug 'wannesm/wmgraphviz.vim'
 Plug 'tpope/vim-eunuch'
 
-" myndshft config
-Plug 'https://bitbucket.org/myndshft/mynd-config-vim.git', { 'do': 'make' }
-
 call plug#end()
+
+"let g:loaded_netrw       = 1
+"let g:loaded_netrwPlugin = 1
+
+" used throughout script
+let mapleader = "m"
 
 " basic sanity
 set ttimeoutlen=50
 set updatetime=100
 set encoding=utf-8
 set clipboard+=unnamedplus
-let mapleader = "m"
 
 " usability
 set autowrite
@@ -203,6 +208,11 @@ autocmd InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
 " vim-lsp odd behavior workaround: https://github.com/dense-analysis/ale/issues/1212
 let g:lsp_diagnostics_echo_cursor = 0
 
+let g:asmsyntax = 'nasm'
+
+" vim-markdown via vim-polyglot
+let g:vim_markdown_no_default_key_mappings = 1
+
 "
 " ale
 "
@@ -242,14 +252,9 @@ let g:ale_linters = {
     \  'cs': [
     \    'OmniSharp',
     \  ],
+    \  'go': [],
     \  'html': [
     \    'htmlhint',
-    \  ],
-    \  'go': [
-    \    'gofmt',
-    \    'golint',
-    \    'gopls',
-    \    'gotype',
     \  ],
     \  'haskell': [
     \    'hie',
@@ -266,6 +271,7 @@ let g:ale_linters = {
     \  'markdown': [
     \    'markdownlint',
     \  ],
+    \  'terraform': [],
     \  'ts': [
     \    'prettier',
     \    'tslint',
@@ -292,14 +298,11 @@ let g:ale_fixers = {
     \    'uncrustify',
     \    'trim_whitespace',
     \  ],
+    \  'go': [],
     \  'html': [
     \    'html-beautify',
     \    'trim_whitespace',
     \    'remove_trailing_lines',
-    \  ],
-    \  'go': [
-    \    'goimports',
-    \    'trim_whitespace',
     \  ],
     \  'haskell': [
     \    'hlint',
@@ -354,7 +357,7 @@ let g:ale_cpp_clang_executable             = '/usr/local/opt/llvm@10/bin/clang'
 let g:ale_cpp_clangd_executable            = '/usr/local/opt/llvm@10/bin/clangd'
 let g:ale_cpp_clangformat_executable       = '/usr/local/opt/llvm@10/bin/clang-format'
 let g:ale_c_clang_options                  = '-std=c11 -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
-let g:ale_cpp_clang_options                = '-std=c++2a -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/opt/llvm@10/include'
+let g:ale_cpp_clang_options                = '-std=c++2a -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/opt/llvm/include'
 let g:ale_c_clangd_options                 = '--function-arg-placeholders --all-scopes-completion --pch-storage=memory --limit-results=50 --completion-style=detailed --background-index'
 let g:ale_cpp_clangd_options               = '--function-arg-placeholders --all-scopes-completion --pch-storage=memory --limit-results=50 --completion-style=detailed --background-index'
 let g:ale_kotlin_languageserver_executable = '/Users/aleciverson/Code/kotlin/kotlin-language-server/server/build/install/server/bin/kotlin-language-server'
@@ -362,8 +365,9 @@ let g:ale_python_flake8_options            = '--max-line-length=120'
 let g:ale_python_black_options             = '--line-length 120'
 let g:ale_markdown_redpen_options          = '--configuration ~/.config/redpen/config.xml'
 
-nmap <silent> <C-k> <Plug>(ale_previous_wrap)
-nmap <silent> <C-j> <Plug>(ale_next_wrap)
+
+nmap <silent> <C-k> <Plug>(coc-diagnostic-prev)
+nmap <silent> <C-j> <Plug>(coc-diagnostic-next)
 
 let delimitMate_expand_cr = 1
 
@@ -378,6 +382,11 @@ let g:fzf_buffers_jump = 1
 let g:terraform_align         = 1
 let g:terraform_fold_sections = 0
 let g:terraform_fmt_on_save   = 1
+
+" git messenger
+let g:git_messenger_always_into_popup = v:true
+
+nmap <leader>g <Plug>(git-messenger)
 
 "
 " C# / OmniSharp settings
@@ -399,9 +408,29 @@ let g:zig_fmt_autosave = 0
 " go settings
 "
 
-let g:go_def_mode                    = 'gopls'
-let g:go_info_mode                   = 'gopls'
-let g:go_fold_enable                 = ['block', 'import', 'varconst', 'package_comment']
+autocmd BufWritePre *.go :silent call CocAction('runCommand', 'editor.action.organizeImport')
+autocmd FileType go nmap <leader>ta :CocCommand go.tags.add.prompt<CR>
+"autocmd FileType go nmap <leader>ty :CocCommand go.tags.add yaml<CR>
+autocmd FileType go nmap <leader>tc :CocCommand go.tags.clear.line<CR>
+
+" delve
+let g:delve_backend                    = "default"
+let g:delve_sign_group                 = "delve"
+let g:delve_sign_priority              = 10
+let g:delve_breakpoint_sign_highlight  = "WarningMsg"
+let g:delve_breakpoint_sign            = "●"
+let g:delve_tracepoint_sign_highlight  = "WarningMsg"
+let g:delve_tracepoint_sign            = "◆"
+let g:delve_cache_path                 = $HOME . "/.cache/" . v:progname . "/vim-delve"
+let g:delve_instructions_file          = g:delve_cache_path ."/". getpid() .".". localtime()
+let g:delve_enable_syntax_highlighting = 1
+let g:delve_new_command                = "vnew"
+let g:delve_use_vimux                  = 0
+
+" TODO can I get rid of all of this?
+"let g:go_def_mode                    = 'gopls'
+"let g:go_info_mode                   = 'gopls'
+"let g:go_fold_enable                 = ['block', 'import', 'varconst', 'package_comment']
 let g:go_highlight_functions         = 1
 let g:go_highlight_function_calls    = 1
 let g:go_highlight_methods           = 1
@@ -411,25 +440,25 @@ let g:go_highlight_operators         = 1
 let g:go_highlight_build_constraints = 1
 let g:go_highlight_generate_tags     = 1
 let g:go_highlight_debug             = 1
-
-let g:go_fmt_command       = "goimports"
-let g:go_fmt_autosave      = 0
-let g:go_fmt_fail_silently = 1
-let g:go_mod_fmt_autosave  = 0
-let g:go_asmfmt_autosave   = 0
-
-let g:go_metalinter_autosave        = 0
-let g:go_metaliner_enabled          = []
-let g:go_metaliner_autosave_enabled = []
-
-let g:go_term_enabled            = 1
-let g:go_term_mode               = "VTerm"
-let g:go_updatetime              = 100
-let g:go_code_completion_enabled = 0
-let g:go_jump_to_error           = 0
-let g:go_def_mapping_enabled     = 0
-let g:go_gorename_prefill        = ''
-let g:go_gocode_propose_source   = 0
+"
+"let g:go_fmt_command       = "goimports"
+"let g:go_fmt_autosave      = 0
+"let g:go_fmt_fail_silently = 1
+"let g:go_mod_fmt_autosave  = 0
+"let g:go_asmfmt_autosave   = 0
+"
+"let g:go_metalinter_autosave        = 0
+"let g:go_metaliner_enabled          = []
+"let g:go_metaliner_autosave_enabled = []
+"
+"let g:go_term_enabled            = 1
+"let g:go_term_mode               = "VTerm"
+"let g:go_updatetime              = 100
+"let g:go_code_completion_enabled = 0
+"let g:go_jump_to_error           = 0
+"let g:go_def_mapping_enabled     = 0
+"let g:go_gorename_prefill        = ''
+"let g:go_gocode_propose_source   = 0
 
 " markdown preview
 let g:mkdp_auto_start = 0
@@ -457,9 +486,11 @@ let g:prolog_swipl_timeout = 10
 
 let g:airline_exclude_preview            = 0
 let g:airline#extensions#ale#enabled     = 1
-let g:airline#extensions#coc#enabled     = 0
+let g:airline#extensions#coc#enabled     = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline_theme                      = 'gruvbox'
+set statusline+="%{coc#status()}"
+set statusline^=%{get(g:,'coc_git_status','')}%{get(b:,'coc_git_status','')}%{get(b:,'coc_git_blame','')}
 
 """ color scheme
 
@@ -493,11 +524,6 @@ set termguicolors
 set background=dark
 colorscheme gruvbox
 
-" modal cursor: '|' for insert mode, '_' for replace, block for normal.
-let &t_SI = "\<Esc>[6 q"
-let &t_SR = "\<Esc>[4 q"
-let &t_EI = "\<Esc>[2 q"
-
 "
 " commands
 "
@@ -516,6 +542,7 @@ let g:tagbar_show_linenumbers = 1
 let g:tagbar_autoshowtag = 0
 let g:tagbar_previewwin_pos = "rightbelow"
 let g:no_status_line = 1
+
 " auto-open Tagbar when opening a buffer containing a supported file type
 "autocmd BufEnter * nested :call tagbar#autoopen(0)
 nnoremap <F2> :TagbarToggle<CR>
@@ -567,7 +594,13 @@ augroup terminal_buf
     au TermClose * call feedkeys('\<CR>')
 
     au BufEnter,BufWinEnter,WinEnter term://* startinsert
+
+    " https://github.com/neovim/neovim/issues/11072
+    au TermEnter * setlocal scrolloff=0
+    au TermLeave * setlocal scrolloff=5
 augroup END
+
+autocmd FileType json syntax match Comment +\/\/.\+$+
 
 augroup cpp_files
     autocmd!
@@ -621,6 +654,11 @@ augroup END
 augroup fsharp_files
     autocmd!
     au BufRead,BufNewFile *.fs set filetype=fsharp
+augroup END
+
+augroup glsl_files
+    autocmd!
+    au BufRead,BufNewFile *.frag set filetype=glsl
 augroup END
 
 augroup go_files
@@ -677,4 +715,10 @@ augroup yaml_files
     autocmd!
     au BufRead,BufNewFile *.yml setfiletype yaml
     au FileType yaml setlocal tabstop=2 softtabstop=2 shiftwidth=2
+augroup END
+
+" why would it not be highlighted in all files?
+augroup HiglightTODO
+    autocmd!
+    autocmd WinEnter,VimEnter * :silent! call matchadd('Todo', 'TODO', -1)
 augroup END
