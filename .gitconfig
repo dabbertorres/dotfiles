@@ -1,0 +1,19 @@
+[core]
+    autocrlf = false
+    longpaths = true
+    ignorecase = false
+[color]
+    advice = auto
+[rebase]
+    missingCommitsCheck = error
+[diff]
+    algorithm = histogram
+[pager]
+    branch = false
+[pull]
+    ff = only
+[init]
+    defaultBranch = master
+[alias]
+    graph = log --all --decorate --oneline --graph --color
+    graphviz = "!f() { echo 'digraph git {' ; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g' ; echo '}'; }; f"
