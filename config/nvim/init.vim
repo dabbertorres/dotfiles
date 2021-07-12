@@ -13,21 +13,9 @@ Plug 'rhysd/git-messenger.vim'
 Plug 'majutsushi/tagbar'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-
-" completion
-Plug 'Raimondi/delimitMate'
-"Plug 'jiangmiao/auto-pairs'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
-
-" syntax check
-Plug 'dense-analysis/ale'
-
-" syntax support
-"Plug 'tikhomirov/vim-glsl'
-"Plug 'hashivim/vim-terraform'
-"Plug 'tbastos/vim-lua'
-"Plug 'udalov/kotlin-vim'
-Plug 'sheerun/vim-polyglot'
+Plug 'nvim-lua/popup.nvim'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
 
 " formatting
 Plug 'tpope/vim-surround'
@@ -35,20 +23,19 @@ Plug 'junegunn/vim-easy-align'
 "Plug 'rhysd/vim-clang-format'
 
 " language tooling
-"Plug 'rust-lang/rust.vim'
-"Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
-"Plug 'OmniSharp/omnisharp-vim'
-"Plug 'ziglang/zig.vim'
-Plug 'posva/vim-vue' " vue single-file components
-Plug 'jackguo380/vim-lsp-cxx-highlight' " semantic highlighting for C, C++, etc
-"Plug 'davidhalter/jedi-vim'
+Plug 'neovim/nvim-lspconfig'
+Plug 'hrsh7th/nvim-compe'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'sheerun/vim-polyglot'
+Plug 'mfussnegger/nvim-dap'
 
 " color schemes
-Plug 'tomasr/molokai'
-Plug 'nanotech/jellybeans.vim'
 Plug 'morhetz/gruvbox'
+"Plug 'tomasr/molokai'
+"Plug 'nanotech/jellybeans.vim'
 
 " quality of life
+Plug 'Raimondi/delimitMate'
 Plug 'jwhitley/vim-matchit'
 Plug 'tpope/vim-repeat'
 Plug 'vimlab/split-term.vim'
@@ -56,8 +43,7 @@ Plug 'editorconfig/editorconfig-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-abolish'
-Plug 'puremourning/vimspector'
-Plug 'sebdah/vim-delve'
+Plug 'tpope/vim-commentary'
 
 " extra helpers
 Plug 'kana/vim-operator-user'
@@ -65,6 +51,9 @@ Plug 'Shougo/vimproc.vim', { 'do': 'make' }
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }}
 Plug 'wannesm/wmgraphviz.vim'
 Plug 'tpope/vim-eunuch'
+
+" myndshft config
+Plug 'https://bitbucket.org/myndshft/mynd-config-vim.git', { 'do': 'make' }
 
 call plug#end()
 
@@ -79,6 +68,7 @@ set ttimeoutlen=50
 set updatetime=100
 set encoding=utf-8
 set clipboard+=unnamedplus
+set synmaxcol=500
 
 " usability
 set autowrite
@@ -135,12 +125,24 @@ silent !mkdir -p "$HOME/.config/nvim/undo"
 " python settings
 "set pyxversion=3
 
+" rather than fix myself, workaround my flaws
+command! Qa :qa
+
 """ completion config
 set hidden
 set nobackup
 set nowritebackup
 set shortmess+=c
 set signcolumn=yes
+
+""" spelling
+"set spelllang=en
+"set spell
+
+lua require("lsp_config")
+lua require("compe_config")
+lua require("treesitter_config")
+lua require("telescope_config")
 
 " netrw explorer
 let g:netrw_liststyle    = 3
@@ -149,225 +151,13 @@ let g:netrw_browse_split = 2
 let g:netrw_winsize      = 25
 let g:netrw_altv         = 1
 
-" If completion menu is visible, and only one item is left, select it.
-" Otherwise, move to the next item.
-" If completion menu is not visible, check if we should refresh the list.
-inoremap <silent><expr> <Tab>
-            \ pumvisible() ?
-            \ (len(complete_info().items) == 1 ? coc#_select_confirm() : "\<C-n>") :
-            \ <SID>check_back_space() ? "\<TAB>" :
-            \ coc#refresh()
-inoremap <silent><expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<C-p>"
-
-function! s:check_back_space() abort
-    let col = col('.') - 1
-    return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
-
-inoremap <silent><expr> <c-space> coc#refresh()
-
-" Remap keys for gotos
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
-nmap <silent> <leader>fa <Plug>(coc-codeaction)
-nmap <silent> <leader>la <Plug>(coc-codeaction-line)
-nmap <silent> <leader>ca <Plug>(coc-codelens-action)
-
-" Use K to show documentation in preview window
-nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-function! s:show_documentation()
-    if (index(['vim','help'], &filetype) >= 0)
-        execute 'h '.expand('<cword>')
-    else
-        call CocAction('doHover')
-    endif
-endfunction
-
-" Remap for rename current word
-nmap <leader>rn <Plug>(coc-rename)
-
-" Remap for format selected region
-xmap <leader>f <Plug>(coc-format-selected)
-nmap <leader>f <Plug>(coc-format-selected)
-
-" Use `:Format` to format current buffer
-command! -nargs=0 Format :call CocAction('format')
-
-" use `:OR` for organize import of current buffer
-command! -nargs=0 OR :call CocAction('runCommand', 'editor.action.organizeImport')
-
 " generate a uuid
 command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen'), '\n$', '', '')
-
-" auto close scratch/preview window after completion
-autocmd InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
-
-" vim-lsp odd behavior workaround: https://github.com/dense-analysis/ale/issues/1212
-let g:lsp_diagnostics_echo_cursor = 0
 
 let g:asmsyntax = 'nasm'
 
 " vim-markdown via vim-polyglot
 let g:vim_markdown_no_default_key_mappings = 1
-
-"
-" ale
-"
-
-" misc
-let g:ale_cache_executable_check_failures = 1
-let g:ale_completion_enabled              = 0
-let g:ale_warn_about_trailing_blank_lines = 0
-let g:ale_sign_priority                   = 999
-let g:ale_list_vertical                   = 1
-
-" display
-let g:ale_sign_column_always     = 1
-let g:ale_virtualtext_cursor     = 1
-let g:ale_set_balloons           = 1
-let g:ale_cursor_detail          = 0
-let g:ale_sign_highlight_linenrs = 1
-let g:ale_set_highlights         = 1
-let g:ale_set_signs              = 1
-
-" lint/fix
-let g:ale_fix_on_save              = 1
-let g:ale_set_quickfix             = 1
-let g:ale_lint_on_text_changed     = 1
-let g:ale_lint_on_insert_leave     = 1
-let g:ale_lint_on_enter            = 1
-let g:ale_lint_on_save             = 1
-let g:ale_lint_on_filetype_changed = 1
-
-let g:ale_linters = {
-    \  'c': [
-    \    'clangd',
-    \  ],
-    \  'cpp': [
-    \     'clangd',
-    \  ],
-    \  'cs': [
-    \    'OmniSharp',
-    \  ],
-    \  'go': [],
-    \  'html': [
-    \    'htmlhint',
-    \  ],
-    \  'haskell': [
-    \    'hie',
-    \    'hlint',
-    \  ],
-    \  'java': [],
-    \  'kotlin': [
-    \    'languageserver',
-    \  ],
-    \  'python': [
-    \    'flake8',
-    \    'mypy',
-    \  ],
-    \  'markdown': [
-    \    'markdownlint',
-    \  ],
-    \  'terraform': [],
-    \  'ts': [
-    \    'prettier',
-    \    'tslint',
-    \  ],
-    \}
-
-let g:ale_linters_ignore =  {
-    \   'html': [
-    \     'proselint',
-    \   ],
-    \ }
-
-let g:ale_fixers = {
-    \  'c': [
-    \    'clang-format',
-    \    'trim_whitespace',
-    \  ],
-    \  'cpp': [
-    \    'clang-format',
-    \    'trim_whitespace',
-    \  ],
-    \  'cs': [
-    \    'OmniSharp',
-    \    'uncrustify',
-    \    'trim_whitespace',
-    \  ],
-    \  'go': [],
-    \  'html': [
-    \    'html-beautify',
-    \    'trim_whitespace',
-    \    'remove_trailing_lines',
-    \  ],
-    \  'haskell': [
-    \    'hlint',
-    \    'trim_whitespace',
-    \  ],
-    \  'lua': [
-    \    'trim_whitespace',
-    \  ],
-    \  'kotlin': [
-    \    'ktlint',
-    \    'trim_whitespace',
-    \  ],
-    \  'python': [
-    \    'black',
-    \    'isort',
-    \  ],
-    \  'markdown': [
-    \    'prettier',
-    \    'remove_trailing_lines',
-    \    'textlint',
-    \    'trim_whitespace',
-    \  ],
-    \  'sql': [
-    \    'trim_whitespace',
-    \  ],
-    \  'ts': [
-    \    'prettier',
-    \    'tslint',
-    \    'remove_trailing_lines',
-    \    'trim_whitespace',
-    \  ],
-    \  'vim': [
-    \    'trim_whitespace',
-    \  ],
-    \  'vue': [
-    \    'prettier',
-    \    'trim_whitespace',
-    \  ],
-    \  'yaml': [
-    \    'trim_whitespace',
-    \  ]
-    \}
-
-let g:ale_java_eclipselsp_executable       = '/Users/aleciverson/.config/coc/extensions/coc-java-data/server/plugins/org.eclipse.equinox.launcher_1.5.500.v20190715-1310.jar'
-let g:ale_java_eclipselsp_config_path      = '/Users/aleciverson/.config/coc/extensions/coc-java-data/server/config_mac/'
-let g:ale_c_parse_makefile                 = 0
-let g:ale_c_parse_compile_commands         = 1
-let g:ale_c_clang_executable               = '/usr/local/opt/llvm@10/bin/clang'
-let g:ale_c_clangd_executable              = '/usr/local/opt/llvm@10/bin/clangd'
-let g:ale_c_clangformat_executable         = '/usr/local/opt/llvm@10/bin/clang-format'
-let g:ale_cpp_clang_executable             = '/usr/local/opt/llvm@10/bin/clang'
-let g:ale_cpp_clangd_executable            = '/usr/local/opt/llvm@10/bin/clangd'
-let g:ale_cpp_clangformat_executable       = '/usr/local/opt/llvm@10/bin/clang-format'
-let g:ale_c_clang_options                  = '-std=c11 -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
-let g:ale_cpp_clang_options                = '-std=c++2a -Wall -Wextra -I/usr/local/include -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/opt/llvm/include'
-let g:ale_c_clangd_options                 = '--function-arg-placeholders --all-scopes-completion --pch-storage=memory --limit-results=50 --completion-style=detailed --background-index'
-let g:ale_cpp_clangd_options               = '--function-arg-placeholders --all-scopes-completion --pch-storage=memory --limit-results=50 --completion-style=detailed --background-index'
-let g:ale_kotlin_languageserver_executable = '/Users/aleciverson/Code/kotlin/kotlin-language-server/server/build/install/server/bin/kotlin-language-server'
-let g:ale_python_flake8_options            = '--max-line-length=120'
-let g:ale_python_black_options             = '--line-length 120'
-let g:ale_markdown_redpen_options          = '--configuration ~/.config/redpen/config.xml'
-
-
-nmap <silent> <C-k> <Plug>(coc-diagnostic-prev)
-nmap <silent> <C-j> <Plug>(coc-diagnostic-next)
 
 let delimitMate_expand_cr = 1
 
@@ -389,76 +179,9 @@ let g:git_messenger_always_into_popup = v:true
 nmap <leader>g <Plug>(git-messenger)
 
 "
-" C# / OmniSharp settings
-"
-let g:OmniSharp_server_stdio  = 1
-let g:OmniSharp_selector_ui   = 'fzf'
-let g:OmniSharp_highlighting  = 3
-let g:OmniSharp_popup_options = {
-    \ 'winblend': 30,
-    \ 'winhl': 'Normal:Normal'
-    \}
-
-"
 " zig settings
 "
 let g:zig_fmt_autosave = 0
-
-"
-" go settings
-"
-
-autocmd BufWritePre *.go :silent call CocAction('runCommand', 'editor.action.organizeImport')
-autocmd FileType go nmap <leader>ta :CocCommand go.tags.add.prompt<CR>
-"autocmd FileType go nmap <leader>ty :CocCommand go.tags.add yaml<CR>
-autocmd FileType go nmap <leader>tc :CocCommand go.tags.clear.line<CR>
-
-" delve
-let g:delve_backend                    = "default"
-let g:delve_sign_group                 = "delve"
-let g:delve_sign_priority              = 10
-let g:delve_breakpoint_sign_highlight  = "WarningMsg"
-let g:delve_breakpoint_sign            = "●"
-let g:delve_tracepoint_sign_highlight  = "WarningMsg"
-let g:delve_tracepoint_sign            = "◆"
-let g:delve_cache_path                 = $HOME . "/.cache/" . v:progname . "/vim-delve"
-let g:delve_instructions_file          = g:delve_cache_path ."/". getpid() .".". localtime()
-let g:delve_enable_syntax_highlighting = 1
-let g:delve_new_command                = "vnew"
-let g:delve_use_vimux                  = 0
-
-" TODO can I get rid of all of this?
-"let g:go_def_mode                    = 'gopls'
-"let g:go_info_mode                   = 'gopls'
-"let g:go_fold_enable                 = ['block', 'import', 'varconst', 'package_comment']
-let g:go_highlight_functions         = 1
-let g:go_highlight_function_calls    = 1
-let g:go_highlight_methods           = 1
-let g:go_highlight_types             = 1
-let g:go_highlight_fields            = 1
-let g:go_highlight_operators         = 1
-let g:go_highlight_build_constraints = 1
-let g:go_highlight_generate_tags     = 1
-let g:go_highlight_debug             = 1
-"
-"let g:go_fmt_command       = "goimports"
-"let g:go_fmt_autosave      = 0
-"let g:go_fmt_fail_silently = 1
-"let g:go_mod_fmt_autosave  = 0
-"let g:go_asmfmt_autosave   = 0
-"
-"let g:go_metalinter_autosave        = 0
-"let g:go_metaliner_enabled          = []
-"let g:go_metaliner_autosave_enabled = []
-"
-"let g:go_term_enabled            = 1
-"let g:go_term_mode               = "VTerm"
-"let g:go_updatetime              = 100
-"let g:go_code_completion_enabled = 0
-"let g:go_jump_to_error           = 0
-"let g:go_def_mapping_enabled     = 0
-"let g:go_gorename_prefill        = ''
-"let g:go_gocode_propose_source   = 0
 
 " markdown preview
 let g:mkdp_auto_start = 0
@@ -489,7 +212,7 @@ let g:airline#extensions#ale#enabled     = 1
 let g:airline#extensions#coc#enabled     = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline_theme                      = 'gruvbox'
-set statusline+="%{coc#status()}"
+set statusline+=%{coc#status()}
 set statusline^=%{get(g:,'coc_git_status','')}%{get(b:,'coc_git_status','')}%{get(b:,'coc_git_blame','')}
 
 """ color scheme
@@ -498,27 +221,6 @@ let g:gruvbox_contrast_dark     = 'hard'
 let g:gruvbox_invert_signs      = 1
 let g:gruvbox_invert_tabline    = 1
 let g:gruvbox_improved_warnings = 1
-
-""" vimpsector
-
-let g:vimspector_base_dir = '/Users/aleciverson/.local/share/nvim/plugged/vimspector/gadgets/macos'
-
-" When stopping debugging, reset the view too
-function! s:stop_debugging()
-    call vimspector#Stop()
-    call vimspector#Reset()
-endfunction
-
-noremap <F3> :CocCommand java.debug.vimspector.start<CR>
-noremap <F4> :call <SID>stop_debugging()<CR>
-noremap <F5> <Plug>VimspectorContinue
-noremap <S-F5> <Plug>VimspectorRestart
-noremap <F6> <Plug>VimspectorPause
-noremap <F8> <Plug>VimspectorToggleBreakpoint
-noremap <S-F8> <Plug>VimspectorToggleConditionalBreakpoint
-noremap <F9> <Plug>VimspectorStepOver
-noremap <F10> <Plug>VimspectorStepInto
-noremap <F11> <Plug>VimspectorStepOut
 
 set termguicolors
 set background=dark
@@ -606,45 +308,6 @@ augroup cpp_files
     autocmd!
     au BufRead,BufNewFile *.tpp set filetype=cpp
 augroup END
-
-"augroup omnisharp_commands
-"  autocmd!
-"
-"  " Show type information automatically when the cursor stops moving.
-"  " Note that the type is echoed to the Vim command line, and will overwrite
-"  " any other messages in this space including e.g. ALE linting messages.
-"  autocmd CursorHold *.cs OmniSharpTypeLookup
-"
-"  " The following commands are contextual, based on the cursor position.
-"  autocmd FileType cs nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osfu <Plug>(omnisharp_find_usages)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osfi <Plug>(omnisharp_find_implementations)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>ospd <Plug>(omnisharp_preview_definition)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>ospi <Plug>(omnisharp_preview_implementations)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>ost <Plug>(omnisharp_type_lookup)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osd <Plug>(omnisharp_documentation)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osfs <Plug>(omnisharp_find_symbol)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osfx <Plug>(omnisharp_fix_usings)
-"  autocmd FileType cs nmap <silent> <buffer> <C-\> <Plug>(omnisharp_signature_help)
-"  autocmd FileType cs imap <silent> <buffer> <C-\> <Plug>(omnisharp_signature_help)
-"
-"  " Navigate up and down by method/property/field
-"  autocmd FileType cs nmap <silent> <buffer> [[ <Plug>(omnisharp_navigate_up)
-"  autocmd FileType cs nmap <silent> <buffer> ]] <Plug>(omnisharp_navigate_down)
-"  " Find all code errors/warnings for the current solution and populate the quickfix window
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osgcc <Plug>(omnisharp_global_code_check)
-"  " Contextual code actions (uses fzf, CtrlP or unite.vim when available)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osca <Plug>(omnisharp_code_actions)
-"  autocmd FileType cs xmap <silent> <buffer> <Leader>osca <Plug>(omnisharp_code_actions)
-"
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>os= <Plug>(omnisharp_code_format)
-"
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osnm <Plug>(omnisharp_rename)
-"
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osre <Plug>(omnisharp_restart_server)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>osst <Plug>(omnisharp_start_server)
-"  autocmd FileType cs nmap <silent> <buffer> <Leader>ossp <Plug>(omnisharp_stop_server)
-"augroup END
 
 augroup docker_files
     autocmd!
