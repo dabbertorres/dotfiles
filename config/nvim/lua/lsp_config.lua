@@ -32,7 +32,16 @@ lsp.jsonls.setup{
 
 lsp.kotlin_language_server.setup{
     cmd = { "/Users/aleciverson/Code/lsps/kotlin-language-server/server/build/install/server/bin/kotlin-language-server" },
-    root_dir = lsp.util.root_pattern("settings.gradle.kts")
+    root_dir = lsp.util.root_pattern("settings.gradle.kts"),
+    settings = {
+        kotlin = {
+            compiler = {
+                jvm = {
+                    target = "1.8",
+                },
+            },
+        },
+    },
 }
 
 lsp.pyright.setup{}
@@ -183,6 +192,7 @@ vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", mappings_o
 vim.api.nvim_set_keymap("i", "mk", "<cmd>lua vim.lsp.buf.signature_help()<CR>", mappings_opts)
 vim.api.nvim_set_keymap("n", "gu", "<cmd>Telescope lsp_references<CR>", mappings_opts)
 vim.api.nvim_set_keymap("n", "mrn", "<cmd>lua vim.lsp.buf.rename()<CR>", mappings_opts)
+vim.api.nvim_set_keymap("n", "mff", "<cmd>lua vim.lsp.buf.formatting()<CR>", mappings_opts)
 
 vim.api.nvim_set_keymap("n", "<c-j>", "<cmd>lua vim.lsp.diagnostic.goto_next({popup_opts = {border = \"single\"}})<CR>", mappings_opts)
 vim.api.nvim_set_keymap("n", "<c-k>", "<cmd>lua vim.lsp.diagnostic.goto_prev({popup_opts = {border = \"single\"}})<CR>", mappings_opts)
