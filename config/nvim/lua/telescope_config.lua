@@ -29,8 +29,8 @@ local mappings_opts = {
     silent = true,
 }
 
-vim.api.nvim_set_keymap("n", "mff", "<cmd>Telescope find_files<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "mfg", "<cmd>Telescope live_grep<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "mfs", "<cmd>Telescope grep_string<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "mfb", "<cmd>Telescope buffers<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "mfh", "<cmd>Telescope help_tags<CR>", mappings_opts)
+vim.api.nvim_set_keymap("n", "msf", "<cmd>Telescope find_files<CR>", mappings_opts)
+vim.api.nvim_set_keymap("n", "msl", "<cmd>Telescope live_grep<CR>", mappings_opts)
+vim.api.nvim_set_keymap("n", "mss", "<cmd>Telescope grep_string<CR>", mappings_opts)
+vim.api.nvim_set_keymap("n", "msb", "<cmd>Telescope buffers<CR>", mappings_opts)
+vim.api.nvim_set_keymap("n", "msh", "<cmd>Telescope help_tags<CR>", mappings_opts)
