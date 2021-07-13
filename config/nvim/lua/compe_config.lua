@@ -41,9 +41,10 @@ local check_back_space = function()
 end
 
 _G.tab_complete = function()
-    if vim.fn.pumvisible() == 1 then
-        if #vim.fn.complete_info().items == 1 then
-            return vim.fn["compe#confirm"]()
+    local info = vim.fn.complete_info()
+    if info.pum_visible then
+        if #info.items == 1 then
+            return vim.fn["compe#confirm"](t"<C-n>")
         else
             return t"<C-n>"
         end
