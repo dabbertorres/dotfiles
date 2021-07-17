@@ -44,6 +44,7 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-commentary'
+"Plug 'b3nj5m1n/kommentary'
 
 " extra helpers
 Plug 'kana/vim-operator-user'
