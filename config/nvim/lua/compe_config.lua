@@ -1,3 +1,5 @@
+--local profile_start_time = vim.loop.hrtime()
+
 local compe = require"compe"
 
 compe.setup {
@@ -67,3 +69,6 @@ vim.api.nvim_set_keymap("i", "<Tab>", "v:lua.tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("s", "<Tab>", "v:lua.tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
+
+--local profile_end_time = vim.loop.hrtime()
+--print("compe_config.lua:", profile_end_time - profile_start_time)
