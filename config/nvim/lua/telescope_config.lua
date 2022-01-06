@@ -1,5 +1,7 @@
-local telescope = require("telescope")
+--local profile_start_time = vim.loop.hrtime()
+
 local actions = require("telescope.actions")
+local telescope = require("telescope")
 
 telescope.setup{
     defaults = {
@@ -21,7 +23,18 @@ telescope.setup{
             },
         },
     },
+    extensions = {
+        fzf = {
+            fuzzy = true,
+            override_generic_sorter = true,
+            override_file_sorter = true,
+            case_mode = "smart_case",
+        },
+    },
 }
+
+telescope.load_extension("fzf")
+--telescope.load_extension("dap")
 
 
 local mappings_opts = {
@@ -34,3 +47,7 @@ vim.api.nvim_set_keymap("n", "msl", "<cmd>Telescope live_grep<CR>", mappings_opt
 vim.api.nvim_set_keymap("n", "mss", "<cmd>Telescope grep_string<CR>", mappings_opts)
 vim.api.nvim_set_keymap("n", "msb", "<cmd>Telescope buffers<CR>", mappings_opts)
 vim.api.nvim_set_keymap("n", "msh", "<cmd>Telescope help_tags<CR>", mappings_opts)
+
+
+--local profile_end_time = vim.loop.hrtime()
+--print("lsp_config.lua:", profile_end_time - profile_start_time)
