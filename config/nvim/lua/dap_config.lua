@@ -20,7 +20,7 @@ dap.adapters.kotlin = {
 
 dap.set_log_level("TRACE")
 
-require("dap.ext.vscode").load_launchjs()
+--require("dap.ext.vscode").load_launchjs()
 
 vim.fn.sign_define("DapStopped", {text="➩", texthl="", linehl="debugPC", numhl=""})
 vim.fn.sign_define("DapBreakpoint", {text="🛑", texthl="", linehl="", numhl=""})
