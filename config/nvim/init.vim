@@ -10,21 +10,17 @@ call plug#begin('~/.local/share/nvim/plugged')
 " interface
 Plug 'mhinz/vim-signify'
 Plug 'rhysd/git-messenger.vim'
-"Plug 'majutsushi/tagbar'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
+Plug 'nvim-lualine/lualine.nvim'
 Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
 "Plug 'kosayoda/nvim-lightbulb'
-"Plug 'tjdevries/express_line.nvim'
 Plug 'kyazdani42/nvim-web-devicons'
 
 " formatting
 Plug 'tpope/vim-surround'
 Plug 'junegunn/vim-easy-align'
-"Plug 'rhysd/vim-clang-format'
 "Plug 'EgZvor/vim-black'
 Plug 'a-vrma/black-nvim', { 'do': ':UpdateRemotePlugins' }
 
@@ -34,7 +30,7 @@ Plug 'rcarriga/nvim-dap-ui'
 
 " language tooling
 Plug 'neovim/nvim-lspconfig'
-Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate', 'branch': '0.5-compat' }
+Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
 Plug 'hrsh7th/nvim-compe'
 " successor to nvim-compe?
 "Plug 'hrsh7th/nvim-cmp'
@@ -45,8 +41,6 @@ Plug 'mfussenegger/nvim-dap-python'
 
 " color schemes
 Plug 'morhetz/gruvbox'
-"Plug 'tomasr/molokai'
-"Plug 'nanotech/jellybeans.vim'
 
 " quality of life
 Plug 'Raimondi/delimitMate'
@@ -72,7 +66,8 @@ let g:loaded_netrwPlugin = 1
 let mapleader = "m"
 
 " basic sanity
-set ttimeoutlen=50
+set timeoutlen=1000
+set ttimeoutlen=10
 set updatetime=100
 set encoding=utf-8
 set clipboard+=unnamedplus
@@ -168,7 +163,7 @@ lua require("compe_config")
 lua require("treesitter_config")
 lua require("telescope_config")
 lua require("devicons_config")
-"lua require("statusline_config")
+lua require("lualine_config")
 lua require("dap_config")
 
 " netrw explorer
@@ -229,12 +224,6 @@ let g:mkdp_port = ''
 " prolog specific behaviors
 let g:prolog_swipl_timeout = 10
 
-""" statusline
-
-let g:airline_exclude_preview            = 0
-let g:airline#extensions#tabline#enabled = 1
-let g:airline_theme                      = 'gruvbox'
-
 """ color scheme
 
 let g:gruvbox_contrast_dark     = 'hard'
@@ -256,20 +245,6 @@ command! Todo silent lgrep -i --ignore-dir=vendor/ '\/\/.*TODO.*' | lwindow
 command! TodoN lnext
 command! TodoP lprevious
 command! TodoE lclose
-
-" list of stuff in the file!
-"let g:tagbar_zoomwidth = 0
-"let g:tagbar_case_insensitive = 1
-"let g:tagbar_show_linenumbers = 1
-"let g:tagbar_autoshowtag = 0
-"let g:tagbar_previewwin_pos = "rightbelow"
-let g:no_status_line = 1
-
-" auto-open Tagbar when opening a buffer containing a supported file type
-"autocmd BufEnter * nested :call tagbar#autoopen(0)
-"nnoremap <F2> :TagbarToggle<CR>
-"nnoremap gst :TagbarShowTag<CR>
-"nnoremap st :TagbarOpen fj<CR>
 
 " easy align (visual, interactive)
 xmap ga <Plug>(EasyAlign)
@@ -307,39 +282,6 @@ let g:black#settings = {
 \}
 let g:python3_host_prog = $HOME . '/.local/share/nvim/py-venv/bin/python'
 
-" format on save via LSP
-"augroup lsp_formatting
-"    autocmd!
-"
-"    au BufWritePre *.c lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
-"    au BufWritePre *.cpp lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
-"
-"    au BufWritePre Dockerfile lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"dockerls"})
-"    au BufWritePre Dockerfile.* lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"dockerls"})
-"
-"    au BufWritePre *.go lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"gopls"})
-"
-"    au BufWritePre *.java lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"java_language_server"})
-"
-"    au BufWritePre *.js lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"tsserver"})
-"
-"    au BufWritePre *.json lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"jsonls"})
-"
-"    au BufWritePre *.kt lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"kotlin_language_server"})
-"
-"    au BufWritePre *.md lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"efm"})
-"
-"    au BufWritePre *.py lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"pyright"})
-"
-"    au BufWritePre *.sh lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"bashls"})
-"
-"    au BufWritePre *.tf lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"terraformls"})
-"
-"    au BufWritePre *.ts lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"tsserver"})
-"
-"    au BufWritePre *.yaml lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"yamlls"})
-"augroup END
-
 " customize built-in terminal
 augroup terminal_buf
     autocmd!
@@ -365,11 +307,28 @@ augroup terminal_buf
     au TermLeave * setlocal scrolloff=5
 augroup END
 
-autocmd FileType json syntax match Comment +\/\/.\+$+
-
-augroup cpp_files
+augroup extra_file_types
     autocmd!
-    au BufRead,BufNewFile *.tpp set filetype=cpp
+    au BufFilePre,BufNewFile,BufReadPost *.tpp set filetype=cpp
+    au BufFilePre,BufNewFile,BufReadPost Dockerfile.* set filetype=Dockerfile
+    au BufFilePre,BufNewFile,BufReadPost *.fs set filetype=fsharp
+    au BufFilePre,BufNewFile,BufReadPost *.frag set filetype=glsl
+    au BufFilePre,BufNewFile,BufReadPost go.mod set filetype=gomod
+augroup END
+
+augroup different_indent_filetypes
+    autocmd!
+    au FileType html setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType java setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType json setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType make setlocal noexpandtab
+    au FileType markdown setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType svelte setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType terraform setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType typescript setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType vue setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType xml setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType yaml setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
 
 augroup csv_files
@@ -378,77 +337,6 @@ augroup csv_files
     "au BufLeave *.csv set wrap
     au BufWinEnter *.csv set nowrap
     au BufWinLeave *.csv set wrap
-augroup END
-
-augroup docker_files
-    autocmd!
-    au BufRead,BufNewFile Dockerfile.* set filetype=Dockerfile
-augroup END
-
-augroup fsharp_files
-    autocmd!
-    au BufRead,BufNewFile *.fs set filetype=fsharp
-augroup END
-
-augroup glsl_files
-    autocmd!
-    au BufRead,BufNewFile *.frag set filetype=glsl
-augroup END
-
-augroup go_files
-    autocmd!
-    au BufRead,BufNewFile go.mod set filetype=gomod
-augroup END
-
-augroup html_files
-    autocmd!
-    au FileType html setlocal tabstop=2 softtabstop=2 shiftwidth=2
-augroup END
-
-augroup java_files
-    autocmd!
-    au FileType java setlocal tabstop=2 softtabstop=2 shiftwidth=2
-augroup END
-
-augroup json_files
-    autocmd!
-    au FileType json setlocal tabstop=2 softtabstop=2 shiftwidth=2
-augroup END
-
-augroup make_files
-    autocmd!
-    au FileType make setlocal noexpandtab
-augroup END
-
-augroup markdown_files
-    autocmd!
-    au FileType markdown setlocal tabstop=2 softtabstop=2 shiftwidth=2
-augroup END
-
-augroup svelte_files
-    autocmd!
-    au FileType svelte setlocal tabstop=2 softtabstop=2 shiftwidth=2
-augroup END
-
-augroup typescript_files
-    autocmd!
-    au FileType typescript setlocal tabstop=2 softtabstop=2 shiftwidth=2
-augroup END
-
-augroup vue_files
-    autocmd!
-    au FileType vue setlocal tabstop=2 softtabstop=2 shiftwidth=2
-augroup END
-
-augroup xml_files
-    autocmd!
-    au FileType xml setlocal tabstop=2 softtabstop=2 shiftwidth=2
-augroup END
-
-augroup yaml_files
-    autocmd!
-    au BufRead,BufNewFile *.yml setfiletype yaml
-    au FileType yaml setlocal tabstop=2 softtabstop=2 shiftwidth=2
 augroup END
 
 " why would it not be highlighted in all files?
