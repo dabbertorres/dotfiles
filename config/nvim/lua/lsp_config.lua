@@ -6,6 +6,8 @@ local lsp = require"lspconfig"
 
 local home = os.getenv("HOME")
 
+vim.lsp.set_log_level("INFO")
+
 lsp.bashls.setup{}
 
 lsp.clangd.setup{}
@@ -14,7 +16,42 @@ lsp.cmake.setup{}
 
 --lsp.csharp_ls.setup{}
 
-lsp.dockerls.setup{}
+lsp.cssls.setup{}
+
+lsp.dockerls.setup{
+    settings = {
+        docker = {
+            languageserver = {
+                diagnostics = {
+                    deprecatedMaintainer = "ignore",
+                    directiveCasing = "warning",
+                    emptyContinuationLine = "warning",
+                    instructionCasing = "warning",
+                    instructionCmdMultiple = "warning",
+                    instructionEntrypointMultiple = "error",
+                    instructionHealthcheckMultiple = "error",
+                    instructionJSONInSingleQuotes = "error",
+                },
+                formatter = {
+                    ignoreMultilineInstructions = true,
+                },
+            },
+        },
+    },
+    on_init = function(client)
+        if client.config.settings then
+            client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+        end
+    end,
+    on_new_config = function(new_config, new_root_dir)
+        if new_root_dir then
+            table.insert(new_config.cmd, "--source")
+            table.insert(new_config.cmd, new_root_dir)
+        end
+    end,
+}
+
+lsp.dotls.setup{}
 
 lsp.efm.setup{
     init_options = {
@@ -125,6 +162,19 @@ lsp.gopls.setup{
     },
 }
 
+lsp.gradle_ls.setup{
+    cmd = { home .. "/Code/lsps/vscode-gradle/gradle-language-server/build/install/gradle-language-server/bin/gradle-language-server" },
+    filetypes = { "groovy", "kotlin" },
+    root_dir = lsp.util.root_pattern("build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"),
+}
+
+local html_capabilities = vim.lsp.protocol.make_client_capabilities()
+html_capabilities.textDocument.completion.completionItem.snippetSupport = true
+
+lsp.html.setup{
+    capabilities = html_capabilities,
+}
+
 lsp.jsonls.setup{
     commands = {
         Format = {
@@ -133,6 +183,7 @@ lsp.jsonls.setup{
             end,
         }
     },
+    single_file_support = true,
 }
 
 lsp.kotlin_language_server.setup{
@@ -208,9 +259,9 @@ lsp.sqls.setup{}
 
 lsp.sumneko_lua.setup{
     cmd = {
-        "/Users/aleciverson/Code/lsps/lua-language-server/bin/macOS/lua-language-server",
+        home .. "/Code/lsps/lua-language-server/bin/lua-language-server",
         "-E",
-        "/Users/aleciverson/Code/lsps/lua-language-server/main.lua"
+        home .. "/Code/lsps/lua-language-server/main.lua"
     },
     settings = {
         Lua = {
@@ -230,7 +281,21 @@ lsp.sumneko_lua.setup{
 
 lsp.tsserver.setup{}
 
-lsp.terraformls.setup{}
+lsp.terraformls.setup{
+    flags = {
+        debounce_text_changes = 500,
+    },
+    init_options = {
+        experimentalFeatures = {
+            validateOnSave = true,
+            prefillRequiredFields = true,
+        },
+        terraformExecTimeout = "5s",
+        terraformLogFilePath = "/Users/aleciverson/Code/myndshft/platform/load-test/ops/infra/.tflogs/{{ .Ppid }}-{{ .Pid }}-{{ .Timestamp }}.log",
+    },
+}
+
+lsp.tflint.setup{}
 
 lsp.vimls.setup{}
 
@@ -266,6 +331,34 @@ lsp.yamlls.setup{
     }
 }
 
+vim.diagnostic.config{
+    underline = true,
+    virtual_text = false,
+    signs = true,
+    float = {
+        border = "single",
+        header = "",
+        scope = "line",
+        focusable = false,
+        focus = false,
+        prefix = function(diagnostic, i, total)
+            if diagnostic == vim.diagnostic.severity.ERROR then
+                return "E: ", ""
+            elseif diagnostic == vim.diagnostic.severity.WARN then
+                return "W: ", ""
+            elseif diagnostic == vim.diagnostic.severity.INFO then
+                return "I: ", ""
+            elseif diagnostic == vim.diagnostic.severity.HINT then
+                return "H: ", ""
+            else
+                return "", ""
+            end
+        end,
+    },
+    update_in_insert = false,
+    severity_sort = true,
+}
+
 vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
 
 local function preview_location_callback(_, _, result)
@@ -279,50 +372,6 @@ _G.peek_definition = function()
     local params = vim.lsp.util.make_position_params()
     return vim.lsp.buf_request(0, "textDocument/definition", params, preview_location_callback)
 end
-
-local diagnostic_cache = {}
-
-local orig_set_signs = vim.lsp.diagnostic.set_signs
-local function set_signs_limited(diagnostics, bufnr, client_id, sign_ns, opts)
-    if not diagnostics then
-        diagnostics = diagnostic_cache[bufnr][client_id]
-    end
-
-    if not diagnostics then
-        return
-    end
-
-    if diagnostic_cache[bufnr] == nil then
-        diagnostic_cache[bufnr] = {}
-    end
-
-    diagnostic_cache[bufnr][client_id] = diagnostics
-
-    local max_severity_per_line = {}
-    for _, d in pairs(diagnostics) do
-        if max_severity_per_line[d.range.start.line] then
-            local current_d = max_severity_per_line[d.range.start.line]
-            if d.severity < current_d.severity then
-                max_severity_per_line[d.range.start.line] = d
-            end
-        else
-            max_severity_per_line[d.range.start.line] = d
-        end
-    end
-
-    local filtered_diagnostics = {}
-    for _, v in pairs(max_severity_per_line) do
-        table.insert(filtered_diagnostics, v)
-    end
-
-    if opts.priority == nil then
-        opts.priority = 1000
-    end
-
-    orig_set_signs(filtered_diagnostics, bufnr, client_id, sign_ns, opts)
-end
-
-vim.lsp.diagnostic.set_signs = set_signs_limited
 
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
     vim.lsp.diagnostic.on_publish_diagnostics, {
@@ -373,51 +422,64 @@ vim.api.nvim_set_keymap("n", "gu", "<cmd>Telescope lsp_references<CR>", mappings
 vim.api.nvim_set_keymap("n", "mrn", "<cmd>lua vim.lsp.buf.rename()<CR>", mappings_opts)
 vim.api.nvim_set_keymap("n", "mff", "<cmd>lua vim.lsp.buf.formatting()<CR>", mappings_opts)
 
-local diagnostic_display_opts = {
-    border = "single",
-    show_header = false,
-    focusable = false,
+local diagnostics_goto_opts = {
+    wrap = true,
 }
 
-_G.my_goto_diag_next = function()
-    vim.lsp.diagnostic.goto_next({ popup_opts = diagnostic_display_opts })
-end
-
-_G.my_goto_diag_prev = function()
-    vim.lsp.diagnostic.goto_prev({ popup_opts = diagnostic_display_opts })
-end
+_G.my_goto_diag_next = function() vim.diagnostic.goto_next(diagnostics_goto_opts) end
+_G.my_goto_diag_prev = function() vim.diagnostic.goto_prev(diagnostics_goto_opts) end
 
 vim.api.nvim_set_keymap("n", "<c-j>", [[<cmd>lua my_goto_diag_next()<CR>]], mappings_opts)
 vim.api.nvim_set_keymap("n", "<c-k>", [[<cmd>lua my_goto_diag_prev()<CR>]], mappings_opts)
 
 vim.o.updatetime = 250
 
-_G.my_show_line_diags = function()
-    --lightbulb.update_lightbulb()
-    vim.lsp.diagnostic.show_line_diagnostics(diagnostic_display_opts)
-end
 vim.cmd[[
 augroup ShowLineDiagnosticsHold
 autocmd!
 
-au CursorHold,CursorHoldI * lua my_show_line_diags()
+au CursorHold,CursorHoldI * lua vim.diagnostic.open_float()
 
 augroup END
 ]]
 
---local function goimports(timeout_ms)
---    local ctx = { only = { "source.organizeImports" } }
---end
+function GoImports(timeout_ms)
+    local params = vim.lsp.util.make_range_params()
+    params.context = { only = { "source.organizeImports" } }
+
+    local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, timeout_ms)
+    if not result or next(result) == nil then return end
+
+    local actions = result[1].result
+    if not actions then return end
+
+    local action = actions[1]
+
+    local is_table = type(action.command) == "table"
+    if action.edit or is_table then
+        if action.edit then
+            vim.lsp.util.apply_workspace_edit(action.edit)
+        end
+
+        if is_table then
+            vim.lsp.buf.execute_command(action.command)
+        end
+    else
+        vim.lsp.buf.execute_command(action)
+    end
+end
 
 vim.cmd[[
 augroup LSPFormatting
 autocmd!
 
+au BufWritePre *.h lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
 au BufWritePre *.c lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
+au BufWritePre *.hpp lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
 au BufWritePre *.cpp lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
+au BufWritePre CMakeLists.txt lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"cmake"})
 au BufWritePre Dockerfile lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"dockerls"})
 au BufWritePre Dockerfile.* lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"dockerls"})
-au BufWritePre *.go lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"gopls"})
 au BufWritePre *.java lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"java_language_server"})
 au BufWritePre *.js lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"tsserver"})
 au BufWritePre *.json lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"jsonls"})
@@ -428,6 +490,26 @@ au BufWritePre *.sh lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"bashls"})
 au BufWritePre *.tf lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"terraformls"})
 au BufWritePre *.ts lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"tsserver"})
 au BufWritePre *.yaml lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"yamlls"})
+
+augroup END
+]]
+
+vim.cmd[[
+augroup FormatGo
+autocmd!
+
+au BufWritePre *.go :silent! lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"gopls"})
+"au BufWritePre *.go :silent! lua GoImports(1000)
+
+augroup END
+]]
+
+vim.cmd[[
+augroup FormatDotNet
+autocmd!
+
+au BufWritePre *.cs :silent! lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"omnisharp"})
+au BufWritePre *.csproj :silent! lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"omnisharp"})
 
 augroup END
 ]]
