@@ -235,5 +235,3 @@ fi
 #zprof
 
 alias luamake=/Users/aleciverson/Code/lsps/lua-language-server/3rd/luamake/luamake
-export DOCKER_HOST=http://docker.local:2375
-export DOCKER_HOST=tcp://docker.local:2375
