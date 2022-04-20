@@ -28,14 +28,22 @@ require("lualine").setup {
                 path = 1,
             },
         },
-        lualine_x = {"filetype"},
+        lualine_x = {
+            {function() return vim.fn["nvim_treesitter#statusline"](90) end},
+            "filetype",
+        },
         lualine_y = {"encoding", "fileformat"},
         lualine_z = {"location", "diagnostics"},
     },
     inactive_sections = {
         lualine_a = {},
         lualine_b = {},
-        lualine_c = {"filename"},
+        lualine_c = {
+            {
+                "filename",
+                path = 1,
+            },
+        },
         lualine_x = {"location"},
         lualine_y = {},
         lualine_z = {}
