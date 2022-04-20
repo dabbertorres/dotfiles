@@ -30,17 +30,19 @@ Plug 'rcarriga/nvim-dap-ui'
 
 " language tooling
 Plug 'neovim/nvim-lspconfig'
-Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
-Plug 'hrsh7th/nvim-compe'
-" successor to nvim-compe?
-"Plug 'hrsh7th/nvim-cmp'
-"Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdateSync' }
+Plug 'hrsh7th/nvim-cmp'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'saadparwaiz1/cmp_luasnip'
+Plug 'L3MON4D3/LuaSnip'
 Plug 'mfussenegger/nvim-jdtls'
-Plug 'leoluz/nvim-dap-go'
 Plug 'mfussenegger/nvim-dap-python'
+Plug 'leoluz/nvim-dap-go'
+Plug 'nanotee/sqls.nvim'
 
 " color schemes
-Plug 'morhetz/gruvbox'
+"Plug 'morhetz/gruvbox'
+Plug 'ellisonleao/gruvbox.nvim'
 
 " quality of life
 Plug 'Raimondi/delimitMate'
@@ -54,7 +56,9 @@ Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-commentary'
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
 Plug 'tpope/vim-eunuch'
+Plug 'lewis6991/spellsitter.nvim'
 "Plug 'wannesm/wmgraphviz.vim'
+Plug 'rcarriga/nvim-notify'
 
 call plug#end()
 
@@ -101,7 +105,7 @@ set scrolloff=5
 set inccommand=nosplit
 
 " enable folding, but disable it by default
-set foldmethod=syntax
+set foldmethod=expr
 set foldexpr=nvim_treesitter#foldexpr()
 set foldlevelstart=99
 
@@ -112,7 +116,7 @@ set t_vb=
 set mouse=a
 set cmdheight=2
 set number
-set pastetoggle=<F11>
+set pastetoggle=<F12>
 
 " searching
 set hlsearch
@@ -155,16 +159,32 @@ set shortmess+=c
 set signcolumn=yes
 
 """ spelling
-"set spelllang=en
-"set spell
+set spelllang=en_us
+set spell
 
+""" color scheme
+
+let g:gruvbox_contrast_dark     = 'hard'
+let g:gruvbox_invert_signs      = 1
+let g:gruvbox_invert_tabline    = 1
+let g:gruvbox_improved_warnings = 1
+
+set termguicolors
+set background=dark
+colorscheme gruvbox
+
+" my lua configs
+lua require("notifications")
 lua require("lsp_config")
-lua require("compe_config")
+lua require("cmp_config")
 lua require("treesitter_config")
 lua require("telescope_config")
 lua require("devicons_config")
 lua require("lualine_config")
 lua require("dap_config")
+
+" Lua plugins
+lua require("spellsitter").setup{ enable = true }
 
 " netrw explorer
 "let g:netrw_liststyle    = 3
@@ -224,17 +244,6 @@ let g:mkdp_port = ''
 " prolog specific behaviors
 let g:prolog_swipl_timeout = 10
 
-""" color scheme
-
-let g:gruvbox_contrast_dark     = 'hard'
-let g:gruvbox_invert_signs      = 1
-let g:gruvbox_invert_tabline    = 1
-let g:gruvbox_improved_warnings = 1
-
-set termguicolors
-set background=dark
-colorscheme gruvbox
-
 "
 " commands
 "
@@ -290,7 +299,7 @@ augroup terminal_buf
     au TermOpen * tnoremap <buffer> <C-w>j <C-\><C-N><C-w>j
     au TermOpen * tnoremap <buffer> <C-w>k <C-\><C-N><C-w>k
     au TermOpen * tnoremap <buffer> <C-w>l <C-\><C-N><C-w>l
-    "
+
     " let me move the terminal window without needing to 'escape' first
     au TermOpen * tnoremap <buffer> <C-w>H <C-\><C-N><C-w>H
     au TermOpen * tnoremap <buffer> <C-w>J <C-\><C-N><C-w>J
@@ -301,10 +310,6 @@ augroup terminal_buf
     au TermClose * call feedkeys('\<CR>')
 
     au BufEnter,BufWinEnter,WinEnter term://* startinsert
-
-    " https://github.com/neovim/neovim/issues/11072
-    au TermEnter * setlocal scrolloff=0
-    au TermLeave * setlocal scrolloff=5
 augroup END
 
 augroup extra_file_types
@@ -314,6 +319,7 @@ augroup extra_file_types
     au BufFilePre,BufNewFile,BufReadPost *.fs set filetype=fsharp
     au BufFilePre,BufNewFile,BufReadPost *.frag set filetype=glsl
     au BufFilePre,BufNewFile,BufReadPost go.mod set filetype=gomod
+    au BufFilePre,BufNewFile,BufReadPost *.cshtml set filetype=html
 augroup END
 
 augroup different_indent_filetypes
@@ -347,8 +353,7 @@ augroup END
 
 function! s:read_large_file()
     if exists(':TSBufDisable')
-        exec 'TSBufDisable autotag'
-        exec 'TSBufDisable highlight'
+        exec 'TSBufDisable incremental_selection highlight indent matchup'
     endif
     setlocal syntax=off
     setlocal foldmethod=manual
