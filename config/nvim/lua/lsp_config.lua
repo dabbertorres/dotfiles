@@ -1,24 +1,137 @@
 --local profile_start_time = vim.loop.hrtime()
 
-local lsp = require"lspconfig"
---local path = lsp.util.path
---local lightbulb = require("nvim-lightbulb")
+local lsp = require("lspconfig")
+local cmp_lsp = require("cmp_nvim_lsp")
+local notifications = require("notifications")
+
+vim.o.updatetime = 250
+vim.lsp.set_log_level("INFO")
 
 local home = os.getenv("HOME")
 
-vim.lsp.set_log_level("INFO")
+local function preview_location_callback(_, result, _, _)
+    if result == nil or vim.tbl_isempty(result) then
+        return nil
+    end
+    vim.lsp.util.preview_location(result[1])
+end
 
-lsp.bashls.setup{}
+_G.peek_definition = function()
+    local params = vim.lsp.util.make_position_params()
+    return vim.lsp.buf_request(0, "textDocument/definition", params, preview_location_callback)
+end
 
-lsp.clangd.setup{}
+local formatting_options = {
+    trimTrailingWhitespace = true,
+    insertFinalNewline = true,
+    trimFinalNewlines = true,
+}
 
-lsp.cmake.setup{}
+local mappings_opts = {
+    noremap = true,
+    silent = true,
+}
 
---lsp.csharp_ls.setup{}
+local function on_attach(client, bufnr)
+    vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
 
-lsp.cssls.setup{}
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-k>", "<cmd>lua vim.diagnostic.goto_prev()<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-j>", "<cmd>lua vim.diagnostic.goto_next()<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mpd", "<cmd>lua peek_definition()<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mca", "<cmd>Telescope lsp_code_actions<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "<cmd>Telescope lsp_definitions<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", "<cmd>Telescope lsp_implementations<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mk", "<cmd>lua vim.lsp.buf.signature_help()<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gu", "<cmd>Telescope lsp_references<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mrn", "<cmd>lua vim.lsp.buf.rename()<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mff", "<cmd>lua vim.lsp.buf.formatting()<CR>", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "v", "ms", "<Plug>(sqls-execute-query)", mappings_opts)
+
+    vim.api.nvim_create_autocmd({"CursorHold", "CursorHoldI"}, {
+        buffer = bufnr,
+        callback = function()
+            vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
+        end,
+    })
+
+    if client.server_capabilities.documentFormattingProvider then
+        vim.api.nvim_create_autocmd("BufWritePre", {
+            buffer = bufnr,
+            callback = function()
+                vim.lsp.buf.formatting_sync(formatting_options, 500)
+            end,
+        })
+    end
+
+    -- if client.server_capabilities.hoverProvider then
+    --     local id = vim.api.nvim_create_augroup("lsp_hover", {})
+    --     vim.api.nvim_create_autocmd("CursorHold,CursorHoldI", {
+    --         group = id,
+    --         buffer = bufnr,
+    --         callback = function()
+    --             vim.lsp.buf.hover()
+    --         end,
+    --     })
+    -- end
+
+    if client.server_capabilities.documentHighlightProvider then
+        vim.api.nvim_create_autocmd("CursorHold", {
+            buffer = bufnr,
+            callback = function()
+                vim.lsp.buf.document_highlight()
+            end,
+        })
+        vim.api.nvim_create_autocmd("CursorMoved", {
+            buffer = bufnr,
+            callback = function()
+                vim.lsp.buf.clear_references()
+            end,
+        })
+        vim.cmd[[
+            hi! LspReferenceRead guibg=#5b5e5b
+            hi! LspReferenceText guibg=#5b5e5b
+            hi! LspReferenceWrite guibg=#5b5e5b
+        ]]
+    end
+end
+
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = cmp_lsp.update_capabilities(capabilities)
+
+lsp.bashls.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
+}
+
+lsp.clangd.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
+}
+
+lsp.cmake.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
+}
+
+lsp.cssls.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
+}
 
 lsp.dockerls.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
     settings = {
         docker = {
             languageserver = {
@@ -38,6 +151,7 @@ lsp.dockerls.setup{
             },
         },
     },
+    on_attach = on_attach,
     on_init = function(client)
         if client.config.settings then
             client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
@@ -51,9 +165,17 @@ lsp.dockerls.setup{
     end,
 }
 
-lsp.dotls.setup{}
+lsp.dotls.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
+}
 
 lsp.efm.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
     init_options = {
         documentFormatting = true,
         hover = true,
@@ -80,6 +202,7 @@ lsp.efm.setup{
             },
         },
     },
+    on_attach = on_attach,
 }
 
 lsp.gopls.setup{
@@ -160,12 +283,17 @@ lsp.gopls.setup{
             usePlaceholders = false,
         },
     },
+    on_attach = on_attach,
 }
 
 lsp.gradle_ls.setup{
     cmd = { home .. "/Code/lsps/vscode-gradle/gradle-language-server/build/install/gradle-language-server/bin/gradle-language-server" },
-    filetypes = { "groovy", "kotlin" },
+    flags = {
+        debounce_text_changes = 150,
+    },
+    filetypes = { "groovy" }, -- TODO: kotlin-script files (e.g. build.gradle.kts)
     root_dir = lsp.util.root_pattern("build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"),
+    on_attach = on_attach,
 }
 
 local html_capabilities = vim.lsp.protocol.make_client_capabilities()
@@ -173,22 +301,26 @@ html_capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 lsp.html.setup{
     capabilities = html_capabilities,
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
 }
 
 lsp.jsonls.setup{
-    commands = {
-        Format = {
-            function()
-                lsp.buf.range_formatting({}, {0, 0}, {vim.fn.line("$"), 0})
-            end,
-        }
+    flags = {
+        debounce_text_changes = 150,
     },
     single_file_support = true,
+    on_attach = on_attach,
 }
 
 lsp.kotlin_language_server.setup{
     cmd = { home .. "/Code/lsps/kotlin-language-server/server/build/install/server/bin/kotlin-language-server" },
     filetypes = { "kotlin" },
+    flags = {
+        debounce_text_changes = 150,
+    },
     root_dir = lsp.util.root_pattern("build.gradle.kts"),
     settings = {
         kotlin = {
@@ -214,6 +346,7 @@ lsp.kotlin_language_server.setup{
             },
         },
     },
+    on_attach = on_attach,
 }
 
 local pid = vim.fn.getpid()
@@ -226,6 +359,7 @@ lsp.omnisharp.setup{
     },
     filetypes = { "cs", "vb" },
     init_options = {},
+    on_attach = on_attach,
     on_init = function(client)
         if client.config.settings then
             client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
@@ -240,6 +374,9 @@ lsp.omnisharp.setup{
 }
 
 lsp.pyright.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
     settings = {
         python = {
             disableLanguageServices = false,
@@ -253,15 +390,27 @@ lsp.pyright.setup{
             },
         },
     },
+    on_attach = on_attach,
 }
 
-lsp.sqls.setup{}
+lsp.sqls.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = function(client, bufnr)
+        on_attach(client, bufnr)
+        require('sqls').on_attach(client, bufnr)
+    end
+}
 
 lsp.sumneko_lua.setup{
     cmd = {
         home .. "/Code/lsps/lua-language-server/bin/lua-language-server",
         "-E",
         home .. "/Code/lsps/lua-language-server/main.lua"
+    },
+    flags = {
+        debounce_text_changes = 150,
     },
     settings = {
         Lua = {
@@ -276,10 +425,16 @@ lsp.sumneko_lua.setup{
                 }
             }
         }
-    }
+    },
+    on_attach = on_attach,
 }
 
-lsp.tsserver.setup{}
+lsp.tsserver.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
+}
 
 lsp.terraformls.setup{
     flags = {
@@ -293,15 +448,34 @@ lsp.terraformls.setup{
         terraformExecTimeout = "5s",
         terraformLogFilePath = "/Users/aleciverson/Code/myndshft/platform/load-test/ops/infra/.tflogs/{{ .Ppid }}-{{ .Pid }}-{{ .Timestamp }}.log",
     },
+    on_attach = on_attach,
 }
 
-lsp.tflint.setup{}
+lsp.tflint.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
+}
 
-lsp.vimls.setup{}
+lsp.vimls.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
+}
 
-lsp.vuels.setup{}
+lsp.vuels.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
+    on_attach = on_attach,
+}
 
 lsp.yamlls.setup{
+    flags = {
+        debounce_text_changes = 150,
+    },
     settings = {
         redhat = {
             telemetry = {
@@ -328,28 +502,45 @@ lsp.yamlls.setup{
             validate = true,
             yamlVersion = "1.2",
         }
-    }
+    },
+    on_attach = on_attach,
 }
 
+-- plugins for specific LSP servers
+local lsp_plugins_au = vim.api.nvim_create_augroup("lsp_plugins", {})
+local jdtls = require("jdtls_setup")
+vim.api.nvim_create_autocmd("FileType", {
+    group = lsp_plugins_au,
+    pattern = "java",
+    callback = function()
+        jdtls.setup{}
+    end,
+})
+
+vim.fn.sign_define("DiagnosticSignError", { text = " ", texthl = "GruvboxRed" })
+vim.fn.sign_define("DiagnosticSignWarn", { text = " ", texthl = "GruvboxYellow" })
+vim.fn.sign_define("DiagnosticSignInfo", { text = " ", texthl = "GruvboxBlue" })
+vim.fn.sign_define("DiagnosticSignHint", { text = " ", texthl = "GruvboxAqua" })
+
 vim.diagnostic.config{
-    underline = true,
+    underline = {},
     virtual_text = false,
-    signs = true,
+    signs = {},
     float = {
         border = "single",
         header = "",
         scope = "line",
         focusable = false,
         focus = false,
-        prefix = function(diagnostic, i, total)
+        prefix = function(diagnostic, _, _)
             if diagnostic == vim.diagnostic.severity.ERROR then
-                return "E: ", ""
+                return " ", ""
             elseif diagnostic == vim.diagnostic.severity.WARN then
-                return "W: ", ""
+                return " ", ""
             elseif diagnostic == vim.diagnostic.severity.INFO then
-                return "I: ", ""
+                return " ", ""
             elseif diagnostic == vim.diagnostic.severity.HINT then
-                return "H: ", ""
+                return " ", ""
             else
                 return "", ""
             end
@@ -358,20 +549,6 @@ vim.diagnostic.config{
     update_in_insert = false,
     severity_sort = true,
 }
-
-vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
-
-local function preview_location_callback(_, _, result)
-    if result == nil or vim.tbl_isempty(result) then
-        return nil
-    end
-    vim.lsp.util.preview_location(result[1])
-end
-
-_G.peek_definition = function()
-    local params = vim.lsp.util.make_position_params()
-    return vim.lsp.buf_request(0, "textDocument/definition", params, preview_location_callback)
-end
 
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
     vim.lsp.diagnostic.on_publish_diagnostics, {
@@ -401,127 +578,35 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
     }
 )
 
-vim.fn.sign_define("LspDiagnosticsSignError", { text = "E ", texthl = "GruvboxRed" })
-vim.fn.sign_define("LspDiagnosticsSignWarning", { text = "W ", texthl = "GruvboxYellow" })
-vim.fn.sign_define("LspDiagnosticsSignInformation", { text = "I ", texthl = "GruvboxBlue" })
-vim.fn.sign_define("LspDiagnosticsSignHint", { text = "H ", texthl = "GruvboxAqua" })
+vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
+    if not result.value.kind then return end
 
-local mappings_opts = {
-    noremap = true,
-    silent = true,
-}
+    local data = notifications.get(ctx.client_id, result.token)
 
-vim.api.nvim_set_keymap("n", "mpd", "v:lua.peek_definition()", mappings_opts)
-vim.api.nvim_set_keymap("n", "mca", "<cmd>Telescope lsp_code_actions<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "gd", "<cmd>Telescope lsp_definitions<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "gi", "<cmd>Telescope lsp_implementations<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "mk", "<cmd>lua vim.lsp.buf.signature_help()<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "gu", "<cmd>Telescope lsp_references<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "mrn", "<cmd>lua vim.lsp.buf.rename()<CR>", mappings_opts)
-vim.api.nvim_set_keymap("n", "mff", "<cmd>lua vim.lsp.buf.formatting()<CR>", mappings_opts)
-
-local diagnostics_goto_opts = {
-    wrap = true,
-}
-
-_G.my_goto_diag_next = function() vim.diagnostic.goto_next(diagnostics_goto_opts) end
-_G.my_goto_diag_prev = function() vim.diagnostic.goto_prev(diagnostics_goto_opts) end
-
-vim.api.nvim_set_keymap("n", "<c-j>", [[<cmd>lua my_goto_diag_next()<CR>]], mappings_opts)
-vim.api.nvim_set_keymap("n", "<c-k>", [[<cmd>lua my_goto_diag_prev()<CR>]], mappings_opts)
-
-vim.o.updatetime = 250
-
-vim.cmd[[
-augroup ShowLineDiagnosticsHold
-autocmd!
-
-au CursorHold,CursorHoldI * lua vim.diagnostic.open_float()
-
-augroup END
-]]
-
-function GoImports(timeout_ms)
-    local params = vim.lsp.util.make_range_params()
-    params.context = { only = { "source.organizeImports" } }
-
-    local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, timeout_ms)
-    if not result or next(result) == nil then return end
-
-    local actions = result[1].result
-    if not actions then return end
-
-    local action = actions[1]
-
-    local is_table = type(action.command) == "table"
-    if action.edit or is_table then
-        if action.edit then
-            vim.lsp.util.apply_workspace_edit(action.edit)
-        end
-
-        if is_table then
-            vim.lsp.buf.execute_command(action.command)
-        end
-    else
-        vim.lsp.buf.execute_command(action)
+    if result.value.kind == "begin" then
+        local msg = notifications.format_message(result.value.message, result.value.percentage)
+        local opts = notifications.init_spinner(ctx.client_id, result.token, data, {
+            title = notifications.format_title(result.value.title, vim.lsp.get_client_by_id(ctx.client_id).name),
+            timeout = false,
+            hide_from_history = false,
+        })
+        data.notification = vim.notify(msg, "info", opts)
+    elseif result.value.kind == "report" and data then
+        local msg = notifications.format_message(result.value.message, result.value.percentage)
+        data.notification = vim.notify(msg, "info", {
+            replace = data.notification,
+            hide_from_history = false,
+        })
+    elseif result.value.kind == "end" and data then
+        local msg = result.value.message and notifications.format_message(result.value.message) or "Complete"
+        data.notification = vim.notify(msg, "info", {
+            icon = "",
+            replace = data.notification,
+            timeout = 3000,
+        })
+        notifications.stop_spinner(data)
     end
 end
-
-vim.cmd[[
-augroup LSPFormatting
-autocmd!
-
-au BufWritePre *.h lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
-au BufWritePre *.c lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
-au BufWritePre *.hpp lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
-au BufWritePre *.cpp lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"clangd"})
-au BufWritePre CMakeLists.txt lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"cmake"})
-au BufWritePre Dockerfile lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"dockerls"})
-au BufWritePre Dockerfile.* lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"dockerls"})
-au BufWritePre *.java lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"java_language_server"})
-au BufWritePre *.js lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"tsserver"})
-au BufWritePre *.json lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"jsonls"})
-au BufWritePre *.kt lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"kotlin_language_server"})
-au BufWritePre *.md lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"efm"})
-au BufWritePre *.py lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"pyright"})
-au BufWritePre *.sh lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"bashls"})
-au BufWritePre *.tf lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"terraformls"})
-au BufWritePre *.ts lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"tsserver"})
-au BufWritePre *.yaml lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"yamlls"})
-
-augroup END
-]]
-
-vim.cmd[[
-augroup FormatGo
-autocmd!
-
-au BufWritePre *.go :silent! lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"gopls"})
-"au BufWritePre *.go :silent! lua GoImports(1000)
-
-augroup END
-]]
-
-vim.cmd[[
-augroup FormatDotNet
-autocmd!
-
-au BufWritePre *.cs :silent! lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"omnisharp"})
-au BufWritePre *.csproj :silent! lua vim.lsp.buf.formatting_seq_sync(nil, 500, {"omnisharp"})
-
-augroup END
-]]
-
-vim.cmd[[
-augroup LSPPlugins
-autocmd!
-
-au FileType java lua require('jdtls_setup').setup()
-
-augroup END
-]]
 
 --local profile_end_time = vim.loop.hrtime()
 --print("lsp_config.lua:", profile_end_time - profile_start_time)
