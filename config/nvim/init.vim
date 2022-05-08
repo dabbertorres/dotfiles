@@ -15,6 +15,8 @@ Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
+Plug 'nvim-telescope/telescope-ui-select.nvim'
+Plug 'nvim-telescope/telescope-file-browser.nvim'
 "Plug 'kosayoda/nvim-lightbulb'
 Plug 'kyazdani42/nvim-web-devicons'
 
@@ -31,14 +33,22 @@ Plug 'rcarriga/nvim-dap-ui'
 " language tooling
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdateSync' }
-Plug 'hrsh7th/nvim-cmp'
-Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'L3MON4D3/LuaSnip'
 Plug 'mfussenegger/nvim-jdtls'
 Plug 'mfussenegger/nvim-dap-python'
 Plug 'leoluz/nvim-dap-go'
 Plug 'nanotee/sqls.nvim'
+
+" autocompletion
+Plug 'hrsh7th/nvim-cmp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'hrsh7th/cmp-calc'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
+Plug 'hrsh7th/cmp-nvim-lua'
+Plug 'hrsh7th/cmp-path'
+" Plug 'f3fora/cmp-spell'
 
 " color schemes
 "Plug 'morhetz/gruvbox'
@@ -59,6 +69,7 @@ Plug 'tpope/vim-eunuch'
 Plug 'lewis6991/spellsitter.nvim'
 "Plug 'wannesm/wmgraphviz.vim'
 Plug 'rcarriga/nvim-notify'
+Plug 'sindrets/diffview.nvim'
 
 call plug#end()
 
@@ -159,8 +170,8 @@ set shortmess+=c
 set signcolumn=yes
 
 """ spelling
-set spelllang=en_us
-set spell
+" set spelllang=en_us
+" set spell
 
 """ color scheme
 
@@ -182,6 +193,7 @@ lua require("telescope_config")
 lua require("devicons_config")
 lua require("lualine_config")
 lua require("dap_config")
+lua require("diffview_config")
 
 " Lua plugins
 lua require("spellsitter").setup{ enable = true }
@@ -324,6 +336,7 @@ augroup END
 
 augroup different_indent_filetypes
     autocmd!
+    au FileType hcl setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType html setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType java setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType json setlocal tabstop=2 softtabstop=2 shiftwidth=2
