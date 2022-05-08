@@ -12,8 +12,13 @@
     branch = false
 [pull]
     ff = only
+    rebase = true
 [init]
     defaultBranch = master
 [alias]
     graph = log --all --decorate --oneline --graph --color
     graphviz = "!f() { echo 'digraph git {' ; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g' ; echo '}'; }; f"
+    ignore = "!gi() { curl -sSL https://www.toptal.com/developers/gitignore/api/$* ;}; gi"
+    prune-branches = "!gp() { git fetch -p; (git branch --merged origin/main; git branch --merged origin/master) 2>/dev/null | grep -Ev \"^[ *]*(main|master|develop)$\" | xargs -r git branch -d ;}; gp"
+    amend = commit --amend -C HEAD
+    changelog = "!cl() { git log --ancestry-path --shortstat --no-decorate ${1:-master}...HEAD; }; cl"
