@@ -3,23 +3,14 @@
 local lsp = require("lspconfig")
 local cmp_lsp = require("cmp_nvim_lsp")
 local notifications = require("notifications")
+local telescope = require("telescope.builtin")
+
+local util = require("util")
 
 vim.o.updatetime = 250
 vim.lsp.set_log_level("INFO")
 
 local home = os.getenv("HOME")
-
-local function preview_location_callback(_, result, _, _)
-    if result == nil or vim.tbl_isempty(result) then
-        return nil
-    end
-    vim.lsp.util.preview_location(result[1])
-end
-
-_G.peek_definition = function()
-    local params = vim.lsp.util.make_position_params()
-    return vim.lsp.buf_request(0, "textDocument/definition", params, preview_location_callback)
-end
 
 local formatting_options = {
     trimTrailingWhitespace = true,
@@ -32,22 +23,70 @@ local mappings_opts = {
     silent = true,
 }
 
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = cmp_lsp.update_capabilities(capabilities)
+capabilities.textDocument.completion.completionItem.snippetSupport = true
+
 local function on_attach(client, bufnr)
     vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-k>", "<cmd>lua vim.diagnostic.goto_prev()<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-j>", "<cmd>lua vim.diagnostic.goto_next()<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mpd", "<cmd>lua peek_definition()<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mca", "<cmd>Telescope lsp_code_actions<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "<cmd>Telescope lsp_definitions<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", "<cmd>Telescope lsp_implementations<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mk", "<cmd>lua vim.lsp.buf.signature_help()<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "gu", "<cmd>Telescope lsp_references<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mrn", "<cmd>lua vim.lsp.buf.rename()<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mff", "<cmd>lua vim.lsp.buf.formatting()<CR>", mappings_opts)
-    vim.api.nvim_buf_set_keymap(bufnr, "v", "ms", "<Plug>(sqls-execute-query)", mappings_opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-k>", "", util.copy_with(mappings_opts, { callback = vim.diagnostic.goto_prev }))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-j>", "", util.copy_with(mappings_opts, { callback = vim.diagnostic.goto_next }))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mpd", "", util.copy_with(mappings_opts, {
+        callback = function()
+            local params = vim.lsp.util.make_position_params()
+            return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
+                if result == nil or vim.tbl_isempty(result) then return nil end
+                vim.lsp.util.preview_location(result[1])
+            end)
+        end,
+    }))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mca", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.code_action }))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "", util.copy_with(mappings_opts, {
+        callback = function()
+            telescope.lsp_definitions({
+                jump_type = nil,
+                ignore_filename = false,
+                trim_text = false,
+            })
+        end}))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.declaration }))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", "", util.copy_with(mappings_opts, {
+        callback = function()
+            telescope.lsp_implementations({
+                jump_type = nil,
+                ignore_filename = false,
+                trim_text = false,
+            })
+        end,
+    }))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "K", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.hover }))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mk", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.signature_help }))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gu", "", util.copy_with(mappings_opts, {
+        callback = function()
+            telescope.lsp_references({
+                include_declaration = true,
+                include_current_line = true,
+                trim_text = false,
+            })
+        end}))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mrn", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.rename } ))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "mfa", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.formatting }))
+
+    -- vim.api.nvim_buf_set_keymap(bufnr, "n", "ms", "<Plug>(sqls-execute-query)", mappings_opts)
+
+    -- vim.api.nvim_buf_set_keymap(bufnr, "v", "ms", "<Plug>(sqls-execute-query)", mappings_opts)
 
     vim.api.nvim_create_autocmd({"CursorHold", "CursorHoldI"}, {
         buffer = bufnr,
@@ -65,29 +104,14 @@ local function on_attach(client, bufnr)
         })
     end
 
-    -- if client.server_capabilities.hoverProvider then
-    --     local id = vim.api.nvim_create_augroup("lsp_hover", {})
-    --     vim.api.nvim_create_autocmd("CursorHold,CursorHoldI", {
-    --         group = id,
-    --         buffer = bufnr,
-    --         callback = function()
-    --             vim.lsp.buf.hover()
-    --         end,
-    --     })
-    -- end
-
     if client.server_capabilities.documentHighlightProvider then
         vim.api.nvim_create_autocmd("CursorHold", {
             buffer = bufnr,
-            callback = function()
-                vim.lsp.buf.document_highlight()
-            end,
+            callback = vim.lsp.buf.document_highlight,
         })
         vim.api.nvim_create_autocmd("CursorMoved", {
             buffer = bufnr,
-            callback = function()
-                vim.lsp.buf.clear_references()
-            end,
+            callback = vim.lsp.buf.clear_references,
         })
         vim.cmd[[
             hi! LspReferenceRead guibg=#5b5e5b
@@ -97,41 +121,28 @@ local function on_attach(client, bufnr)
     end
 end
 
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = cmp_lsp.update_capabilities(capabilities)
-
 lsp.bashls.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.clangd.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.cmake.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.cssls.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.dockerls.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     settings = {
         docker = {
             languageserver = {
@@ -166,16 +177,12 @@ lsp.dockerls.setup{
 }
 
 lsp.dotls.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.efm.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     init_options = {
         documentFormatting = true,
         hover = true,
@@ -207,9 +214,7 @@ lsp.efm.setup{
 
 lsp.gopls.setup{
     cmd = {"gopls", "-remote=auto", "-logfile=auto", "-debug=:0", "-remote.debug=:0", "-remote.logfile=auto"},
-    flags = {
-        debounce_text_changes = 500,
-    },
+    capabilities = capabilities,
     settings = {
         gopls = {
             analyses = {
@@ -288,39 +293,27 @@ lsp.gopls.setup{
 
 lsp.gradle_ls.setup{
     cmd = { home .. "/Code/lsps/vscode-gradle/gradle-language-server/build/install/gradle-language-server/bin/gradle-language-server" },
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     filetypes = { "groovy" }, -- TODO: kotlin-script files (e.g. build.gradle.kts)
     root_dir = lsp.util.root_pattern("build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"),
     on_attach = on_attach,
 }
 
-local html_capabilities = vim.lsp.protocol.make_client_capabilities()
-html_capabilities.textDocument.completion.completionItem.snippetSupport = true
-
 lsp.html.setup{
-    capabilities = html_capabilities,
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.jsonls.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     single_file_support = true,
     on_attach = on_attach,
 }
 
 lsp.kotlin_language_server.setup{
     cmd = { home .. "/Code/lsps/kotlin-language-server/server/build/install/server/bin/kotlin-language-server" },
+    capabilities = capabilities,
     filetypes = { "kotlin" },
-    flags = {
-        debounce_text_changes = 150,
-    },
     root_dir = lsp.util.root_pattern("build.gradle.kts"),
     settings = {
         kotlin = {
@@ -352,9 +345,9 @@ lsp.kotlin_language_server.setup{
 local pid = vim.fn.getpid()
 lsp.omnisharp.setup{
     cmd = { home .. "/Code/lsps/omnisharp/OmniSharp", "--languageserver", "--hostPID", tostring(pid) },
+    capabilities = capabilities,
     root_dir = lsp.util.root_pattern("*.csproj"),
     flags = {
-        debounce_text_changes = 150,
         allow_incremental_sync = true,
     },
     filetypes = { "cs", "vb" },
@@ -374,9 +367,7 @@ lsp.omnisharp.setup{
 }
 
 lsp.pyright.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     settings = {
         python = {
             disableLanguageServices = false,
@@ -394,9 +385,7 @@ lsp.pyright.setup{
 }
 
 lsp.sqls.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = function(client, bufnr)
         on_attach(client, bufnr)
         require('sqls').on_attach(client, bufnr)
@@ -409,9 +398,7 @@ lsp.sumneko_lua.setup{
         "-E",
         home .. "/Code/lsps/lua-language-server/main.lua"
     },
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     settings = {
         Lua = {
             diagnostics = {
@@ -430,13 +417,12 @@ lsp.sumneko_lua.setup{
 }
 
 lsp.tsserver.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.terraformls.setup{
+    capabilities = capabilities,
     flags = {
         debounce_text_changes = 500,
     },
@@ -452,30 +438,22 @@ lsp.terraformls.setup{
 }
 
 lsp.tflint.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.vimls.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.vuels.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     on_attach = on_attach,
 }
 
 lsp.yamlls.setup{
-    flags = {
-        debounce_text_changes = 150,
-    },
+    capabilities = capabilities,
     settings = {
         redhat = {
             telemetry = {
@@ -512,9 +490,7 @@ local jdtls = require("jdtls_setup")
 vim.api.nvim_create_autocmd("FileType", {
     group = lsp_plugins_au,
     pattern = "java",
-    callback = function()
-        jdtls.setup{}
-    end,
+    callback = jdtls.setup,
 })
 
 vim.fn.sign_define("DiagnosticSignError", { text = " ", texthl = "GruvboxRed" })
@@ -523,9 +499,9 @@ vim.fn.sign_define("DiagnosticSignInfo", { text = " ", texthl = "GruvboxBlue"
 vim.fn.sign_define("DiagnosticSignHint", { text = " ", texthl = "GruvboxAqua" })
 
 vim.diagnostic.config{
-    underline = {},
+    underline = true,
     virtual_text = false,
-    signs = {},
+    signs = true,
     float = {
         border = "single",
         header = "",
@@ -555,11 +531,6 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
         underline = true,
         signs = true,
         virtual_text = false,
-        --virtual_text = {
-        --    spacing = 4,
-        --    prefix = "> ",
-        --},
-        --update_in_insert = true,
         severity_sort = true,
     }
 )
