@@ -19,6 +19,7 @@ Plug 'nvim-telescope/telescope-ui-select.nvim'
 Plug 'nvim-telescope/telescope-file-browser.nvim'
 "Plug 'kosayoda/nvim-lightbulb'
 Plug 'kyazdani42/nvim-web-devicons'
+Plug 'nvim-neorg/neorg'
 
 " formatting
 Plug 'tpope/vim-surround'
@@ -39,6 +40,7 @@ Plug 'mfussenegger/nvim-jdtls'
 Plug 'mfussenegger/nvim-dap-python'
 Plug 'leoluz/nvim-dap-go'
 Plug 'nanotee/sqls.nvim'
+Plug 'mfussenegger/nvim-lint'
 
 " autocompletion
 Plug 'hrsh7th/nvim-cmp'
@@ -194,8 +196,8 @@ lua require("devicons_config")
 lua require("lualine_config")
 lua require("dap_config")
 lua require("diffview_config")
+lua require("neorg_config")
 
-" Lua plugins
 lua require("spellsitter").setup{ enable = true }
 
 " netrw explorer
