@@ -1,14 +1,17 @@
 --local profile_start_time = vim.loop.hrtime()
 
 local lsp = require("lspconfig")
+local log = require("vim.lsp.log")
+
 local cmp_lsp = require("cmp_nvim_lsp")
-local notifications = require("notifications")
+local lint = require("lint")
 local telescope = require("telescope.builtin")
 
+local notifications = require("notifications")
 local util = require("util")
 
 vim.o.updatetime = 250
-vim.lsp.set_log_level("INFO")
+log.set_level(log.levels.WARN)
 
 local home = os.getenv("HOME")
 
@@ -45,6 +48,8 @@ local function on_attach(client, bufnr)
     }))
 
     vim.api.nvim_buf_set_keymap(bufnr, "n", "mca", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.code_action }))
+
+    vim.api.nvim_buf_set_keymap(bufnr, "v", "mca", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.range_code_action }))
 
     vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "", util.copy_with(mappings_opts, {
         callback = function()
@@ -181,37 +186,6 @@ lsp.dotls.setup{
     on_attach = on_attach,
 }
 
-lsp.efm.setup{
-    capabilities = capabilities,
-    init_options = {
-        documentFormatting = true,
-        hover = true,
-        documentSymbol = true,
-        codeAction = true,
-        completion = true,
-    },
-    filetypes = {"markdown"},
-    settings = {
-        languages = {
-            markdown = {
-                {
-                    lintCommand = "markdownlint -s",
-                    lintStdin = true,
-                    lintFormats = {
-                        "%f:%l %m",
-                        "%f:%l:%c %m",
-                        "%f: %l: %m",
-                    },
-                },
-                {
-                    formatCommand = "pandoc -f markdown -t gfm -sp --tab-stop=2",
-                },
-            },
-        },
-    },
-    on_attach = on_attach,
-}
-
 lsp.gopls.setup{
     cmd = {"gopls", "-remote=auto", "-logfile=auto", "-debug=:0", "-remote.debug=:0", "-remote.logfile=auto"},
     capabilities = capabilities,
@@ -314,7 +288,11 @@ lsp.kotlin_language_server.setup{
     cmd = { home .. "/Code/lsps/kotlin-language-server/server/build/install/server/bin/kotlin-language-server" },
     capabilities = capabilities,
     filetypes = { "kotlin" },
-    root_dir = lsp.util.root_pattern("build.gradle.kts"),
+    root_dir = function(fname)
+        local primary = lsp.util.root_pattern("settings.gradle", "settings.gradle.kts")
+        local fallback = lsp.util.root_pattern("build.gradle", "build.gradle.kts")
+        return primary(fname) or fallback(fname)
+    end,
     settings = {
         kotlin = {
             compiler = {
@@ -404,15 +382,26 @@ lsp.sumneko_lua.setup{
             diagnostics = {
                 globals = { "vim" },
             },
-            runtime = {
-                version = "Lua 5.4",
-                path = {
-                    "?.lua",
-                    "?/init.lua",
-                }
-            }
-        }
+            -- runtime = {
+            --     version = "Lua 5.4",
+            --     path = {
+            --         "?.lua",
+            --         "?/init.lua",
+            --     }
+            -- },
+            telemetry = {
+                enable = false,
+            },
+            workspace = {
+                library = vim.api.nvim_get_runtime_file("", true),
+            },
+        },
     },
+    -- on_init = function(client)
+    --     if client.config.settings then
+    --         client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+    --     end
+    -- end,
     on_attach = on_attach,
 }
 
@@ -438,6 +427,7 @@ lsp.terraformls.setup{
 }
 
 lsp.tflint.setup{
+    cmd = { "tflint", "--config", home .. "/.config/tflint/config.hcl", "--langserver" },
     capabilities = capabilities,
     on_attach = on_attach,
 }
@@ -484,8 +474,108 @@ lsp.yamlls.setup{
     on_attach = on_attach,
 }
 
+lint.linters.tfsec = {
+    cmd = "tfsec",
+    stdin = true, -- if false, nvim-lint automatically adds the filename as an argument, which we don't want
+    args = {
+        "--soft-fail",
+        "--format=json",
+        function()
+            local root_path = vim.api.nvim_buf_get_name(0)
+            if not lsp.util.path.is_dir(root_path) then
+                root_path = lsp.util.path.dirname(root_path)
+            end
+            return root_path
+        end,
+    },
+    stream = "stdout",
+    ignore_exitcode = false,
+    env = nil,
+    parser = function(output, bufnr)
+        local body = vim.json.decode(output)
+        if not body or body.results == vim.NIL then return {} end
+
+        local filename = vim.api.nvim_buf_get_name(bufnr)
+        local diagnostics = {}
+
+        for _, result in ipairs(body.results) do
+            -- TODO set diagnostics for other buffers instead of skipping?
+            -- tfsec is giving us all those anyways
+            if result.location.filename ~= filename then
+                goto skip_to_next
+            end
+
+            -- exclude duplicates (e.g. for multiple values in the same block)
+            for _, dup in ipairs(diagnostics) do
+                if dup.lnum == result.location.start_line and
+                    dup.end_lnum == result.location.end_line and
+                    dup.code == result.long_id then
+                    goto skip_to_next
+                end
+            end
+
+            local severity = vim.diagnostic.severity.WARN
+            if result.warning then
+                severity = vim.diagnostic.severity.INFO
+            end
+
+            local fmt = [[
+%s (%s)
+Impact (%s): %s
+Resolution: %s
+See:
+]] .. string.rep("* %s", #result.links, "\n")
+.. "\n"
+
+            local msg = string.format(fmt,
+                result.description,
+                result.long_id,
+                result.severity,
+                result.impact,
+                result.resolution,
+                unpack(result.links)
+            )
+
+            local diag = {
+                bufnr = bufnr,
+                lnum = result.location.start_line,
+                end_lnum = result.location.end_line,
+                col = 0,
+                severity = severity,
+                message = msg,
+                source = "tfsec",
+                code = result.long_id,
+                user_data = {
+                    links = result.links,
+                },
+            }
+
+            table.insert(diagnostics, diag)
+
+            ::skip_to_next::
+        end
+
+        return diagnostics
+    end,
+}
+
+lint.linters_by_ft = {
+    dockerfile = { "hadolint", },
+    markdown = { "markdownlint", "proselint", },
+    text = { "proselint", },
+    rst = { "proselint", },
+    -- sh = { "shellcheck", },
+    terraform = { "tfsec", },
+}
+
 -- plugins for specific LSP servers
 local lsp_plugins_au = vim.api.nvim_create_augroup("lsp_plugins", {})
+
+vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
+    group = lsp_plugins_au,
+    callback = function() lint.try_lint() end,
+})
+
 local jdtls = require("jdtls_setup")
 vim.api.nvim_create_autocmd("FileType", {
     group = lsp_plugins_au,
@@ -556,21 +646,22 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
 
     if result.value.kind == "begin" then
         local msg = notifications.format_message(result.value.message, result.value.percentage)
+        local client = vim.lsp.get_client_by_id(ctx.client_id)
         local opts = notifications.init_spinner(ctx.client_id, result.token, data, {
-            title = notifications.format_title(result.value.title, vim.lsp.get_client_by_id(ctx.client_id).name),
+            title = notifications.format_title(result.value.title, client.name),
             timeout = false,
             hide_from_history = false,
         })
-        data.notification = vim.notify(msg, "info", opts)
+        data.notification = vim.notify(msg, vim.log.levels.INFO, opts)
     elseif result.value.kind == "report" and data then
         local msg = notifications.format_message(result.value.message, result.value.percentage)
-        data.notification = vim.notify(msg, "info", {
+        data.notification = vim.notify(msg, vim.log.levels.INFO, {
             replace = data.notification,
             hide_from_history = false,
         })
     elseif result.value.kind == "end" and data then
         local msg = result.value.message and notifications.format_message(result.value.message) or "Complete"
-        data.notification = vim.notify(msg, "info", {
+        data.notification = vim.notify(msg, vim.log.levels.INFO, {
             icon = "",
             replace = data.notification,
             timeout = 3000,
@@ -578,6 +669,44 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
         notifications.stop_spinner(data)
     end
 end
+
+local function lsp_message_type_to_icon_and_neovim(message_type)
+    if message_type == vim.lsp.protocol.MessageType.Error then
+        return log.levels.ERROR, " "
+    elseif message_type == vim.lsp.protocol.MessageType.Warning then
+        return log.levels.WARN, " "
+    elseif message_type == vim.lsp.protocol.MessageType.Info then
+        return log.levels.INFO, " "
+    elseif message_type == vim.lsp.protocol.MessageType.Log then
+        return log.levels.TRACE, " "
+    else
+        return log.levels.DEBUG, "? "
+    end
+end
+
+local function lsp_message_notify(_, result, ctx, _)
+    if not result then return end
+
+    local level, icon = lsp_message_type_to_icon_and_neovim(result.type)
+
+    if not log.should_log(level) then return end
+
+    local client = vim.lsp.get_client_by_id(ctx.client_id)
+    local client_name = ""
+    if client ~= nil then
+        client_name = client.name
+    else
+        client_name = "Client " .. tostring(ctx.client_id)
+    end
+
+    vim.notify(result.message, level, {
+        title = client_name,
+        icon = icon,
+    })
+end
+
+-- vim.lsp.handlers["window/logMessage"] = lsp_message_notify
+vim.lsp.handlers["window/showMessage"] = lsp_message_notify
 
 --local profile_end_time = vim.loop.hrtime()
 --print("lsp_config.lua:", profile_end_time - profile_start_time)
