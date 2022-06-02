@@ -8,18 +8,30 @@ endif
 call plug#begin('~/.local/share/nvim/plugged')
 
 " interface
-Plug 'mhinz/vim-signify'
-Plug 'rhysd/git-messenger.vim'
 Plug 'nvim-lualine/lualine.nvim'
-Plug 'nvim-lua/popup.nvim'
-Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
 Plug 'nvim-telescope/telescope-ui-select.nvim'
 Plug 'nvim-telescope/telescope-file-browser.nvim'
 "Plug 'kosayoda/nvim-lightbulb'
 Plug 'kyazdani42/nvim-web-devicons'
+Plug 'rcarriga/nvim-notify'
+Plug 'vimlab/split-term.vim'
+
+" dependencies
+Plug 'nvim-lua/popup.nvim'
+Plug 'nvim-lua/plenary.nvim'
+
+" tools
 Plug 'nvim-neorg/neorg'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
+" git
+" Plug 'mhinz/vim-signify'
+Plug 'lewis6991/gitsigns.nvim'
+" Plug 'rhysd/git-messenger.vim'
+Plug 'TimUntersberger/neogit'
 
 " formatting
 Plug 'tpope/vim-surround'
@@ -60,17 +72,13 @@ Plug 'ellisonleao/gruvbox.nvim'
 Plug 'Raimondi/delimitMate'
 Plug 'andymass/vim-matchup'
 Plug 'tpope/vim-repeat'
-Plug 'vimlab/split-term.vim'
 Plug 'editorconfig/editorconfig-vim'
-Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-commentary'
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
 Plug 'tpope/vim-eunuch'
 Plug 'lewis6991/spellsitter.nvim'
 "Plug 'wannesm/wmgraphviz.vim'
-Plug 'rcarriga/nvim-notify'
 Plug 'sindrets/diffview.nvim'
 
 call plug#end()
@@ -197,6 +205,8 @@ lua require("lualine_config")
 lua require("dap_config")
 lua require("diffview_config")
 lua require("neorg_config")
+lua require("neogit_config")
+lua require("gitsigns_config")
 
 lua require("spellsitter").setup{ enable = true }
 
@@ -228,8 +238,6 @@ let g:fzf_buffers_jump = 1
 
 " git messenger
 let g:git_messenger_always_into_popup = v:true
-
-nmap <leader>g <Plug>(git-messenger)
 
 "
 " zig settings
