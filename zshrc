@@ -85,10 +85,10 @@ fi
 if [ "${commands[kubectl]}" ] && [ ! -f "${fpath[1]}/_kubectl" ]; then
    kubectl completion zsh > "${fpath[1]}/_kubectl"
 
-   if [ ! -f "${fpath[1]}/_kubectl_krew" ]; then
+    if [ ! -f "${fpath[1]}/_kubectl_krew" ]; then
         kubectl krew completion zsh > "${fpath[1]}/_kubectl_krew"
-        export PATH="$HOME/.krew/bin:$PATH"
-   fi
+    fi
+    export PATH="$HOME/.krew/bin:$PATH"
 
     function watch_pods()
     {
