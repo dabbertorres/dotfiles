@@ -33,65 +33,54 @@ capabilities.textDocument.completion.completionItem.snippetSupport = true
 local function on_attach(client, bufnr)
     vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-k>", "", util.copy_with(mappings_opts, { callback = vim.diagnostic.goto_prev }))
+    vim.keymap.set("n", "<c-k>", vim.diagnostic.goto_prev, util.copy_with(mappings_opts, { buffer = bufnr }))
+    vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-j>", "", util.copy_with(mappings_opts, { callback = vim.diagnostic.goto_next }))
+    vim.keymap.set("n", "mpd", function()
+        local params = vim.lsp.util.make_position_params()
+        return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
+            if result == nil or vim.tbl_isempty(result) then return nil end
+            vim.lsp.util.preview_location(result[1])
+        end)
+    end, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mpd", "", util.copy_with(mappings_opts, {
-        callback = function()
-            local params = vim.lsp.util.make_position_params()
-            return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
-                if result == nil or vim.tbl_isempty(result) then return nil end
-                vim.lsp.util.preview_location(result[1])
-            end)
-        end,
-    }))
+    vim.keymap.set("n", "mca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
+    vim.keymap.set("v", "mca", vim.lsp.buf.range_code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mca", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.code_action }))
+    vim.keymap.set("n", "gd", function()
+        telescope.lsp_definitions{
+            jump_type = nil,
+            ignore_filename = false,
+            trim_text = false,
+        }
+    end, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "v", "mca", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.range_code_action }))
+    vim.keymap.set("n", "gD", vim.lsp.buf.declaration, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "", util.copy_with(mappings_opts, {
-        callback = function()
-            telescope.lsp_definitions({
-                jump_type = nil,
-                ignore_filename = false,
-                trim_text = false,
-            })
-        end}))
+    vim.keymap.set("n", "gi", function()
+        telescope.lsp_implementations{
+            jump_type = nil,
+            ignore_filename = false,
+            trim_text = false,
+        }
+    end, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.declaration }))
+    vim.keymap.set("n", "K", vim.lsp.buf.hover, util.copy_with(mappings_opts, { buffer = bufnr }))
+    vim.keymap.set("n", "mk", vim.lsp.buf.signature_help, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", "", util.copy_with(mappings_opts, {
-        callback = function()
-            telescope.lsp_implementations({
-                jump_type = nil,
-                ignore_filename = false,
-                trim_text = false,
-            })
-        end,
-    }))
+    vim.keymap.set("n", "gu", function()
+        telescope.lsp_references({
+            include_declaration = true,
+            include_current_line = true,
+            trim_text = false,
+        })
+    end, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "K", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.hover }))
+    vim.keymap.set("n", "mrn", vim.lsp.buf.rename, util.copy_with(mappings_opts, { buffer = bufnr } ))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mk", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.signature_help }))
+    vim.keymap.set("n", "mfa", vim.lsp.buf.formatting, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "gu", "", util.copy_with(mappings_opts, {
-        callback = function()
-            telescope.lsp_references({
-                include_declaration = true,
-                include_current_line = true,
-                trim_text = false,
-            })
-        end}))
-
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mrn", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.rename } ))
-
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "mfa", "", util.copy_with(mappings_opts, { callback = vim.lsp.buf.formatting }))
-
-    -- vim.api.nvim_buf_set_keymap(bufnr, "n", "ms", "<Plug>(sqls-execute-query)", mappings_opts)
-
-    -- vim.api.nvim_buf_set_keymap(bufnr, "v", "ms", "<Plug>(sqls-execute-query)", mappings_opts)
+    -- vim.keymap.set({"n", "v"}, "ms", "<Plug>(sqls-execute-query)", { buffer = bufnr })
 
     vim.api.nvim_create_autocmd({"CursorHold", "CursorHoldI"}, {
         buffer = bufnr,

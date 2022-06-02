@@ -33,14 +33,14 @@ vim.fn.sign_define("DapBreakpointCondition", { text = "❓", texthl = "",       
 vim.fn.sign_define("DapLogPoint",            { text = "📜", texthl = "",        linehl = "",       numhl = "" })
 vim.fn.sign_define("DapBreakpointRejected",  { text = "❌", texthl = "",        linehl = "",       numhl = "" })
 
-vim.api.nvim_set_keymap("n", "<F5>",  ":lua require('dap').continue()<CR>",          { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<F6>",  ":lua require('dap').terminate()<CR>",         { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<F7>",  ":lua require('dap').toggle_breakpoint()<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<F8>",  ":lua require('dap').continue()<CR>",          { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<F9>",  ":lua require('dap').step_over()<CR>",         { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<F10>", ":lua require('dap').step_into()<CR>",         { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<F11>", ":lua require('dap').step_out()<CR>",          { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "mi",    ":lua require('dapui').eval()<CR>",            { noremap = true, silent = true })
+vim.keymap.set("n", "<F5>",  dap.continue,          { noremap = true, silent = true })
+vim.keymap.set("n", "<F6>",  dap.terminate,         { noremap = true, silent = true })
+vim.keymap.set("n", "<F7>",  dap.toggle_breakpoint, { noremap = true, silent = true })
+vim.keymap.set("n", "<F8>",  dap.continue,          { noremap = true, silent = true })
+vim.keymap.set("n", "<F9>",  dap.step_over,         { noremap = true, silent = true })
+vim.keymap.set("n", "<F10>", dap.step_into,         { noremap = true, silent = true })
+vim.keymap.set("n", "<F11>", dap.step_out,          { noremap = true, silent = true })
+vim.keymap.set("n", "mi",    dapui.eval,            { noremap = true, silent = true })
 
 dapui.setup{
     icons = {

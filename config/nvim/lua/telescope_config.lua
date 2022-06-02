@@ -4,8 +4,6 @@ local actions = require("telescope.actions")
 local telescope = require("telescope")
 local builtin = require("telescope.builtin")
 
-local util = require("util")
-
 telescope.setup{
     defaults = {
         vimgrep_arguments = {
@@ -54,15 +52,14 @@ local file_browser_opts = {
     hidden = false,
 }
 
-vim.api.nvim_set_keymap("n", "mfb", "", util.copy_with(mappings_opts, {
-    callback = function()
-        telescope.extensions.file_browser.file_browser(file_browser_opts)
-    end}))
-vim.api.nvim_set_keymap("n", "mff", "", util.copy_with(mappings_opts, { callback = builtin.find_files }))
-vim.api.nvim_set_keymap("n", "msl", "", util.copy_with(mappings_opts, { callback = builtin.live_grep }))
-vim.api.nvim_set_keymap("n", "mss", "", util.copy_with(mappings_opts, { callback = builtin.grep_string }))
-vim.api.nvim_set_keymap("n", "msb", "", util.copy_with(mappings_opts, { callback = builtin.buffers }))
-vim.api.nvim_set_keymap("n", "msh", "", util.copy_with(mappings_opts, { callback = builtin.help_tags }))
+vim.keymap.set("n", "mfb", function()
+    telescope.extensions.file_browser.file_browser(file_browser_opts)
+end, mappings_opts)
+vim.keymap.set("n", "mff", builtin.find_files, mappings_opts)
+vim.keymap.set("n", "msl", builtin.live_grep, mappings_opts)
+vim.keymap.set("n", "mss", builtin.grep_string, mappings_opts)
+vim.keymap.set("n", "msb", builtin.buffers, mappings_opts)
+vim.keymap.set("n", "msh", builtin.help_tags, mappings_opts)
 
 --local profile_end_time = vim.loop.hrtime()
 --print("lsp_config.lua:", profile_end_time - profile_start_time)

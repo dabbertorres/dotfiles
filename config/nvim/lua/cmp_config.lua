@@ -53,7 +53,8 @@ cmp.setup{
         },
         { name = "spell" },
         { name = "calc" },
-    }, {
+    },
+    {
         {
             name = "buffer",
             option = {
