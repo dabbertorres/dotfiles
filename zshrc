@@ -208,12 +208,9 @@ function show-git-status()
 
 function show-jobs()
 {
-    local num_jobs=$(jobs -d | wc -l)
-    num_jobs=$(echo "$num_jobs / 2" | bc)
-    if [[ $num_jobs -gt 0 ]]; then
-        local word="jobs"
-        if [[ $num_jobs -eq 1 ]]; then word="job"; fi
-        printf " %%F{cyan}[%d %s]%%f" "$num_jobs" "$word"
+    read num_jobs < <(jobs -d | wc -l | xargs printf "%d / 2\n" | bc)
+    if [[ num_jobs -gt 0 ]]; then
+        printf " %%F{cyan}[%d job(s)]%%f" "$num_jobs"
     fi
 }
 
@@ -221,7 +218,7 @@ function show-dirs()
 {
     local num_dirs=$(( $(dirs | sed -e 's/ /\n/g' | wc -l) - 1))
     if [[ $num_dirs -gt 0 ]]; then
-        printf " %%F{magenta}[%d dirs]%%f" $num_dirs
+        printf " %%F{magenta}[%d dir(s)]%%f" $num_dirs
     fi
 }
 
@@ -234,7 +231,9 @@ function show-pyvenv()
 
 function precmd
 {
-    PROMPT="%U%n@%m%u$(show-pwd)$(show-git-status)$(show-pyvenv)$(show-jobs)$(show-dirs)
+    read job_sts < <(show-jobs)
+    job_sts="${job_sts:+ $job_sts}"
+    PROMPT="%U%n@%m%u$(show-pwd)$(show-git-status)$(show-pyvenv)${job_sts}$(show-dirs)
 > "
 }
 
