@@ -1,11 +1,15 @@
-require("lualine").setup {
+local lualine = require("lualine")
+local toggleterm_status = require("toggleterm_lualine")
+
+lualine.setup {
     options = {
         icons_enabled = true,
         theme = "gruvbox",
-        component_separators = { left = "", right = ""},
-        section_separators = { left = "", right = ""},
-        disabled_filetypes = {},
+        component_separators = { left = "", right = "" },
+        section_separators = { left = "", right = "" },
+        disabled_filetypes = { "toggleterm" },
         always_divide_middle = true,
+        globalstatus = true,
     },
     sections = {
         lualine_a = {"mode"},
@@ -29,28 +33,54 @@ require("lualine").setup {
             },
         },
         lualine_x = {
-            {function() return vim.fn["nvim_treesitter#statusline"](90) end},
+            "MatchupStatusOffscreen",
+            { function() return vim.fn["nvim_treesitter#statusline"](90) end },
             "filetype",
         },
         lualine_y = {"encoding", "fileformat"},
         lualine_z = {"location", "diagnostics"},
     },
-    inactive_sections = {
-        lualine_a = {},
-        lualine_b = {},
-        lualine_c = {
+    -- inactive_sections = {
+    --     lualine_a = {},
+    --     lualine_b = {},
+    --     lualine_c = {
+    --         {
+    --             "filename",
+    --             path = 1,
+    --         },
+    --     },
+    --     lualine_x = {"location"},
+    --     lualine_y = {},
+    --     lualine_z = {},
+    -- },
+    tabline = {
+        -- options = {
+        --     section_separators = { left = "|", right = "|" },
+        -- },
+        lualine_a = {
             {
-                "filename",
-                path = 1,
+                "buffers",
+                symbols = {
+                    modified = " ●",
+                    alternate_file = "",
+                    directory = "",
+                },
             },
         },
-        lualine_x = {"location"},
-        lualine_y = {},
-        lualine_z = {}
-    },
-    tabline = {
-        lualine_a = {"buffers"},
+        lualine_y = {
+            { toggleterm_status, id = 1 },
+            { toggleterm_status, id = 2 },
+            { toggleterm_status, id = 3 },
+            { toggleterm_status, id = 4 },
+            { toggleterm_status, id = 5 },
+            { toggleterm_status, id = 6 },
+            { toggleterm_status, id = 7 },
+            { toggleterm_status, id = 8 },
+            { toggleterm_status, id = 9 },
+            { toggleterm_status, id = 10 },
+            { toggleterm_status.terminal_icon() },
+        },
         lualine_z = {"tabs"},
     },
-    extensions = {}
+    extensions = {},
 }

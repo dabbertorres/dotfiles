@@ -13,30 +13,27 @@ Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
 Plug 'nvim-telescope/telescope-ui-select.nvim'
 Plug 'nvim-telescope/telescope-file-browser.nvim'
-"Plug 'kosayoda/nvim-lightbulb'
+Plug 'kosayoda/nvim-lightbulb'
 Plug 'kyazdani42/nvim-web-devicons'
 Plug 'rcarriga/nvim-notify'
-Plug 'vimlab/split-term.vim'
+Plug 'akinsho/toggleterm.nvim'
 
 " dependencies
 Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 
 " tools
-Plug 'nvim-neorg/neorg'
+"Plug 'nvim-neorg/neorg'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
 " git
-" Plug 'mhinz/vim-signify'
 Plug 'lewis6991/gitsigns.nvim'
-" Plug 'rhysd/git-messenger.vim'
 Plug 'TimUntersberger/neogit'
 
 " formatting
 Plug 'tpope/vim-surround'
 Plug 'junegunn/vim-easy-align'
-"Plug 'EgZvor/vim-black'
 Plug 'a-vrma/black-nvim', { 'do': ':UpdateRemotePlugins' }
 
 " debugging tooling
@@ -46,6 +43,7 @@ Plug 'rcarriga/nvim-dap-ui'
 " language tooling
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdateSync' }
+" Plug 'nvim-treesitter/playground'
 Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'L3MON4D3/LuaSnip'
 Plug 'mfussenegger/nvim-jdtls'
@@ -53,6 +51,7 @@ Plug 'mfussenegger/nvim-dap-python'
 Plug 'leoluz/nvim-dap-go'
 Plug 'nanotee/sqls.nvim'
 Plug 'mfussenegger/nvim-lint'
+Plug 'rcarriga/neotest'
 
 " autocompletion
 Plug 'hrsh7th/nvim-cmp'
@@ -80,6 +79,7 @@ Plug 'tpope/vim-eunuch'
 Plug 'lewis6991/spellsitter.nvim'
 "Plug 'wannesm/wmgraphviz.vim'
 Plug 'sindrets/diffview.nvim'
+Plug 'antoinemadec/FixCursorHold.nvim' " https://github.com/neovim/neovim/issues/12587
 
 call plug#end()
 
@@ -206,9 +206,11 @@ lua require("devicons_config")
 lua require("lualine_config")
 lua require("dap_config")
 lua require("diffview_config")
-lua require("neorg_config")
+"lua require("neorg_config")
 lua require("neogit_config")
 lua require("gitsigns_config")
+lua require("neotest_config")
+lua require("toggleterm_config")
 
 lua require("spellsitter").setup{ enable = true }
 
@@ -225,10 +227,13 @@ command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen'), '\n$', '', 
 let g:asmsyntax = 'nasm'
 
 let delimitMate_expand_cr = 1
+let g:matchup_matchparen_offscreen = {
+    \ 'method': 'status_manual',
+    \ }
 
 " split-term
 let g:disable_key_mappings = 1
-set splitbelow
+set splitright
 
 " fzf
 let g:fzf_buffers_jump = 1

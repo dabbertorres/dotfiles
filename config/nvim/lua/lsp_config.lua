@@ -6,6 +6,7 @@ local log = require("vim.lsp.log")
 local cmp_lsp = require("cmp_nvim_lsp")
 local lint = require("lint")
 local telescope = require("telescope.builtin")
+local lightbulb = require("nvim-lightbulb")
 
 local notifications = require("notifications")
 local util = require("util")
@@ -29,6 +30,8 @@ local mappings_opts = {
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = cmp_lsp.update_capabilities(capabilities)
 capabilities.textDocument.completion.completionItem.snippetSupport = true
+
+lightbulb.setup{}
 
 local function on_attach(client, bufnr)
     vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
@@ -82,10 +85,17 @@ local function on_attach(client, bufnr)
 
     -- vim.keymap.set({"n", "v"}, "ms", "<Plug>(sqls-execute-query)", { buffer = bufnr })
 
-    vim.api.nvim_create_autocmd({"CursorHold", "CursorHoldI"}, {
+    vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
         buffer = bufnr,
         callback = function()
             vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
+        end,
+    })
+
+    vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+        buffer = bufnr,
+        callback = function()
+            lightbulb.update_lightbulb()
         end,
     })
 
@@ -673,7 +683,7 @@ local function lsp_message_type_to_icon_and_neovim(message_type)
     end
 end
 
-local function lsp_message_notify(_, result, ctx, _)
+vim.lsp.handlers["window/showMessage"] = function(_, result, ctx, _)
     if not result then return end
 
     local level, icon = lsp_message_type_to_icon_and_neovim(result.type)
@@ -693,9 +703,6 @@ local function lsp_message_notify(_, result, ctx, _)
         icon = icon,
     })
 end
-
--- vim.lsp.handlers["window/logMessage"] = lsp_message_notify
-vim.lsp.handlers["window/showMessage"] = lsp_message_notify
 
 --local profile_end_time = vim.loop.hrtime()
 --print("lsp_config.lua:", profile_end_time - profile_start_time)
