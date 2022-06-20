@@ -98,6 +98,7 @@ set encoding=utf-8
 set clipboard+=unnamedplus
 set synmaxcol=500
 
+if has('mac')
 let g:clipboard = {
     \ 'name': 'pbcopy',
     \ 'copy': {
@@ -109,7 +110,8 @@ let g:clipboard = {
     \     '*': 'pbpaste',
     \ },
     \ 'cache_enabled': 0,
-\ }
+    \ }
+endif
 
 " usability
 set autowrite

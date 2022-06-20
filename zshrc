@@ -2,6 +2,10 @@
 
 if [[ $(uname) == "Linux" ]]; then
     IS_LINUX=true
+
+    if [[ $(uname -a | grep "microsoft") ]]; then
+        IS_WSL=true
+    fi
 elif [[ $(uname) == "Darwin" ]]; then
     IS_OSX=true
     if [ "${commands[brew]}" ]; then
@@ -25,7 +29,7 @@ export PATH="/usr/local/bin:$PATH"
 export PATH="/usr/local/sbin:$PATH"
 
 if [ $IS_LINUX ]; then
-    true
+    export PATH="/usr/local/go/bin:$PATH"
 elif [ $IS_OSX ]; then
     export HOMEBREW_NO_AUTO_UPDATE=1
 
@@ -44,7 +48,7 @@ compinit
 autoload -U +X bashcompinit && bashcompinit
 
 if [ -d "$HOME/.zsh/completion" ]; then
-    fpath=(${fpath[@]} $HOME/.zsh/completion)
+    fpath=($HOME/.zsh/completion ${fpath[@]})
 fi
 
 if [ "${commands[dotnet]}" ]; then
@@ -54,9 +58,10 @@ fi
 
 if [ "${commands[gcloud]}" ]; then
     export CLOUDSDK_PYTHON_SITEPACKAGES=1
-    source "${BREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
-    source "${BREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
-
+    if [ $IS_OSX ]; then
+        source "${BREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
+        source "${BREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
+    fi
 
     function list_compute_instances()
     {
@@ -73,7 +78,10 @@ if [ "${commands[go]}" ]; then
 fi
 
 if [ "${commands[java]}" ]; then
-    export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-14.jdk/Contents/Home
+    if [ $IS_OSX ]; then
+        export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-14.jdk/Contents/Home
+    fi
+
     export _JAVA_AWT_WM_NONREPARENTING=1
     export PATH="$JAVA_HOME/bin:$PATH"
 fi
@@ -152,7 +160,7 @@ elif [ -d "$HOME/.local/share/gitstatus" ]; then
 fi
 
 # OSX specific settings for using non-default compiler toolchains
-if $IS_OSX; then
+if [[ $IS_OSX ]]; then
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib"
     export TOOLCHAINS=swift
 
@@ -172,7 +180,7 @@ fi
 ### aliases
 
 alias cl=clear
-alias ls='ls -G'
+alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 
 LUAMAKE_DIR="$HOME/Code/lsps/lua-language-server/3rd/luamake"

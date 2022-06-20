@@ -33,14 +33,19 @@ vim.fn.sign_define("DapBreakpointCondition", { text = "❓", texthl = "",       
 vim.fn.sign_define("DapLogPoint",            { text = "📜", texthl = "",        linehl = "",       numhl = "" })
 vim.fn.sign_define("DapBreakpointRejected",  { text = "❌", texthl = "",        linehl = "",       numhl = "" })
 
-vim.keymap.set("n", "<F5>",  dap.continue,          { noremap = true, silent = true })
-vim.keymap.set("n", "<F6>",  dap.terminate,         { noremap = true, silent = true })
-vim.keymap.set("n", "<F7>",  dap.toggle_breakpoint, { noremap = true, silent = true })
-vim.keymap.set("n", "<F8>",  dap.continue,          { noremap = true, silent = true })
-vim.keymap.set("n", "<F9>",  dap.step_over,         { noremap = true, silent = true })
-vim.keymap.set("n", "<F10>", dap.step_into,         { noremap = true, silent = true })
-vim.keymap.set("n", "<F11>", dap.step_out,          { noremap = true, silent = true })
-vim.keymap.set("n", "mi",    dapui.eval,            { noremap = true, silent = true })
+local keymap_opts = { noremap = true, silent = true }
+
+vim.keymap.set("n",          "<F5>",       dap.continue,          keymap_opts)
+vim.keymap.set("n",          "<F6>",       dap.terminate,         keymap_opts)
+vim.keymap.set("n",          "<F7>",       dap.toggle_breakpoint, keymap_opts)
+vim.keymap.set("n",          "<F8>",       dap.continue,          keymap_opts)
+vim.keymap.set("n",          "<F9>",       dap.step_over,         keymap_opts)
+vim.keymap.set("n",          "<F10>",      dap.step_into,         keymap_opts)
+vim.keymap.set("n",          "<F11>",      dap.step_out,          keymap_opts)
+vim.keymap.set({ "n", "v" }, "<leader>de", dapui.eval,            keymap_opts)
+vim.keymap.set("n",          "<leader>du", dap.up,                keymap_opts)
+vim.keymap.set("n",          "<leader>dd", dap.down,              keymap_opts)
+vim.keymap.set("n",          "<leader>dr", dap.run_to_cursor,     keymap_opts)
 
 dapui.setup{
     icons = {
@@ -55,6 +60,7 @@ dapui.setup{
         edit   = "e",
         repl   = "r",
     },
+    expand_lines = true,
     sidebar = {
         elements = {
           { id = "scopes",      size = 0.25 },
@@ -83,7 +89,7 @@ dapui.setup{
     },
 }
 
-dap.listeners.before.event_progressStart["progress-notifications"] = function(session, body)
+dap.listeners.after["event_progressStart"]["progress-notifications"] = function(session, body)
     local data = notifications.get("dap", body.progressId)
 
     local msg = notifications.format_message(body.message, body.percentage)
@@ -96,7 +102,7 @@ dap.listeners.before.event_progressStart["progress-notifications"] = function(se
     data.notification = vim.notify(msg, "info", opts)
 end
 
-dap.listeners.before.event_progressUpdate["progress-notifications"] = function(_, body)
+dap.listeners.after["event_progressUpdate"]["progress-notifications"] = function(_, body)
     local data = notifications.get("dap", body.progressId)
     local msg = notifications.format_message(body.message, body.percentage)
     data.notification = vim.notify(msg, "info", {
@@ -105,28 +111,20 @@ dap.listeners.before.event_progressUpdate["progress-notifications"] = function(_
     })
 end
 
-dap.listeners.before.event_progressEnd["progress-notifications"] = function(_, body)
+dap.listeners.after["event_progressEnd"]["progress-notifications"] = function(_, body)
     local data = notifications.get("dap", body.progressId)
     local msg = body.message and notifications.format_message(body.message) or "Complete"
     data.notification = vim.notify(msg, "info", {
         icon = "",
         replace = data.notification,
-            timeout = 3000,
+        timeout = 3000,
     })
     notifications.stop_spinner(data)
 end
 
-dap.listeners.before.event_initialized["dapui_config"] = function()
-    dapui.open()
-end
-
-dap.listeners.after.event_terminated["dapui_config"] = function()
-    dapui.close()
-end
-
-dap.listeners.after.event_exited["dapui_config"] = function()
-    dapui.close()
-end
+dap.listeners.after["event_initialized"]["dapui_config"] = dapui.open
+dap.listeners.before["event_terminated"]["dapui_config"] = dapui.close
+dap.listeners.before["event_exited"]["dapui_config"] = dapui.close
 
 --local profile_end_time = vim.loop.hrtime()
 --print("compe_config.lua:", profile_end_time - profile_start_time)
