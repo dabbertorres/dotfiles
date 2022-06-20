@@ -42,6 +42,10 @@ elif [ $IS_OSX ]; then
     alias lldb='PATH=/usr/bin lldb' # force using system python for lldb - avoids a python import error
 fi
 
+if [ -f "${HOME}/.cargo/env" ]; then
+    source "${HOME}/.cargo/env"
+fi
+
 autoload -Uz compinit
 compinit
 
