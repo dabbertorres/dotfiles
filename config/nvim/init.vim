@@ -31,10 +31,9 @@ Plug 'junegunn/fzf.vim'
 Plug 'lewis6991/gitsigns.nvim'
 Plug 'TimUntersberger/neogit'
 
-" formatting
-Plug 'tpope/vim-surround'
-Plug 'junegunn/vim-easy-align'
-Plug 'a-vrma/black-nvim', { 'do': ':UpdateRemotePlugins' }
+" testing tooling
+Plug 'nvim-neotest/neotest'
+Plug 'nvim-neotest/neotest-go'
 
 " debugging tooling
 Plug 'mfussenegger/nvim-dap'
@@ -44,14 +43,12 @@ Plug 'rcarriga/nvim-dap-ui'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdateSync' }
 " Plug 'nvim-treesitter/playground'
-Plug 'saadparwaiz1/cmp_luasnip'
-Plug 'L3MON4D3/LuaSnip'
 Plug 'mfussenegger/nvim-jdtls'
 Plug 'mfussenegger/nvim-dap-python'
 Plug 'leoluz/nvim-dap-go'
 Plug 'nanotee/sqls.nvim'
 Plug 'mfussenegger/nvim-lint'
-Plug 'rcarriga/neotest'
+Plug 'a-vrma/black-nvim', { 'do': ':UpdateRemotePlugins' }
 
 " autocompletion
 Plug 'hrsh7th/nvim-cmp'
@@ -61,6 +58,8 @@ Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
 Plug 'hrsh7th/cmp-nvim-lua'
 Plug 'hrsh7th/cmp-path'
+Plug 'saadparwaiz1/cmp_luasnip'
+Plug 'L3MON4D3/LuaSnip'
 " Plug 'f3fora/cmp-spell'
 
 " color schemes
@@ -80,6 +79,8 @@ Plug 'lewis6991/spellsitter.nvim'
 "Plug 'wannesm/wmgraphviz.vim'
 Plug 'sindrets/diffview.nvim'
 Plug 'antoinemadec/FixCursorHold.nvim' " https://github.com/neovim/neovim/issues/12587
+Plug 'tpope/vim-surround'
+Plug 'junegunn/vim-easy-align'
 
 call plug#end()
 
