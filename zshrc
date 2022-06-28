@@ -184,7 +184,11 @@ fi
 ### aliases
 
 alias cl=clear
-alias ls='ls --color=auto'
+if [[ $IS_OSX ]]; then
+    alias ls='ls -G'
+else
+    alias ls='ls --color=auto'
+fi
 alias grep='grep --color=auto'
 
 LUAMAKE_DIR="$HOME/Code/lsps/lua-language-server/3rd/luamake"
@@ -201,6 +205,7 @@ function show-pwd()
 
 function show-git-status()
 {
+    gitstatus_prompt_update
     if [[ ${GITSTATUS_PROMPT_LEN} -gt 0 ]]; then
         printf " (%s)" "${GITSTATUS_PROMPT}"
     fi
