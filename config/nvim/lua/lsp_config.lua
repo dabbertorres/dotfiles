@@ -258,6 +258,7 @@ lsp.gopls.setup{
             semanticTokens = true,
             symbolMatcher = "FastFuzzy",
             symbolStyle = "Dynamic",
+            templateExtensions = {"gotmpl", "tmpl"},
             usePlaceholders = false,
         },
     },
@@ -412,15 +413,14 @@ lsp.tsserver.setup{
 lsp.terraformls.setup{
     capabilities = capabilities,
     flags = {
-        debounce_text_changes = 500,
+        debounce_text_changes = 1000,
     },
     init_options = {
         experimentalFeatures = {
-            validateOnSave = true,
+            validateOnSave = false,
             prefillRequiredFields = true,
         },
         terraformExecTimeout = "5s",
-        terraformLogFilePath = "/Users/aleciverson/Code/myndshft/platform/load-test/ops/infra/.tflogs/{{ .Ppid }}-{{ .Pid }}-{{ .Timestamp }}.log",
     },
     on_attach = on_attach,
 }

@@ -89,7 +89,7 @@ dapui.setup{
     },
 }
 
-dap.listeners.after["event_progressStart"]["progress-notifications"] = function(session, body)
+dap.listeners.after.event_progressStart["progress-notifications"] = function(session, body)
     local data = notifications.get("dap", body.progressId)
 
     local msg = notifications.format_message(body.message, body.percentage)
@@ -102,7 +102,7 @@ dap.listeners.after["event_progressStart"]["progress-notifications"] = function(
     data.notification = vim.notify(msg, "info", opts)
 end
 
-dap.listeners.after["event_progressUpdate"]["progress-notifications"] = function(_, body)
+dap.listeners.after.event_progressUpdate["progress-notifications"] = function(_, body)
     local data = notifications.get("dap", body.progressId)
     local msg = notifications.format_message(body.message, body.percentage)
     data.notification = vim.notify(msg, "info", {
@@ -111,7 +111,7 @@ dap.listeners.after["event_progressUpdate"]["progress-notifications"] = function
     })
 end
 
-dap.listeners.after["event_progressEnd"]["progress-notifications"] = function(_, body)
+dap.listeners.after.event_progressEnd["progress-notifications"] = function(_, body)
     local data = notifications.get("dap", body.progressId)
     local msg = body.message and notifications.format_message(body.message) or "Complete"
     data.notification = vim.notify(msg, "info", {
@@ -122,9 +122,9 @@ dap.listeners.after["event_progressEnd"]["progress-notifications"] = function(_,
     notifications.stop_spinner(data)
 end
 
-dap.listeners.after["event_initialized"]["dapui_config"] = dapui.open
-dap.listeners.before["event_terminated"]["dapui_config"] = dapui.close
-dap.listeners.before["event_exited"]["dapui_config"] = dapui.close
+dap.listeners.after.event_initialized["dapui_config"] = dapui.open
+dap.listeners.before.event_terminated["dapui_config"] = dapui.close
+dap.listeners.before.event_exited["dapui_config"] = dapui.close
 
 --local profile_end_time = vim.loop.hrtime()
 --print("compe_config.lua:", profile_end_time - profile_start_time)

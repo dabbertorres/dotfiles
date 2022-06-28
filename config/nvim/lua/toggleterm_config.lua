@@ -1,18 +1,15 @@
 local toggleterm = require("toggleterm")
 local terminals = require("toggleterm.terminal")
 
-local function on_open(terminal)
-    local keymap_opts = {
-        buffer = terminal.bufnr,
-        remap = false,
-    }
-
-    vim.keymap.set({ "n", "t" }, "<esc><esc>", function() vim.api.nvim_win_close(0, false) end, keymap_opts)
-    vim.keymap.set({ "n", "t" }, "<C-[><C-[>", function() vim.api.nvim_win_close(0, false) end, keymap_opts)
-end
+-- local function on_open(terminal)
+--     local keymap_opts = {
+--         buffer = terminal.bufnr,
+--         remap = false,
+--     }
+-- end
 
 toggleterm.setup{
-    on_open = on_open,
+    -- on_open = on_open,
     -- open_mapping = [[<C-\>]],
     hide_numbers = true,
     shade_terminals = true,
