@@ -39,7 +39,7 @@ telescope.setup{
 telescope.load_extension("file_browser")
 telescope.load_extension("fzf")
 telescope.load_extension("ui-select")
---telescope.load_extension("dap")
+-- telescope.load_extension("dap")
 
 local mappings_opts = {
     noremap = true,
@@ -55,11 +55,12 @@ local file_browser_opts = {
 vim.keymap.set("n", "mfb", function()
     telescope.extensions.file_browser.file_browser(file_browser_opts)
 end, mappings_opts)
-vim.keymap.set("n", "mff", builtin.find_files, mappings_opts)
-vim.keymap.set("n", "msl", builtin.live_grep, mappings_opts)
-vim.keymap.set("n", "mss", builtin.grep_string, mappings_opts)
-vim.keymap.set("n", "msb", builtin.buffers, mappings_opts)
-vim.keymap.set("n", "msh", builtin.help_tags, mappings_opts)
+vim.keymap.set("n", "<leader>ff", builtin.find_files, mappings_opts)
+vim.keymap.set("n", "<leader>sl", builtin.live_grep, mappings_opts)
+vim.keymap.set("n", "<leader>ss", builtin.grep_string, mappings_opts)
+vim.keymap.set("n", "<leader>sb", builtin.buffers, mappings_opts)
+vim.keymap.set("n", "<leader>sh", builtin.help_tags, mappings_opts)
+vim.keymap.set("n", "<leader>C", builtin.builtin, mappings_opts)
 
 --local profile_end_time = vim.loop.hrtime()
 --print("lsp_config.lua:", profile_end_time - profile_start_time)

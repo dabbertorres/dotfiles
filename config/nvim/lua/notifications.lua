@@ -5,7 +5,7 @@ notify.setup{
     timeout = 5000,
 }
 
-vim.notify = notify
+vim.notify = notify.notify
 
 local M = {}
 

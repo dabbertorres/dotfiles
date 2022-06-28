@@ -364,10 +364,17 @@ lsp.pyright.setup{
 
 lsp.sqls.setup{
     capabilities = capabilities,
+    root_dir = lsp.util.root_pattern(".sqls.yaml"),
     on_attach = function(client, bufnr)
         on_attach(client, bufnr)
         require('sqls').on_attach(client, bufnr)
-    end
+    end,
+    on_new_config = function(new_config, new_root_dir)
+        if new_root_dir then
+            table.insert(new_config.cmd, "--config")
+            table.insert(new_config.cmd, new_root_dir)
+        end
+    end,
 }
 
 lsp.sumneko_lua.setup{
