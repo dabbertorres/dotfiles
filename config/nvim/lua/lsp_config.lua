@@ -5,10 +5,8 @@ local log = require("vim.lsp.log")
 
 local cmp_lsp = require("cmp_nvim_lsp")
 local lint = require("lint")
-local telescope = require("telescope.builtin")
 local lightbulb = require("nvim-lightbulb")
 
-local notifications = require("notifications")
 local util = require("util")
 
 vim.o.updatetime = 250
@@ -34,6 +32,8 @@ capabilities.textDocument.completion.completionItem.snippetSupport = true
 lightbulb.setup{}
 
 local function on_attach(client, bufnr)
+    local telescope = require("telescope.builtin")
+
     vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
 
     vim.keymap.set("n", "<c-k>", vim.diagnostic.goto_prev, util.copy_with(mappings_opts, { buffer = bufnr }))
@@ -362,6 +362,10 @@ lsp.pyright.setup{
     on_attach = on_attach,
 }
 
+lsp.rust_analyzer.setup{
+    on_attach = on_attach,
+}
+
 lsp.sqls.setup{
     capabilities = capabilities,
     root_dir = lsp.util.root_pattern(".sqls.yaml"),
@@ -646,6 +650,8 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
 )
 
 vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
+    local notifications = require("notifications")
+
     if not result.value.kind then return end
 
     local data = notifications.get(ctx.client_id, result.token)
