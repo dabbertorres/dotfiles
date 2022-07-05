@@ -197,6 +197,8 @@ set termguicolors
 set background=dark
 colorscheme gruvbox
 
+"vim.notify = notify.notify
+
 " my lua configs
 lua require("notifications")
 lua require("lsp_config")

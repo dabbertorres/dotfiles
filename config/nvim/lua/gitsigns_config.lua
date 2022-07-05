@@ -60,8 +60,8 @@ gitsigns.setup{
     on_attach = function(bufnr)
         local gs = package.loaded.gitsigns
 
-        vim.keymap.set("n", "mgj", next_hunk(gs), { buffer = bufnr, expr = true })
-        vim.keymap.set("n", "mgk", prev_hunk(gs), { buffer = bufnr, expr = true })
+        vim.keymap.set("n", "<leader>gj", next_hunk(gs), { buffer = bufnr, expr = true })
+        vim.keymap.set("n", "<leader>gk", prev_hunk(gs), { buffer = bufnr, expr = true })
 
         vim.keymap.set({"n", "v"}, "<leader>gs", stage_hunk(gs), { buffer = bufnr })
         vim.keymap.set({"n", "v"}, "<leader>gr", reset_hunk(gs), { buffer = bufnr })

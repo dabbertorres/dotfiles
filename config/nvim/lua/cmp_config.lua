@@ -1,6 +1,6 @@
 local cmp = require("cmp")
 local luasnip = require("luasnip")
-local util = require("util")
+local util = require("my_util")
 
 vim.opt.completeopt = { "menu", "menuone", "preview" }
 

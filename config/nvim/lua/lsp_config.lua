@@ -7,7 +7,7 @@ local cmp_lsp = require("cmp_nvim_lsp")
 local lint = require("lint")
 local lightbulb = require("nvim-lightbulb")
 
-local util = require("util")
+local util = require("my_util")
 
 vim.o.updatetime = 250
 log.set_level(log.levels.WARN)
