@@ -64,7 +64,7 @@ Plug 'L3MON4D3/LuaSnip'
 
 " color schemes
 "Plug 'morhetz/gruvbox'
-Plug 'ellisonleao/gruvbox.nvim'
+Plug 'ellisonleao/gruvbox.nvim', { 'tag': '0.1.0' } " background color broken in later commits - need to investigate
 
 " quality of life
 Plug 'Raimondi/delimitMate'
@@ -196,8 +196,7 @@ let g:gruvbox_improved_warnings = 1
 set termguicolors
 set background=dark
 colorscheme gruvbox
-
-"vim.notify = notify.notify
+" lua require("gruvbox_config")
 
 " my lua configs
 lua require("notifications")
