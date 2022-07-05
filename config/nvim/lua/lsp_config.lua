@@ -190,6 +190,7 @@ lsp.gopls.setup{
     capabilities = capabilities,
     settings = {
         gopls = {
+            allowModfileModifications = true,
             analyses = {
                 asmdecl = true,
                 assign = true,
@@ -201,11 +202,14 @@ lsp.gopls.setup{
                 composites = true,
                 copylocks = true,
                 deepequalerrors = true,
+                embed = true,
                 errorsas = true,
-                fieldalignment = false,
+                fieldalignment = true,
                 fillreturns = true,
+                fillstruct = true,
                 httpresponse = true,
                 ifaceassert = true,
+                infertypeargs = true,
                 loopclosure = true,
                 lostcancel = true,
                 nilfunc = true,
@@ -222,6 +226,7 @@ lsp.gopls.setup{
                 stdmethods = true,
                 stringintconv = true,
                 structtag = true,
+                stubmethods = true,
                 testinggoroutine = true,
                 tests = true,
                 undeclaredname = true,
@@ -231,6 +236,7 @@ lsp.gopls.setup{
                 unusedparams = true,
                 unusedresult = true,
                 unusedwrite = true,
+                useany = true,
             },
             buildFlags = {
                 "-tags=wireinject"
@@ -238,8 +244,7 @@ lsp.gopls.setup{
             codelenses = {
                 gc_details = true,
                 generate = true,
-                regenerate_cgo = false,
-                test = true,
+                regenerate_cgo = true,
                 tidy = true,
                 upgrade_dependency = true,
                 vendor = false,
@@ -247,9 +252,8 @@ lsp.gopls.setup{
             directoryFilters = {
                 "-node_modules",
             },
-            diagnosticsDelay = "500ms",
-            expandWorkspaceToModule = true,
-            ["local"] = "bitbucket.org/myndshft/",
+            -- diagnosticsDelay = "500ms",
+            -- ["local"] = "bitbucket.org/myndshft/",
             gofumpt = true,
             hoverKind = "FullDocumentation",
             importShortcut = "Link",
@@ -263,6 +267,21 @@ lsp.gopls.setup{
         },
     },
     on_attach = on_attach,
+    on_new_config = function(new_config, new_root_dir)
+        local Job = require("plenary.job")
+
+        Job:new({
+            command = "go",
+            args = { "list", "-m" },
+            cwd = new_root_dir,
+            on_stdout = function(err, output, _)
+                if not err then
+                    local module = string.gsub(output, "%s", "")
+                    new_config.settings.gopls["local"] = module
+                end
+            end,
+        }):sync()
+    end,
 }
 
 lsp.gradle_ls.setup{
