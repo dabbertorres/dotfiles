@@ -262,7 +262,7 @@ lsp.gopls.setup{
             semanticTokens = true,
             symbolMatcher = "FastFuzzy",
             symbolStyle = "Dynamic",
-            templateExtensions = {"gotmpl", "tmpl"},
+            templateExtensions = {"gotmpl", "tmpl", "gohtml"},
             usePlaceholders = false,
         },
     },
