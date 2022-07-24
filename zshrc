@@ -179,6 +179,8 @@ if [[ $IS_OSX ]]; then
     export CGO_CXXFLAGS="$(go env CGO_CXXFLAGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
     export CGO_FFLAGS="$(go env CGO_FFLAGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
     export CGO_LDFLAGS="$(go env CGO_LDFLAGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/ -L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
+elif [[ $IS_WSL ]]; then
+    export DISPLAY=$(awk '/nameserver/ { print $2 }' < /etc/resolv.conf):0.0
 fi
 
 ### aliases
