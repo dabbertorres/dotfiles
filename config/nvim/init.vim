@@ -355,6 +355,7 @@ augroup END
 
 augroup different_indent_filetypes
     autocmd!
+    au FileType cmake setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType hcl setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType html setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType java setlocal tabstop=2 softtabstop=2 shiftwidth=2
