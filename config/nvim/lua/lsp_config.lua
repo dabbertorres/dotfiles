@@ -312,30 +312,39 @@ lsp.kotlin_language_server.setup{
         local fallback = lsp.util.root_pattern("build.gradle", "build.gradle.kts")
         return primary(fname) or fallback(fname)
     end,
-    settings = {
-        kotlin = {
-            compiler = {
-                jvm = {
-                    target = "1.8",
-                },
-            },
-            debugAdapter = {
-                enabled = false,
-                path = "",
-            },
-            externalSources = {
-                autoConvertToKotlin = false,
-            },
-            indexing = {
-                enabled = true,
-            },
-            languageServer = {
-                enabled = true,
-                port = 0,
-                transport = "tcp",
-            },
-        },
-    },
+    -- settings = {
+    --     kotlin = {
+    --         compiler = {
+    --             jvm = {
+    --                 target = "default",
+    --             },
+    --         },
+    --         completion = {
+    --             snippets = {
+    --                 enabled = true,
+    --             },
+    --         },
+    --         debugAdapter = {
+    --             enabled = false,
+    --             path = "",
+    --         },
+    --         linting = {
+    --             debounceTime = 250,
+    --         },
+    --         indexing = {
+    --             enabled = true,
+    --         },
+    --         externalSources = {
+    --             useKlsScheme = false,
+    --             autoConvertToKotlin = false,
+    --         },
+    --         languageServer = {
+    --             enabled = true,
+    --             port = 0,
+    --             transport = "tcp",
+    --         },
+    --     },
+    -- },
     on_attach = on_attach,
 }
 
@@ -394,8 +403,11 @@ lsp.sqls.setup{
     end,
     on_new_config = function(new_config, new_root_dir)
         if new_root_dir then
-            table.insert(new_config.cmd, "--config")
-            table.insert(new_config.cmd, new_root_dir)
+            local new_config_file = new_root_dir .. "/.sqls.yaml"
+            if vim.fn.filereadable(new_config_file) == 1 then
+                table.insert(new_config.cmd, "--config")
+                table.insert(new_config.cmd, new_config_file)
+            end
         end
     end,
 }

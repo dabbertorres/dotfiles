@@ -351,6 +351,7 @@ augroup extra_file_types
     au BufFilePre,BufNewFile,BufReadPost *.frag set filetype=glsl
     au BufFilePre,BufNewFile,BufReadPost go.mod set filetype=gomod
     au BufFilePre,BufNewFile,BufReadPost *.cshtml set filetype=html
+    au BufFilePre,BufNewFile,BufReadPost *.gohtml set filetype=html
 augroup END
 
 augroup different_indent_filetypes
