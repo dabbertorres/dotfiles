@@ -29,7 +29,7 @@ local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = cmp_lsp.update_capabilities(capabilities)
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-lightbulb.setup{}
+lightbulb.setup {}
 
 local function on_attach(client, bufnr)
     local telescope = require("telescope.builtin")
@@ -51,7 +51,7 @@ local function on_attach(client, bufnr)
     vim.keymap.set("v", "mca", vim.lsp.buf.range_code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
 
     vim.keymap.set("n", "gd", function()
-        telescope.lsp_definitions{
+        telescope.lsp_definitions {
             jump_type = nil,
             ignore_filename = false,
             trim_text = false,
@@ -61,7 +61,7 @@ local function on_attach(client, bufnr)
     vim.keymap.set("n", "gD", vim.lsp.buf.declaration, util.copy_with(mappings_opts, { buffer = bufnr }))
 
     vim.keymap.set("n", "gi", function()
-        telescope.lsp_implementations{
+        telescope.lsp_implementations {
             jump_type = nil,
             ignore_filename = false,
             trim_text = false,
@@ -79,7 +79,7 @@ local function on_attach(client, bufnr)
         })
     end, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.keymap.set("n", "mrn", vim.lsp.buf.rename, util.copy_with(mappings_opts, { buffer = bufnr } ))
+    vim.keymap.set("n", "mrn", vim.lsp.buf.rename, util.copy_with(mappings_opts, { buffer = bufnr }))
 
     vim.keymap.set("n", "mfa", vim.lsp.buf.formatting, util.copy_with(mappings_opts, { buffer = bufnr }))
 
@@ -117,7 +117,7 @@ local function on_attach(client, bufnr)
             buffer = bufnr,
             callback = vim.lsp.buf.clear_references,
         })
-        vim.cmd[[
+        vim.cmd [[
             hi! LspReferenceRead guibg=#5b5e5b
             hi! LspReferenceText guibg=#5b5e5b
             hi! LspReferenceWrite guibg=#5b5e5b
@@ -125,28 +125,29 @@ local function on_attach(client, bufnr)
     end
 end
 
-lsp.bashls.setup{
+lsp.bashls.setup {
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.clangd.setup{
+lsp.clangd.setup {
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.cmake.setup{
+lsp.cmake.setup {
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.cssls.setup{
+lsp.cssls.setup {
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.dockerls.setup{
+lsp.dockerls.setup {
     capabilities = capabilities,
+    on_attach = on_attach,
     settings = {
         docker = {
             languageserver = {
@@ -166,7 +167,6 @@ lsp.dockerls.setup{
             },
         },
     },
-    on_attach = on_attach,
     on_init = function(client)
         if client.config.settings then
             client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
@@ -180,17 +180,17 @@ lsp.dockerls.setup{
     end,
 }
 
-lsp.dotls.setup{
+lsp.dotls.setup {
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.gopls.setup{
-    cmd = {"gopls", "-remote=auto", "-logfile=auto", "-debug=:0", "-remote.debug=:0", "-remote.logfile=auto"},
+lsp.gopls.setup {
     capabilities = capabilities,
+    on_attach = on_attach,
+    cmd = { "gopls", "-remote=auto", "-logfile=auto", "-remote.logfile=auto" },
     settings = {
         gopls = {
-            allowModfileModifications = true,
             analyses = {
                 asmdecl = true,
                 assign = true,
@@ -204,7 +204,7 @@ lsp.gopls.setup{
                 deepequalerrors = true,
                 embed = true,
                 errorsas = true,
-                fieldalignment = true,
+                fieldalignment = false,
                 fillreturns = true,
                 fillstruct = true,
                 httpresponse = true,
@@ -238,6 +238,12 @@ lsp.gopls.setup{
                 unusedwrite = true,
                 useany = true,
             },
+            annotations = {
+                bounds = true,
+                escape = true,
+                inline = true,
+                ["nil"] = true,
+            },
             buildFlags = {
                 "-tags=wireinject"
             },
@@ -245,6 +251,7 @@ lsp.gopls.setup{
                 gc_details = true,
                 generate = true,
                 regenerate_cgo = true,
+                run_vulncheck_exp = true,
                 tidy = true,
                 upgrade_dependency = true,
                 vendor = false,
@@ -252,21 +259,28 @@ lsp.gopls.setup{
             directoryFilters = {
                 "-node_modules",
             },
-            -- diagnosticsDelay = "500ms",
-            -- ["local"] = "bitbucket.org/myndshft/",
+            hints = {
+                assignVariableTypes = false,
+                compositeLiteralFields = true,
+                compositeLiteralTypes = false,
+                constantValues = true,
+                functionTypeParameters = false,
+                parameterNames = false,
+                rangeVariableTypes = false,
+            },
+            allowModfileModifications = true,
+            allowImplicitNetworkAccess = true,
+            experimentalUseInvalidMetadata = true,
             gofumpt = true,
             hoverKind = "FullDocumentation",
             importShortcut = "Link",
             linksInHover = true,
             linkTarget = "pkg.go.dev",
             semanticTokens = true,
-            symbolMatcher = "FastFuzzy",
-            symbolStyle = "Dynamic",
-            templateExtensions = {"gotmpl", "tmpl", "gohtml"},
+            templateExtensions = { "gotmpl", "tmpl", "gohtml" },
             usePlaceholders = false,
         },
     },
-    on_attach = on_attach,
     on_new_config = function(new_config, new_root_dir)
         local Job = require("plenary.job")
 
@@ -284,28 +298,35 @@ lsp.gopls.setup{
     end,
 }
 
-lsp.gradle_ls.setup{
-    cmd = { home .. "/Code/lsps/vscode-gradle/gradle-language-server/build/install/gradle-language-server/bin/gradle-language-server" },
+lsp.gradle_ls.setup {
     capabilities = capabilities,
+    on_attach = on_attach,
+    cmd = { home ..
+        "/Code/lsps/vscode-gradle/gradle-language-server/build/install/gradle-language-server/bin/gradle-language-server" },
     filetypes = { "groovy" }, -- TODO: kotlin-script files (e.g. build.gradle.kts)
     root_dir = lsp.util.root_pattern("build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"),
-    on_attach = on_attach,
+    init_options = {
+        settings = {
+            gradleWrapperEnabled = true,
+        },
+    },
 }
 
-lsp.html.setup{
+lsp.html.setup {
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.jsonls.setup{
+lsp.jsonls.setup {
     capabilities = capabilities,
+    on_attach = on_attach,
     single_file_support = true,
-    on_attach = on_attach,
 }
 
-lsp.kotlin_language_server.setup{
-    cmd = { home .. "/Code/lsps/kotlin-language-server/server/build/install/server/bin/kotlin-language-server" },
+lsp.kotlin_language_server.setup {
     capabilities = capabilities,
+    on_attach = on_attach,
+    cmd = { home .. "/Code/lsps/kotlin-language-server/server/build/install/server/bin/kotlin-language-server" },
     filetypes = { "kotlin" },
     root_dir = function(fname)
         local primary = lsp.util.root_pattern("settings.gradle", "settings.gradle.kts")
@@ -345,20 +366,19 @@ lsp.kotlin_language_server.setup{
     --         },
     --     },
     -- },
-    on_attach = on_attach,
 }
 
 local pid = vim.fn.getpid()
-lsp.omnisharp.setup{
-    cmd = { home .. "/Code/lsps/omnisharp/OmniSharp", "--languageserver", "--hostPID", tostring(pid) },
+lsp.omnisharp.setup {
+    on_attach = on_attach,
     capabilities = capabilities,
+    cmd = { home .. "/Code/lsps/omnisharp/OmniSharp", "--languageserver", "--hostPID", tostring(pid) },
     root_dir = lsp.util.root_pattern("*.csproj"),
     flags = {
         allow_incremental_sync = true,
     },
     filetypes = { "cs", "vb" },
     init_options = {},
-    on_attach = on_attach,
     on_init = function(client)
         if client.config.settings then
             client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
@@ -372,8 +392,9 @@ lsp.omnisharp.setup{
     end,
 }
 
-lsp.pyright.setup{
+lsp.pyright.setup {
     capabilities = capabilities,
+    on_attach = on_attach,
     settings = {
         python = {
             disableLanguageServices = false,
@@ -387,20 +408,26 @@ lsp.pyright.setup{
             },
         },
     },
-    on_attach = on_attach,
 }
 
-lsp.rust_analyzer.setup{
-    on_attach = on_attach,
-}
-
-lsp.sqls.setup{
+lsp.rust_analyzer.setup {
     capabilities = capabilities,
-    root_dir = lsp.util.root_pattern(".sqls.yaml"),
+    on_attach = on_attach,
+}
+
+lsp.sorbet.setup {
+    capabilities = capabilities,
+    on_attach = on_attach,
+    cmd = { "srb", "tc", "--lsp", "--disable-watchman", },
+}
+
+lsp.sqls.setup {
+    capabilities = capabilities,
     on_attach = function(client, bufnr)
         on_attach(client, bufnr)
         require('sqls').on_attach(client, bufnr)
     end,
+    root_dir = lsp.util.root_pattern(".sqls.yaml"),
     on_new_config = function(new_config, new_root_dir)
         if new_root_dir then
             local new_config_file = new_root_dir .. "/.sqls.yaml"
@@ -412,13 +439,9 @@ lsp.sqls.setup{
     end,
 }
 
-lsp.sumneko_lua.setup{
-    cmd = {
-        home .. "/Code/lsps/lua-language-server/bin/lua-language-server",
-        "-E",
-        home .. "/Code/lsps/lua-language-server/main.lua"
-    },
+lsp.sumneko_lua.setup {
     capabilities = capabilities,
+    on_attach = on_attach,
     settings = {
         Lua = {
             diagnostics = {
@@ -444,16 +467,19 @@ lsp.sumneko_lua.setup{
     --         client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
     --     end
     -- end,
-    on_attach = on_attach,
 }
 
-lsp.tsserver.setup{
+-- official Ruby LSP
+-- lsp.typeprof.setup {}
+
+lsp.tsserver.setup {
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.terraformls.setup{
+lsp.terraformls.setup {
     capabilities = capabilities,
+    on_attach = on_attach,
     flags = {
         debounce_text_changes = 1000,
     },
@@ -462,29 +488,31 @@ lsp.terraformls.setup{
             validateOnSave = false,
             prefillRequiredFields = true,
         },
-        terraformExecTimeout = "5s",
+        terraform = {
+            timeout = "5s",
+        },
     },
-    on_attach = on_attach,
 }
 
-lsp.tflint.setup{
+lsp.tflint.setup {
     cmd = { "tflint", "--config", home .. "/.config/tflint/config.hcl", "--langserver" },
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.vimls.setup{
+lsp.vimls.setup {
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.vuels.setup{
+lsp.vuels.setup {
     capabilities = capabilities,
     on_attach = on_attach,
 }
 
-lsp.yamlls.setup{
+lsp.yamlls.setup {
     capabilities = capabilities,
+    on_attach = on_attach,
     settings = {
         redhat = {
             telemetry = {
@@ -512,7 +540,6 @@ lsp.yamlls.setup{
             yamlVersion = "1.2",
         }
     },
-    on_attach = on_attach,
 }
 
 lint.linters.tfsec = {
@@ -565,8 +592,8 @@ lint.linters.tfsec = {
 Impact (%s): %s
 Resolution: %s
 See:
-]] .. string.rep("* %s", #result.links, "\n")
-.. "\n"
+]]           .. string.rep("* %s", #result.links, "\n")
+                .. "\n"
 
             local msg = string.format(fmt,
                 result.description,
@@ -605,6 +632,7 @@ lint.linters_by_ft = {
     markdown = { "markdownlint", "proselint", },
     text = { "proselint", },
     rst = { "proselint", },
+    ruby = { "ruby", "rubocop", },
     -- sh = { "shellcheck", },
     terraform = { "tfsec", },
 }
@@ -629,7 +657,7 @@ vim.fn.sign_define("DiagnosticSignWarn", { text = " ", texthl = "GruvboxYello
 vim.fn.sign_define("DiagnosticSignInfo", { text = " ", texthl = "GruvboxBlue" })
 vim.fn.sign_define("DiagnosticSignHint", { text = " ", texthl = "GruvboxAqua" })
 
-vim.diagnostic.config{
+vim.diagnostic.config {
     underline = true,
     virtual_text = false,
     signs = true,
@@ -659,25 +687,25 @@ vim.diagnostic.config{
 
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
     vim.lsp.diagnostic.on_publish_diagnostics, {
-        underline = true,
-        signs = true,
-        virtual_text = false,
-        severity_sort = true,
-    }
+    underline = true,
+    signs = true,
+    virtual_text = false,
+    severity_sort = true,
+}
 )
 
 vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
     vim.lsp.handlers.hover, {
-        border = "single",
-        focusable = true,
-    }
+    border = "single",
+    focusable = true,
+}
 )
 
 vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
     vim.lsp.handlers.signature_help, {
-        border = "single",
-        focusable = false,
-    }
+    border = "single",
+    focusable = false,
+}
 )
 
 vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)

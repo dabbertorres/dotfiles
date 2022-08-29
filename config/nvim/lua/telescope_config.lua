@@ -19,8 +19,11 @@ telescope.setup{
             i = {
                 ["<C-n>"] = false,
                 ["<C-p>"] = false,
-                ["<C-j>"] = actions.move_selection_next,
-                ["<C-k>"] = actions.move_selection_previous,
+                ["<C-j>"] = actions.move_selection_better,
+                ["<C-k>"] = actions.move_selection_worse,
+            },
+            n = {
+                ["<C-[>"] = actions.close,
             },
         },
     },
@@ -56,11 +59,11 @@ vim.keymap.set("n", "mfb", function()
     telescope.extensions.file_browser.file_browser(file_browser_opts)
 end, mappings_opts)
 vim.keymap.set("n", "<leader>ff", builtin.find_files, mappings_opts)
-vim.keymap.set("n", "<leader>sl", builtin.live_grep, mappings_opts)
-vim.keymap.set("n", "<leader>ss", builtin.grep_string, mappings_opts)
-vim.keymap.set("n", "<leader>sb", builtin.buffers, mappings_opts)
-vim.keymap.set("n", "<leader>sh", builtin.help_tags, mappings_opts)
+vim.keymap.set("n", "<leader>s", builtin.live_grep, mappings_opts)
+vim.keymap.set("n", "<leader>b", builtin.buffers, mappings_opts)
+vim.keymap.set("n", "<leader>h", builtin.help_tags, mappings_opts)
 vim.keymap.set("n", "<leader>C", builtin.builtin, mappings_opts)
+vim.keymap.set("n", "<leader>sc", builtin.spell_suggest, mappings_opts)
 
 --local profile_end_time = vim.loop.hrtime()
 --print("lsp_config.lua:", profile_end_time - profile_start_time)

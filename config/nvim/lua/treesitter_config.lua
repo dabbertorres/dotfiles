@@ -2,67 +2,13 @@
 
 local treesitter = require("nvim-treesitter.configs")
 
+-- constants for selection_modes
+local charwise = "v"
+local linewise = "V"
+local blockwise = "<c-v>"
+
 treesitter.setup {
-    ensure_installed = {
-        "bash",
-        "c",
-        "c_sharp",
-        "cmake",
-        "comment",
-        "commonlisp",
-        "cpp",
-        "css",
-        "dockerfile",
-        "dot",
-        "glsl",
-        "go",
-        "gomod",
-        "gowork",
-        "graphql",
-        "haskell",
-        "hcl",
-        "help",
-        "hjson",
-        "html",
-        "http",
-        "java",
-        "javascript",
-        "jsdoc",
-        "json",
-        "json5",
-        "jsonc",
-        "julia",
-        "kotlin",
-        "llvm",
-        "lua",
-        "make",
-        "markdown",
-        "ninja",
-        "norg",
-        "org",
-        "pascal",
-        "perl",
-        "php",
-        "proto",
-        "python",
-        "query",
-        "r",
-        "regex",
-        "ruby",
-        "rust",
-        "scala",
-        "scheme",
-        "scss",
-        "svelte",
-        "swift",
-        "todotxt",
-        "toml",
-        "tsx",
-        "typescript",
-        "vim",
-        "vue",
-        "yaml",
-    },
+    ensure_installed = "all",
     sync_install = true,
     highlight = {
         enable = true,
@@ -79,11 +25,28 @@ treesitter.setup {
     },
     indent = {
         enable = true,
-        disable = { "python", "yaml" },
+        disable = { "yaml" },
     },
     matchup = {
         enable = true,
         disable = {},
+    },
+    textobjects = {
+        select = {
+            enable = true,
+            lookahead = true,
+            keymaps = {
+                ["af"] = "@function.outer",
+                ["if"] = "@function.inner",
+                ["ac"] = "@class.outer",
+                ["ic"] = "@class.inner",
+            },
+            selection_modes = {
+                ["@parameter.outer"] = charwise,
+                ["@function.outer"] = linewise,
+                ["@class.outer"] = linewise,
+            },
+        },
     },
 }
 

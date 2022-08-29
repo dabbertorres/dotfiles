@@ -37,6 +37,9 @@ elif [ $IS_OSX ]; then
     export PATH="/usr/local/opt/gcc/bin:$PATH"
     export PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
     export PATH="/usr/local/opt/openssl/bin:$PATH"
+    export PATH="/usr/local/opt/ruby/bin:$PATH"
+    export PATH="/usr/local/lib/ruby/gems/3.1.0/gems/rubocop-1.35.0/exe:$PATH"
+    export PATH="/usr/local/lib/ruby/gems/3.1.0/gems/sorbet-0.5.10324/bin:$PATH"
 
     export PATH="$HOME/Library/Python/3.9/bin:$PATH"
     alias lldb='PATH=/usr/bin lldb' # force using system python for lldb - avoids a python import error

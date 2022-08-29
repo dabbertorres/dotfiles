@@ -8,8 +8,13 @@ endif
 call plug#begin('~/.local/share/nvim/plugged')
 
 " interface
-Plug 'nvim-lualine/lualine.nvim'
-Plug 'nvim-telescope/telescope.nvim'
+Plug 'ellisonleao/gruvbox.nvim'
+
+" Commits after this cause status/tab lines to be refreshed on CursorMoved events, which causes flickering for some actions - which is annoying
+" What do?
+Plug 'nvim-lualine/lualine.nvim', { 'commit': '1e53bf7386619722b7cfae0d541b45978f0152e4' }
+
+Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
 Plug 'nvim-telescope/telescope-ui-select.nvim'
 Plug 'nvim-telescope/telescope-file-browser.nvim'
@@ -26,6 +31,7 @@ Plug 'nvim-lua/plenary.nvim'
 "Plug 'nvim-neorg/neorg'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+Plug 'rest-nvim/rest.nvim'
 
 " git
 Plug 'lewis6991/gitsigns.nvim'
@@ -42,6 +48,7 @@ Plug 'rcarriga/nvim-dap-ui'
 " language tooling
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdateSync' }
+Plug 'nvim-treesitter/nvim-treesitter-textobjects'
 " Plug 'nvim-treesitter/playground'
 Plug 'mfussenegger/nvim-jdtls'
 Plug 'mfussenegger/nvim-dap-python'
@@ -61,10 +68,6 @@ Plug 'hrsh7th/cmp-path'
 Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'L3MON4D3/LuaSnip'
 " Plug 'f3fora/cmp-spell'
-
-" color schemes
-"Plug 'morhetz/gruvbox'
-Plug 'ellisonleao/gruvbox.nvim', { 'tag': '0.1.0' } " background color broken in later commits - need to investigate
 
 " quality of life
 Plug 'Raimondi/delimitMate'
@@ -98,6 +101,7 @@ set updatetime=100
 set encoding=utf-8
 set clipboard+=unnamedplus
 set synmaxcol=500
+set shortmess=filmnrxoOtTIcF
 
 if has('mac')
 let g:clipboard = {
@@ -127,11 +131,6 @@ set ruler
 set wildmenu
 set scrolloff=5
 set inccommand=nosplit
-
-" enable folding, but disable it by default
-set foldmethod=expr
-set foldexpr=nvim_treesitter#foldexpr()
-set foldlevelstart=99
 
 " unset visualbell terminal code
 set visualbell
@@ -170,9 +169,6 @@ set undoreload=1000
 " ensure undo directory exists
 silent !mkdir -p "$HOME/.config/nvim/undo"
 
-" python settings
-"set pyxversion=3
-
 " rather than fix myself, workaround my flaws
 command! Qa :qa
 
@@ -186,17 +182,7 @@ set signcolumn=yes
 " set spelllang=en_us
 " set spell
 
-""" color scheme
-
-let g:gruvbox_contrast_dark     = 'hard'
-let g:gruvbox_invert_signs      = 1
-let g:gruvbox_invert_tabline    = 1
-let g:gruvbox_improved_warnings = 1
-
-set termguicolors
-set background=dark
-colorscheme gruvbox
-" lua require("gruvbox_config")
+lua require("gruvbox_config")
 
 " my lua configs
 lua require("notifications")
@@ -213,15 +199,13 @@ lua require("neogit_config")
 lua require("gitsigns_config")
 lua require("neotest_config")
 lua require("toggleterm_config")
-
+lua require("rest_config")
 lua require("spellsitter").setup{ enable = true }
 
-" netrw explorer
-"let g:netrw_liststyle    = 3
-"let g:netrw_banner       = 0
-"let g:netrw_browse_split = 2
-"let g:netrw_winsize      = 25
-"let g:netrw_altv         = 1
+" enable folding, but disable it by default
+set foldmethod=expr
+set foldexpr=nvim_treesitter#foldexpr()
+set foldlevelstart=99
 
 " generate a uuid
 command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen'), '\n$', '', '')
@@ -239,19 +223,6 @@ set splitright
 
 " fzf
 let g:fzf_buffers_jump = 1
-
-" terraform
-"let g:terraform_align         = 1
-"let g:terraform_fold_sections = 0
-"let g:terraform_fmt_on_save   = 1
-
-" git messenger
-let g:git_messenger_always_into_popup = v:true
-
-"
-" zig settings
-"
-let g:zig_fmt_autosave = 0
 
 " markdown preview
 let g:mkdp_auto_start = 0
@@ -373,8 +344,6 @@ augroup END
 
 augroup csv_files
     autocmd!
-    "au BufEnter *.csv set nowrap
-    "au BufLeave *.csv set wrap
     au BufWinEnter *.csv set nowrap
     au BufWinLeave *.csv set wrap
 augroup END

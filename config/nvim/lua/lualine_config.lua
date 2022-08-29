@@ -12,7 +12,7 @@ lualine.setup {
         globalstatus = true,
     },
     sections = {
-        lualine_a = {"mode"},
+        lualine_a = { "mode" },
         lualine_b = {
             "branch",
             {
@@ -37,8 +37,8 @@ lualine.setup {
             { function() return vim.fn["nvim_treesitter#statusline"](90) end },
             "filetype",
         },
-        lualine_y = {"encoding", "fileformat"},
-        lualine_z = {"location", "diagnostics"},
+        lualine_y = { "encoding", "fileformat" },
+        lualine_z = { "location", "diagnostics" },
     },
     -- inactive_sections = {
     --     lualine_a = {},
@@ -80,7 +80,7 @@ lualine.setup {
             { toggleterm_status, id = 10 },
             { toggleterm_status.terminal_icon() },
         },
-        lualine_z = {"tabs"},
+        lualine_z = { "tabs" },
     },
     extensions = {},
 }
