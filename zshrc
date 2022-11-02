@@ -41,8 +41,8 @@ elif [ $IS_OSX ]; then
     export PATH="/usr/local/lib/ruby/gems/3.1.0/gems/rubocop-1.35.0/exe:$PATH"
     export PATH="/usr/local/lib/ruby/gems/3.1.0/gems/sorbet-0.5.10324/bin:$PATH"
 
-    export PATH="$HOME/Library/Python/3.9/bin:$PATH"
-    alias lldb='PATH=/usr/bin lldb' # force using system python for lldb - avoids a python import error
+    export PATH="$HOME/Library/Python/3.10/bin:$PATH"
+    # alias lldb='PATH=/usr/bin lldb' # force using system python for lldb - avoids a python import error
 fi
 
 if [ -f "${HOME}/.cargo/env" ]; then
@@ -86,7 +86,7 @@ fi
 
 if [ "${commands[java]}" ]; then
     if [ $IS_OSX ]; then
-        export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-14.jdk/Contents/Home
+        export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-17.jdk/Contents/Home
     fi
 
     export _JAVA_AWT_WM_NONREPARENTING=1
@@ -97,13 +97,17 @@ if [ "${commands[kubebuilder]}" ] && [ ! -f "${fpath[1]}/_kubebuilder" ]; then
     kubebuilder completion zsh > "${fpath[1]}/_kubebuilder"
 fi
 
-if [ "${commands[kubectl]}" ] && [ ! -f "${fpath[1]}/_kubectl" ]; then
-   kubectl completion zsh > "${fpath[1]}/_kubectl"
-
-    if [ ! -f "${fpath[1]}/_kubectl_krew" ]; then
-        kubectl krew completion zsh > "${fpath[1]}/_kubectl_krew"
+if [ "${commands[kubectl]}" ]; then
+    if [ ! -f "${fpath[1]}/_kubectl" ]; then
+        kubectl completion zsh > "${fpath[1]}/_kubectl"
     fi
-    export PATH="$HOME/.krew/bin:$PATH"
+
+    if [ "${commands[kubectl-krew]}" ]; then
+        if [ ! -f "${fpath[1]}/_kubectl_krew" ]; then
+            kubectl krew completion zsh > "${fpath[1]}/_kubectl_krew"
+        fi
+        export PATH="$HOME/.krew/bin:$PATH"
+    fi
 
     function watch_pods()
     {
@@ -143,7 +147,7 @@ if [ "${commands[vagrant]}" ]; then
     if [ $IS_LINUX ]; then
         true
     elif [ $IS_OSX ]; then
-        fpath=(/opt/vagrant/embedded/gems/2.2.14/gems/vagrant-2.2.14/contrib/zsh $fpath)
+        fpath=(/opt/vagrant/embedded/gems/2.2.14/gems/vagrant-2.2.14/contrib/zsh ${fpath[@]})
     fi
 fi
 

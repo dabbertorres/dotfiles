@@ -25,8 +25,7 @@ local mappings_opts = {
     silent = true,
 }
 
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = cmp_lsp.update_capabilities(capabilities)
+local capabilities = cmp_lsp.default_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 lightbulb.setup {}
@@ -103,7 +102,7 @@ local function on_attach(client, bufnr)
         vim.api.nvim_create_autocmd("BufWritePre", {
             buffer = bufnr,
             callback = function()
-                vim.lsp.buf.formatting_sync(formatting_options, 500)
+                vim.lsp.buf.format({ formatting_options = formatting_options }, 500)
             end,
         })
     end
@@ -131,6 +130,16 @@ lsp.bashls.setup {
 }
 
 lsp.clangd.setup {
+    cmd = {
+        "clangd",
+        "--background-index",
+        "--clang-tidy",
+        "--completion-style=detailed",
+        "--enable-config",
+        "--pch-storage=memory",
+        "-j=8",
+        "--offset-encoding=utf-8",
+    },
     capabilities = capabilities,
     on_attach = on_attach,
 }
@@ -245,7 +254,7 @@ lsp.gopls.setup {
                 ["nil"] = true,
             },
             buildFlags = {
-                "-tags=wireinject"
+                "-tags=wireinject integrationTest windows",
             },
             codelenses = {
                 gc_details = true,
@@ -421,23 +430,23 @@ lsp.sorbet.setup {
     cmd = { "srb", "tc", "--lsp", "--disable-watchman", },
 }
 
-lsp.sqls.setup {
-    capabilities = capabilities,
-    on_attach = function(client, bufnr)
-        on_attach(client, bufnr)
-        require('sqls').on_attach(client, bufnr)
-    end,
-    root_dir = lsp.util.root_pattern(".sqls.yaml"),
-    on_new_config = function(new_config, new_root_dir)
-        if new_root_dir then
-            local new_config_file = new_root_dir .. "/.sqls.yaml"
-            if vim.fn.filereadable(new_config_file) == 1 then
-                table.insert(new_config.cmd, "--config")
-                table.insert(new_config.cmd, new_config_file)
-            end
-        end
-    end,
-}
+-- lsp.sqls.setup {
+--     capabilities = capabilities,
+--     on_attach = function(client, bufnr)
+--         on_attach(client, bufnr)
+--         require('sqls').on_attach(client, bufnr)
+--     end,
+--     root_dir = lsp.util.root_pattern(".sqls.yaml"),
+--     on_new_config = function(new_config, new_root_dir)
+--         if new_root_dir then
+--             local new_config_file = new_root_dir .. "/.sqls.yaml"
+--             if vim.fn.filereadable(new_config_file) == 1 then
+--                 table.insert(new_config.cmd, "--config")
+--                 table.insert(new_config.cmd, new_config_file)
+--             end
+--         end
+--     end,
+-- }
 
 lsp.sumneko_lua.setup {
     capabilities = capabilities,
@@ -495,7 +504,7 @@ lsp.terraformls.setup {
 }
 
 lsp.tflint.setup {
-    cmd = { "tflint", "--config", home .. "/.config/tflint/config.hcl", "--langserver" },
+    cmd = { "tflint", "--langserver" },
     capabilities = capabilities,
     on_attach = on_attach,
 }
@@ -542,12 +551,24 @@ lsp.yamlls.setup {
     },
 }
 
+local tfsec_root_dir = lsp.util.root_pattern(".tfsec")
+
 lint.linters.tfsec = {
     cmd = "tfsec",
     stdin = true, -- if false, nvim-lint automatically adds the filename as an argument, which we don't want
     args = {
         "--soft-fail",
         "--format=json",
+        function()
+            local root_dir = tfsec_root_dir(util.buffer_dir(0))
+            if root_dir then
+                local config_file = root_dir .. "/.tfsec/config.yml"
+                if vim.fn.filereadable(config_file) == 1 then
+                    return "--config-file=" .. config_file
+                end
+            end
+            return nil
+        end,
         function()
             local root_path = vim.api.nvim_buf_get_name(0)
             if not lsp.util.path.is_dir(root_path) then
@@ -686,26 +707,29 @@ vim.diagnostic.config {
 }
 
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
-    vim.lsp.diagnostic.on_publish_diagnostics, {
-    underline = true,
-    signs = true,
-    virtual_text = false,
-    severity_sort = true,
-}
+    vim.lsp.diagnostic.on_publish_diagnostics,
+    {
+        underline = true,
+        signs = true,
+        virtual_text = false,
+        severity_sort = true,
+    }
 )
 
 vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-    vim.lsp.handlers.hover, {
-    border = "single",
-    focusable = true,
-}
+    vim.lsp.handlers.hover,
+    {
+        border = "single",
+        focusable = true,
+    }
 )
 
 vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-    vim.lsp.handlers.signature_help, {
-    border = "single",
-    focusable = false,
-}
+    vim.lsp.handlers.signature_help,
+    {
+        border = "single",
+        focusable = false,
+    }
 )
 
 vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)

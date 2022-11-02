@@ -1,8 +1,9 @@
 local notify = require("notify")
 
-notify.setup{
+notify.setup {
     level = "info",
     timeout = 5000,
+    background_color = "#000000",
 }
 
 vim.notify = notify.notify

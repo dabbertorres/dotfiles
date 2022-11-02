@@ -4,16 +4,17 @@ local actions = require("telescope.actions")
 local telescope = require("telescope")
 local builtin = require("telescope.builtin")
 
-telescope.setup{
+telescope.setup {
     defaults = {
         vimgrep_arguments = {
-            "ag",
-            "--nocolor",
-            "--noheading",
-            "--filename",
-            "--numbers",
+            "rg",
+            "--color=never",
+            "--no-heading",
+            "--with-filename",
+            "--line-number",
             "--column",
             "--smart-case",
+            "--glob", "!vcpkg/**",
         },
         mappings = {
             i = {
@@ -26,6 +27,8 @@ telescope.setup{
                 ["<C-[>"] = actions.close,
             },
         },
+        -- path_display = "smart",
+        selection_strategy = "follow",
     },
     extensions = {
         file_browser = {},

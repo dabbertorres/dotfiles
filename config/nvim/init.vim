@@ -56,6 +56,7 @@ Plug 'leoluz/nvim-dap-go'
 Plug 'nanotee/sqls.nvim'
 Plug 'mfussenegger/nvim-lint'
 Plug 'a-vrma/black-nvim', { 'do': ':UpdateRemotePlugins' }
+" Plug 'ThePrimeagen/refactoring.nvim'
 
 " autocompletion
 Plug 'hrsh7th/nvim-cmp'
@@ -81,7 +82,6 @@ Plug 'tpope/vim-eunuch'
 Plug 'lewis6991/spellsitter.nvim'
 "Plug 'wannesm/wmgraphviz.vim'
 Plug 'sindrets/diffview.nvim'
-Plug 'antoinemadec/FixCursorHold.nvim' " https://github.com/neovim/neovim/issues/12587
 Plug 'tpope/vim-surround'
 Plug 'junegunn/vim-easy-align'
 
@@ -199,6 +199,7 @@ lua require("neogit_config")
 lua require("gitsigns_config")
 lua require("neotest_config")
 lua require("toggleterm_config")
+" lua require("refactoring_config")
 lua require("rest_config")
 lua require("spellsitter").setup{ enable = true }
 
