@@ -2,19 +2,42 @@
     autocrlf = false
     longpaths = true
     ignorecase = false
+    pager = delta
+
 [color]
     advice = auto
-[rebase]
-    missingCommitsCheck = error
+
+[delta]
+    line-numbers = true
+    navigate = true
+    side-by-side = true
+
 [diff]
     algorithm = histogram
+    colorMoved = default
+
+[init]
+    defaultBranch = master
+
+[interactive]
+    diffFilter = delta --color-only
+
+[merge]
+    conflictstyle = diff3
+
 [pager]
     branch = false
+
 [pull]
     ff = only
     rebase = true
-[init]
-    defaultBranch = master
+
+[rebase]
+    missingCommitsCheck = error
+
+[url "git@bitbucket.org:myndshft"]
+    insteadOf = https://bitbucket.org/myndshft
+
 [alias]
     graph = log --all --decorate --oneline --graph --color
     graphviz = "!f() { echo 'digraph git {' ; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g' ; echo '}'; }; f"
