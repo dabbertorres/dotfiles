@@ -44,6 +44,7 @@ telescope.setup {
 
 telescope.load_extension("file_browser")
 telescope.load_extension("fzf")
+telescope.load_extension("notify")
 telescope.load_extension("ui-select")
 -- telescope.load_extension("dap")
 
@@ -58,7 +59,7 @@ local file_browser_opts = {
     hidden = false,
 }
 
-vim.keymap.set("n", "mfb", function()
+vim.keymap.set("n", "<leader>fe", function()
     telescope.extensions.file_browser.file_browser(file_browser_opts)
 end, mappings_opts)
 vim.keymap.set("n", "<leader>ff", builtin.find_files, mappings_opts)

@@ -2,6 +2,7 @@
 
 local lsp = require("lspconfig")
 local log = require("vim.lsp.log")
+local notifications = require("notifications")
 
 local cmp_lsp = require("cmp_nvim_lsp")
 local lint = require("lint")
@@ -28,75 +29,108 @@ local mappings_opts = {
 local capabilities = cmp_lsp.default_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-lightbulb.setup {}
+lightbulb.setup {
+    sign = {
+        enabled = true,
+        priority = 10,
+    },
+}
 
 local function on_attach(client, bufnr)
     local telescope = require("telescope.builtin")
 
     vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
 
-    vim.keymap.set("n", "<c-k>", vim.diagnostic.goto_prev, util.copy_with(mappings_opts, { buffer = bufnr }))
-    vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, util.copy_with(mappings_opts, { buffer = bufnr }))
+    if client.server_capabilities.definitionProvider then
+        vim.keymap.set("n", "mpd", function()
+            local params = vim.lsp.util.make_position_params()
+            return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
+                if result == nil or vim.tbl_isempty(result) then return nil end
+                vim.lsp.util.preview_location(result[1])
+            end)
+        end, util.copy_with(mappings_opts, { buffer = bufnr }))
 
-    vim.keymap.set("n", "mpd", function()
-        local params = vim.lsp.util.make_position_params()
-        return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
-            if result == nil or vim.tbl_isempty(result) then return nil end
-            vim.lsp.util.preview_location(result[1])
-        end)
-    end, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "gd", function()
+            telescope.lsp_definitions {
+                jump_type = nil,
+                ignore_filename = false,
+                trim_text = false,
+            }
+        end, util.copy_with(mappings_opts, { buffer = bufnr }))
+    end
 
-    vim.keymap.set("n", "mca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
-    vim.keymap.set("v", "mca", vim.lsp.buf.range_code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
+    if client.server_capabilities.declarationProvider then
+        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, util.copy_with(mappings_opts, { buffer = bufnr }))
+    end
 
-    vim.keymap.set("n", "gd", function()
-        telescope.lsp_definitions {
-            jump_type = nil,
-            ignore_filename = false,
-            trim_text = false,
-        }
-    end, util.copy_with(mappings_opts, { buffer = bufnr }))
+    if client.server_capabilities.implementationProvider then
+        vim.keymap.set("n", "gi", function()
+            telescope.lsp_implementations {
+                jump_type = nil,
+                ignore_filename = false,
+                trim_text = false,
+            }
+        end, util.copy_with(mappings_opts, { buffer = bufnr }))
+    end
 
-    vim.keymap.set("n", "gD", vim.lsp.buf.declaration, util.copy_with(mappings_opts, { buffer = bufnr }))
+    if client.server_capabilities.hoverProvider then
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, util.copy_with(mappings_opts, { buffer = bufnr }))
+    end
 
-    vim.keymap.set("n", "gi", function()
-        telescope.lsp_implementations {
-            jump_type = nil,
-            ignore_filename = false,
-            trim_text = false,
-        }
-    end, util.copy_with(mappings_opts, { buffer = bufnr }))
+    if client.server_capabilities.signatureHelpProvider then
+        vim.keymap.set("n", "mk", vim.lsp.buf.signature_help, util.copy_with(mappings_opts, { buffer = bufnr }))
+    end
 
-    vim.keymap.set("n", "K", vim.lsp.buf.hover, util.copy_with(mappings_opts, { buffer = bufnr }))
-    vim.keymap.set("n", "mk", vim.lsp.buf.signature_help, util.copy_with(mappings_opts, { buffer = bufnr }))
+    if client.server_capabilities.referencesProvider then
+        vim.keymap.set("n", "gu", function()
+            telescope.lsp_references({
+                include_declaration = true,
+                include_current_line = true,
+                trim_text = false,
+            })
+        end, util.copy_with(mappings_opts, { buffer = bufnr }))
+    end
 
-    vim.keymap.set("n", "gu", function()
-        telescope.lsp_references({
-            include_declaration = true,
-            include_current_line = true,
-            trim_text = false,
-        })
-    end, util.copy_with(mappings_opts, { buffer = bufnr }))
-
-    vim.keymap.set("n", "mrn", vim.lsp.buf.rename, util.copy_with(mappings_opts, { buffer = bufnr }))
-
-    vim.keymap.set("n", "mfa", vim.lsp.buf.formatting, util.copy_with(mappings_opts, { buffer = bufnr }))
+    if client.server_capabilities.renameProvider then
+        vim.keymap.set("n", "mrn", vim.lsp.buf.rename, util.copy_with(mappings_opts, { buffer = bufnr }))
+    end
 
     -- vim.keymap.set({"n", "v"}, "ms", "<Plug>(sqls-execute-query)", { buffer = bufnr })
 
-    vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+    -- if client.server_capabilities.diagnosticProvider then
+    vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
         buffer = bufnr,
         callback = function()
             vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
         end,
     })
 
-    vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-        buffer = bufnr,
-        callback = function()
-            lightbulb.update_lightbulb()
-        end,
-    })
+    vim.keymap.set("n", "<c-k>", vim.diagnostic.goto_prev, util.copy_with(mappings_opts, { buffer = bufnr }))
+    vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, util.copy_with(mappings_opts, { buffer = bufnr }))
+    -- end
+
+    if client.server_capabilities.codeActionProvider then
+        vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
+            buffer = bufnr,
+            callback = function()
+                lightbulb.update_lightbulb()
+            end,
+        })
+
+        vim.keymap.set("n", "mca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("v", "mca", vim.lsp.buf.range_code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
+    end
+
+    if client.server_capabilities.codeLensProvider then
+        vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
+            buffer = bufnr,
+            callback = function()
+                vim.lsp.codelens.refresh()
+            end,
+        })
+
+        vim.keymap.set("n", "mcl", vim.lsp.codelens.run, util.copy_with(mappings_opts, { buffer = bufnr }))
+    end
 
     if client.server_capabilities.documentFormattingProvider then
         vim.api.nvim_create_autocmd("BufWritePre", {
@@ -105,10 +139,12 @@ local function on_attach(client, bufnr)
                 vim.lsp.buf.format({ formatting_options = formatting_options }, 500)
             end,
         })
+
+        vim.keymap.set("n", "mfa", vim.lsp.buf.formatting, util.copy_with(mappings_opts, { buffer = bufnr }))
     end
 
     if client.server_capabilities.documentHighlightProvider then
-        vim.api.nvim_create_autocmd("CursorHold", {
+        vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
             buffer = bufnr,
             callback = vim.lsp.buf.document_highlight,
         })
@@ -139,6 +175,8 @@ lsp.clangd.setup {
         "--pch-storage=memory",
         "-j=8",
         "--offset-encoding=utf-8",
+        "--use-dirty-headers",
+        "--query-driver=/usr/local/Cellar/llvm/**/bin/clang++"
     },
     capabilities = capabilities,
     on_attach = on_attach,
@@ -200,6 +238,37 @@ lsp.gopls.setup {
     cmd = { "gopls", "-remote=auto", "-logfile=auto", "-remote.logfile=auto" },
     settings = {
         gopls = {
+            -- Build
+            buildFlags = {
+                "-tags=wireinject,integrationTest",
+            },
+            directoryFilters = {
+                "-**/node_modules",
+            },
+            templateExtensions = { "gotmpl", "tmpl", "gohtml" },
+            allowModfileModifications = true,
+            allowImplicitNetworkAccess = true,
+
+            -- Formatting
+            gofumpt = true,
+
+            -- UI
+            codelenses = {
+                gc_details = true,
+                generate = true,
+                regenerate_cgo = true,
+                run_vulncheck_exp = true,
+                test = false,
+                tidy = true,
+                upgrade_dependency = true,
+                vendor = false,
+            },
+            semanticTokens = true,
+
+            -- Completion
+            usePlaceholders = false,
+
+            -- Diagnostic
             analyses = {
                 asmdecl = true,
                 assign = true,
@@ -238,12 +307,14 @@ lsp.gopls.setup {
                 stubmethods = true,
                 testinggoroutine = true,
                 tests = true,
+                timeformat = true,
                 undeclaredname = true,
                 unmarshal = true,
                 unreachable = true,
                 unsafeptr = true,
                 unusedparams = true,
                 unusedresult = true,
+                unusedvariable = true,
                 unusedwrite = true,
                 useany = true,
             },
@@ -253,21 +324,13 @@ lsp.gopls.setup {
                 inline = true,
                 ["nil"] = true,
             },
-            buildFlags = {
-                "-tags=wireinject integrationTest windows",
-            },
-            codelenses = {
-                gc_details = true,
-                generate = true,
-                regenerate_cgo = true,
-                run_vulncheck_exp = true,
-                tidy = true,
-                upgrade_dependency = true,
-                vendor = false,
-            },
-            directoryFilters = {
-                "-node_modules",
-            },
+
+            -- Documentation
+            hoverKind = "FullDocumentation",
+            linkTarget = "pkg.go.dev",
+            linksInHover = true,
+
+            -- Inlay Hint
             hints = {
                 assignVariableTypes = false,
                 compositeLiteralFields = true,
@@ -277,17 +340,9 @@ lsp.gopls.setup {
                 parameterNames = false,
                 rangeVariableTypes = false,
             },
-            allowModfileModifications = true,
-            allowImplicitNetworkAccess = true,
-            experimentalUseInvalidMetadata = true,
-            gofumpt = true,
-            hoverKind = "FullDocumentation",
+
+            -- Navigation
             importShortcut = "Link",
-            linksInHover = true,
-            linkTarget = "pkg.go.dev",
-            semanticTokens = true,
-            templateExtensions = { "gotmpl", "tmpl", "gohtml" },
-            usePlaceholders = false,
         },
     },
     on_new_config = function(new_config, new_root_dir)
@@ -324,6 +379,48 @@ lsp.gradle_ls.setup {
 lsp.html.setup {
     capabilities = capabilities,
     on_attach = on_attach,
+    init_options = {
+        configurationSection = { "html", "css", "javascript" },
+        embeddedLanguages = {
+            css = true,
+            javascript = true,
+        },
+        provideFormatter = true,
+    },
+    settings = {
+        editor = {
+            linkedEditing = true,
+        },
+        html = {
+            autoClosingTags = true,
+            format = {
+                enable = true,
+                endWithNewline = true,
+                indentHandlebars = true,
+                indentInnerHtml = false,
+                maxPreserveNewLines = 1,
+                preserveNewLines = true,
+                templating = true,
+                unformatted = {
+                    "script",
+                },
+                unformattedContentDelimiter = "{{}}",
+                wrapAttributes = "aligned-multiple",
+                wrapLineLength = 120,
+            },
+            hover = {
+                documentation = true,
+                references = true,
+            },
+            suggest = {
+                html5 = true,
+            },
+            validate = {
+                scripts = true,
+                styles = true,
+            },
+        },
+    },
 }
 
 lsp.jsonls.setup {
@@ -551,6 +648,32 @@ lsp.yamlls.setup {
     },
 }
 
+lsp.zls.setup {
+    cmd = { home .. "/Code/zig/zls/zig-out/bin/zls" }, --"--config-path=" .. home .. "/.config/zls/zls.json" },
+    root_dir = lsp.util.root_pattern("build.zig", "zls.build.json", "zls.json"),
+    capabilities = capabilities,
+    on_attach = on_attach,
+    settings = {
+        enable_snippets = true,
+        enable_ast_check_diagnostics = true,
+        enable_autofix = true,
+        enable_import_embedfile_argument_completions = true,
+        warn_style = true,
+        enable_semantic_tokens = true,
+        enable_inlay_hints = true,
+        inlay_hints_show_builtin = true,
+        inlay_hints_exclude_single_argument = false,
+        inlay_hints_hide_redundant_param_names = false,
+        inlay_hints_hide_redundant_param_names_last_token = false,
+        operator_completions = true,
+        include_at_in_builtins = true,
+        max_detail_length = 1024 * 1024,
+        skip_std_references = false,
+        highlight_global_var_declarations = true,
+        use_comptime_interpreter = true,
+    },
+}
+
 local tfsec_root_dir = lsp.util.root_pattern(".tfsec")
 
 lint.linters.tfsec = {
@@ -584,13 +707,11 @@ lint.linters.tfsec = {
         local body = vim.json.decode(output)
         if not body or body.results == vim.NIL then return {} end
 
-        local filename = vim.api.nvim_buf_get_name(bufnr)
         local diagnostics = {}
 
         for _, result in ipairs(body.results) do
-            -- TODO set diagnostics for other buffers instead of skipping?
-            -- tfsec is giving us all those anyways
-            if result.location.filename ~= filename then
+            local diag_bufnr = vim.fn.bufnr(vim.fs.normalize(result.location.filename))
+            if diag_bufnr ~= bufnr then
                 goto skip_to_next
             end
 
@@ -626,10 +747,11 @@ See:
             )
 
             local diag = {
-                bufnr = bufnr,
+                bufnr = diag_bufnr,
                 lnum = result.location.start_line,
                 end_lnum = result.location.end_line,
                 col = 0,
+                end_col = -1,
                 severity = severity,
                 message = msg,
                 source = "tfsec",
@@ -648,6 +770,90 @@ See:
     end,
 }
 
+lint.linters.terraform_validate = {
+    cmd = "terraform",
+    stdin = true, -- if false, nvim-lint automatically adds the filename as an argument, which we don't want
+    args = {
+        -- function()
+        --     local root_path = vim.api.nvim_buf_get_name(0)
+        --     if not lsp.util.path.is_dir(root_path) then
+        --         root_path = lsp.util.path.dirname(root_path)
+        --     end
+        --     return "-chdir=" .. root_path
+        -- end,
+        "validate",
+        "-json",
+    },
+    stream = "stdout",
+    ignore_exitcode = true,
+    parser = function(output, bufnr)
+        local body = vim.json.decode(output)
+        if not body or body.valid then return {} end
+
+        local diagnostics = {}
+
+        local pwd = vim.fn.getcwd()
+
+        for _, diag in ipairs(body.diagnostics) do
+            local severity = vim.diagnostic.severity.WARN
+            if diag.severity == "error" then
+                severity = vim.diagnostic.severity.ERROR
+            end
+
+            -- module-level issue
+            if diag.range == nil then
+                table.insert(diagnostics, {
+                    bufnr = bufnr,
+                    lnum = 0,
+                    col = 0,
+                    end_col = -1,
+                    severity = severity,
+                    message = string.format("%s\n%s\n", diag.summary, diag.detail),
+                    source = "terraform_validate",
+                })
+                goto skip_to_next
+            end
+
+            local diag_filename = vim.fs.normalize(pwd .. "/" .. diag.range.filename)
+            local diag_bufnr = vim.fn.bufnr(diag_filename)
+            if diag_bufnr == -1 then
+                goto skip_to_next
+            end
+
+            local fmt = [[
+%s
+Context: %s
+Snippet:
+    %s
+
+%s
+]]
+
+            local msg = string.format(fmt,
+                diag.summary,
+                diag.snippet.context,
+                diag.snippet.code,
+                diag.detail
+            )
+
+            table.insert(diagnostics, {
+                bufnr = diag_bufnr,
+                lnum = diag.range.start.line - 1,
+                end_lnum = diag.range["end"].line - 1,
+                col = diag.range.start.column - 1,
+                end_col = diag.range["end"].column - 1,
+                severity = severity,
+                message = msg,
+                source = "terraform_validate",
+            })
+
+            ::skip_to_next::
+        end
+
+        return diagnostics
+    end,
+}
+
 lint.linters_by_ft = {
     dockerfile = { "hadolint", },
     markdown = { "markdownlint", "proselint", },
@@ -655,7 +861,7 @@ lint.linters_by_ft = {
     rst = { "proselint", },
     ruby = { "ruby", "rubocop", },
     -- sh = { "shellcheck", },
-    terraform = { "tfsec", },
+    terraform = { "tfsec", "terraform_validate", },
 }
 
 -- plugins for specific LSP servers
@@ -732,9 +938,27 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
     }
 )
 
-vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
-    local notifications = require("notifications")
+-- local builtin_on_codelens = vim.lsp.codelens.on_codelens
+-- vim.lsp.codelens.on_codelens = function(err, result, ctx, config)
+--     builtin_on_codelens(err, result, ctx, config)
 
+-- local client = vim.lsp.get_client_by_id(ctx.client_id)
+-- if err then
+--     vim.notify("Error: " .. err.message, vim.log.levels.ERROR, {
+--         title = notifications.format_title(result.command.title, client.name),
+--         icon = " ",
+--         timeout = 5000,
+--     })
+-- else
+--     vim.notify("Completed", vim.log.levels.INFO, {
+--         title = notifications.format_title(result.command.title, client.name),
+--         icon = "",
+--         timeout = 5000,
+--     })
+-- end
+-- end
+
+vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
     if not result.value.kind then return end
 
     local data = notifications.get(ctx.client_id, result.token)

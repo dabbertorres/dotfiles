@@ -17,7 +17,25 @@ rest.setup {
         },
     },
     jump_to_request = true,
-    custom_dynamic_variables = {},
+    env_file = ".env",
+    custom_dynamic_variables = {
+        ["$gcloud_auth"] = function()
+            local h = io.popen("gcloud auth print-access-token")
+            if h == nil then error("failed to run gcloud auth print-access-token") end
+
+            local token = h:read("a")
+            h:close()
+            return string.gsub(token, "%s+", "")
+        end,
+        ["$gcloud_id_token"] = function()
+            local h = io.popen("gcloud auth print-identity-token")
+            if h == nil then error("failed to run gcloud auth print-identity-token") end
+
+            local token = h:read("a")
+            h:close()
+            return string.gsub(token, "%s+", "")
+        end,
+    },
 }
 
 vim.api.nvim_create_autocmd({ "FileType" }, {

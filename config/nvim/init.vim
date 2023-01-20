@@ -57,6 +57,7 @@ Plug 'nanotee/sqls.nvim'
 Plug 'mfussenegger/nvim-lint'
 Plug 'a-vrma/black-nvim', { 'do': ':UpdateRemotePlugins' }
 " Plug 'ThePrimeagen/refactoring.nvim'
+Plug 'ziglang/zig.vim'
 
 " autocompletion
 Plug 'hrsh7th/nvim-cmp'
@@ -176,7 +177,7 @@ set hidden
 set nobackup
 set nowritebackup
 set shortmess+=c
-set signcolumn=yes
+set signcolumn=yes:1
 
 """ spelling
 " set spelllang=en_us
@@ -202,6 +203,7 @@ lua require("toggleterm_config")
 " lua require("refactoring_config")
 lua require("rest_config")
 lua require("spellsitter").setup{ enable = true }
+lua require("dotenv").setup()
 
 " enable folding, but disable it by default
 set foldmethod=expr
@@ -243,6 +245,8 @@ let g:mkdp_preview_options = {
 let g:mkdp_markdown_css = ''
 let g:mkdp_highlight_css = ''
 let g:mkdp_port = ''
+
+let g:zig_fmt_autosave = 0
 
 " prolog specific behaviors
 let g:prolog_swipl_timeout = 10
