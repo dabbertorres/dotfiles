@@ -143,6 +143,10 @@ if [ "${commands[terraform]}" ] && [ ! -f "${fpath[1]}/_terraform" ]; then
     complete -o nospace -C "${commands[terraform]}" terraform
 fi
 
+if [ "${commands[upterm]}" ] && [ ! -f "${fpath[1]}/_upterm" ]; then
+    upterm completion zsh > "${fpath[1]}/_upterm"
+fi
+
 if [ "${commands[vagrant]}" ]; then
     if [ $IS_LINUX ]; then
         true
