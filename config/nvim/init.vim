@@ -9,17 +9,13 @@ call plug#begin('~/.local/share/nvim/plugged')
 
 " interface
 Plug 'ellisonleao/gruvbox.nvim'
-
-" Commits after this cause status/tab lines to be refreshed on CursorMoved events, which causes flickering for some actions - which is annoying
-" What do?
 Plug 'nvim-lualine/lualine.nvim', { 'commit': '1e53bf7386619722b7cfae0d541b45978f0152e4' }
-
 Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
 Plug 'nvim-telescope/telescope-ui-select.nvim'
 Plug 'nvim-telescope/telescope-file-browser.nvim'
 Plug 'kosayoda/nvim-lightbulb'
-Plug 'kyazdani42/nvim-web-devicons'
+Plug 'nvim-tree/nvim-web-devicons'
 Plug 'rcarriga/nvim-notify'
 Plug 'akinsho/toggleterm.nvim'
 
@@ -67,6 +63,7 @@ Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
 Plug 'hrsh7th/cmp-nvim-lua'
 Plug 'hrsh7th/cmp-path'
+Plug 'rcarriga/cmp-dap'
 Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'L3MON4D3/LuaSnip'
 " Plug 'f3fora/cmp-spell'
@@ -88,9 +85,11 @@ Plug 'junegunn/vim-easy-align'
 
 call plug#end()
 
-" disable netrw
+" disable unused plugins
 let g:loaded_netrw       = 1
 let g:loaded_netrwPlugin = 1
+let g:loaded_perl_provider = 0
+let g:loaded_ruby_provider = 0
 
 " used throughout script
 let mapleader = "m"
@@ -138,7 +137,7 @@ set visualbell
 set t_vb=
 
 set mouse=a
-set cmdheight=2
+set cmdheight=0
 set number
 set pastetoggle=<F12>
 
@@ -216,8 +215,10 @@ command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen'), '\n$', '', 
 let g:asmsyntax = 'nasm'
 
 let delimitMate_expand_cr = 1
+let g:matchup_matchparen_deferred = 1
 let g:matchup_matchparen_offscreen = {
     \ 'method': 'status_manual',
+    \ 'scrolloff': 1,
     \ }
 
 " split-term

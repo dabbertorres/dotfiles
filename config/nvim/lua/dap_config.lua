@@ -27,30 +27,84 @@ dappy.setup(home .. "/.python-venvs/debugpy/bin/python")
 dap.defaults.fallback.terminal_win_cmd = '50vsplit new'
 dap.set_log_level("INFO")
 
-vim.fn.sign_define("DapStopped",             { text = "➩",  texthl = "DiffAdd", linehl = "Cursor", numhl = "" })
-vim.fn.sign_define("DapBreakpoint",          { text = "🛑", texthl = "",        linehl = "",       numhl = "" })
-vim.fn.sign_define("DapBreakpointCondition", { text = "❓", texthl = "",        linehl = "",       numhl = "" })
-vim.fn.sign_define("DapLogPoint",            { text = "📜", texthl = "",        linehl = "",       numhl = "" })
-vim.fn.sign_define("DapBreakpointRejected",  { text = "❌", texthl = "",        linehl = "",       numhl = "" })
+vim.fn.sign_define("DapStopped", { text = "➩", texthl = "DiffAdd", linehl = "Cursor", numhl = "" })
+vim.fn.sign_define("DapBreakpoint", { text = "🛑", texthl = "", linehl = "", numhl = "" })
+vim.fn.sign_define("DapBreakpointCondition", { text = "❓", texthl = "", linehl = "", numhl = "" })
+vim.fn.sign_define("DapLogPoint", { text = "📜", texthl = "", linehl = "", numhl = "" })
+vim.fn.sign_define("DapBreakpointRejected", { text = "❌", texthl = "", linehl = "", numhl = "" })
 
 local keymap_opts = { noremap = true, silent = true }
 
-vim.keymap.set("n",          "<F5>",       dap.continue,          keymap_opts)
-vim.keymap.set("n",          "<F6>",       dap.terminate,         keymap_opts)
-vim.keymap.set("n",          "<F7>",       dap.toggle_breakpoint, keymap_opts)
-vim.keymap.set("n",          "<F8>",       dap.continue,          keymap_opts)
-vim.keymap.set("n",          "<F9>",       dap.step_over,         keymap_opts)
-vim.keymap.set("n",          "<F10>",      dap.step_into,         keymap_opts)
-vim.keymap.set("n",          "<F11>",      dap.step_out,          keymap_opts)
-vim.keymap.set({ "n", "v" }, "<leader>de", dapui.eval,            keymap_opts)
-vim.keymap.set("n",          "<leader>du", dap.up,                keymap_opts)
-vim.keymap.set("n",          "<leader>dd", dap.down,              keymap_opts)
-vim.keymap.set("n",          "<leader>dr", dap.run_to_cursor,     keymap_opts)
+vim.keymap.set("n", "<F5>", dap.continue, keymap_opts)
+vim.keymap.set("n", "<F6>", dap.terminate, keymap_opts)
+vim.keymap.set("n", "<F7>", dap.toggle_breakpoint, keymap_opts)
+vim.keymap.set("n", "<F8>", dap.continue, keymap_opts)
+vim.keymap.set("n", "<F9>", dap.step_over, keymap_opts)
+vim.keymap.set("n", "<F10>", dap.step_into, keymap_opts)
+vim.keymap.set("n", "<F11>", dap.step_out, keymap_opts)
+vim.keymap.set({ "n", "v" }, "<leader>de", dapui.eval, keymap_opts)
+vim.keymap.set("n", "<leader>du", dap.up, keymap_opts)
+vim.keymap.set("n", "<leader>dd", dap.down, keymap_opts)
+vim.keymap.set("n", "<leader>dr", dap.run_to_cursor, keymap_opts)
 
-dapui.setup{
+-- hide annoying dap-repl buffer on startup when not used
+-- NOTE: this needs to be defined before dapui.setup() is called
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "dap-repl",
+    callback = function(args)
+        vim.api.nvim_buf_set_option(args.buf, "buflisted", false)
+    end,
+})
+
+dapui.setup {
+    controls = {
+        element = "repl",
+        enabled = true,
+        icons = {
+            pause = "",
+            play = "",
+            run_last = "",
+            step_back = "",
+            step_into = "",
+            step_out = "",
+            step_over = "",
+            terminate = ""
+        },
+    },
+    element_mappings = {},
+    expand_lines = true,
+    floating = {
+        max_height = nil,
+        max_width  = nil,
+        border     = "single",
+        mappings   = {
+            close = { "q", "<Esc>" },
+        },
+    },
     icons = {
-        expanded  = "▾",
-        collapsed = "▸",
+        collapsed = "",
+        current_frame = "",
+        expanded = ""
+    },
+    layouts = {
+        {
+            elements = {
+                { id = 'scopes', size = 0.25 },
+                { id = 'breakpoints', size = 0.25 },
+                { id = 'stacks', size = 0.25 },
+                { id = 'watches', size = 0.25 },
+            },
+            size = 40,
+            position = 'left',
+        },
+        {
+            elements = {
+                { id = 'repl', size = 0.5 },
+                { id = 'console', size = 0.5 },
+            },
+            size = 10,
+            position = 'bottom',
+        },
     },
     mappings = {
         -- Use a table to apply multiple mappings
@@ -60,37 +114,9 @@ dapui.setup{
         edit   = "e",
         repl   = "r",
     },
-    expand_lines = true,
-    layouts = {
-      {
-        elements = {
-          'scopes',
-          'breakpoints',
-          'stacks',
-          'watches',
-        },
-        size = 40,
-        position = 'left',
-      },
-      {
-        elements = {
-          'repl',
-          'console',
-        },
-        size = 10,
-        position = 'bottom',
-      },
-    },
-    floating = {
-        max_height = nil,
-        max_width  = nil,
-        border     = "single",
-        mappings = {
-          close = { "q", "<Esc>" },
-        },
-    },
-    windows = {
+    render = {
         indent = 1,
+        max_value_lines = 100,
     },
 }
 

@@ -10,6 +10,11 @@ lualine.setup {
         disabled_filetypes = { "toggleterm" },
         always_divide_middle = true,
         globalstatus = true,
+        refresh = {
+            statusline = 200,
+            tabline = 1000,
+            winbar = 1000,
+        },
     },
     sections = {
         lualine_a = { "mode" },

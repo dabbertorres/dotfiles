@@ -55,7 +55,7 @@ function M.stop_spinner(data)
 end
 
 function M.format_title(title, client_name)
-    return client_name .. (#title > 0 and ": " .. title or "")
+    return client_name .. (title and #title > 0 and ": " .. title or "")
 end
 
 function M.format_message(message, percentage)

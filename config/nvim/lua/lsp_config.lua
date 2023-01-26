@@ -961,11 +961,18 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
 vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
     if not result.value.kind then return end
 
+    local client = vim.lsp.get_client_by_id(ctx.client_id)
+
+    -- ignore sumneko_lua spamming Diagnosing notifications
+    if client.name == "sumneko_lua" then
+        if result.value.title == "Diagnosing" then return end
+    end
+
     local data = notifications.get(ctx.client_id, result.token)
 
     if result.value.kind == "begin" then
         local msg = notifications.format_message(result.value.message, result.value.percentage)
-        local client = vim.lsp.get_client_by_id(ctx.client_id)
+
         local opts = notifications.init_spinner(ctx.client_id, result.token, data, {
             title = notifications.format_title(result.value.title, client.name),
             timeout = false,
@@ -980,7 +987,9 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
         })
     elseif result.value.kind == "end" and data then
         local msg = result.value.message and notifications.format_message(result.value.message) or "Complete"
+
         data.notification = vim.notify(msg, vim.log.levels.INFO, {
+            title = notifications.format_title(result.value.title, client.name),
             icon = "",
             replace = data.notification,
             timeout = 3000,
