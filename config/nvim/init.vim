@@ -137,7 +137,7 @@ set visualbell
 set t_vb=
 
 set mouse=a
-set cmdheight=0
+set cmdheight=1
 set number
 set pastetoggle=<F12>
 
