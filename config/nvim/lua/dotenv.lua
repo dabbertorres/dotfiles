@@ -30,23 +30,27 @@ local function load_data(data, key_value_callback)
     for _, line in pairs(lines) do
         line = vim.trim(line)
 
-        if line ~= "" and line[1] ~= "#" then
-            local eq_idx = string.find(line, "=", 1, true)
-            if eq_idx ~= nil then
-                local key = vim.trim(string.sub(line, 1, eq_idx - 1))
-                if key ~= "" then
-                    local val = vim.trim(string.sub(line, eq_idx + 1))
+        if line == "" or vim.startswith(line, "#") then
+            goto continue
+        end
 
-                    local val_start = 1
-                    local val_end = #val
-                    if val[val_start] == '"' then val_start = val_start + 1 end
-                    if val[val_end] == '"' then val_end = val_end - 1 end
-                    val = string.sub(val, val_start, val_end)
+        local eq_idx = string.find(line, "=", 1, true)
+        if eq_idx ~= nil then
+            local key = vim.trim(string.sub(line, 1, eq_idx - 1))
+            if key ~= "" then
+                local val = vim.trim(string.sub(line, eq_idx + 1))
 
-                    key_value_callback(key, val)
-                end
+                local val_start = 1
+                local val_end = #val
+                if val[val_start] == '"' then val_start = val_start + 1 end
+                if val[val_end] == '"' then val_end = val_end - 1 end
+                val = string.sub(val, val_start, val_end)
+
+                key_value_callback(key, val)
             end
         end
+
+        ::continue::
     end
 end
 
@@ -74,40 +78,43 @@ local function find_dotenv(start_dir, callback)
     end)
 end
 
+local function find_and_load_dotenv()
+    find_dotenv(vim.loop.cwd(), function(ok, data, path)
+        if not ok then
+            return
+        end
+
+        vim.schedule(function()
+            local total = 0
+            load_data(data, function(key, val)
+                vim.env[key] = val
+                total = total + 1
+            end)
+
+            vim.notify("loaded " .. tostring(total) .. " variables from " .. path,
+                vim.log.levels.INFO,
+                { title = "dotenv" })
+            -- M.loaded = true
+        end)
+    end)
+end
+
 -- TODO: watch the .env file for changes?
 
-M.loaded = false
+-- M.loaded = false
 M.setup = function()
     local group = vim.api.nvim_create_augroup("Dotenv", { clear = true })
 
-    vim.api.nvim_create_autocmd("BufReadPost", {
+    vim.api.nvim_create_autocmd("VimEnter", {
         group = group,
         pattern = "*",
-        callback = function()
-            if M.loaded then return end
+        callback = find_and_load_dotenv,
+    })
 
-            find_dotenv(vim.loop.cwd(), function(ok, data, path)
-                if not ok then
-                    return
-                end
-
-                vim.schedule(function()
-                    local total = 0
-                    load_data(data, function(key, val)
-                        vim.env[key] = val
-                        total = total + 1
-                    end)
-
-                    vim.notify("loaded " .. tostring(total) .. " variables from " .. path,
-                        vim.log.levels.INFO,
-                        { title = "dotenv" })
-                    M.loaded = true
-                end)
-
-                vim.schedule(function()
-                end)
-            end)
-        end,
+    vim.api.nvim_create_autocmd("BufWritePost", {
+        group = group,
+        pattern = "*.env",
+        callback = find_and_load_dotenv,
     })
 end
 

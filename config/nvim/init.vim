@@ -145,18 +145,19 @@ set pastetoggle=<F12>
 set hlsearch
 
 " indentation
-"set autoindent
-"set smartindent
-"set cindent
+set autoindent
+set smartindent
+" set cindent
+" set indentexpr=nvim_treesitter#indent()
 set shiftwidth=4
 set softtabstop=4
 set tabstop=4
 set expandtab
 set textwidth=0
 set wrap
-"set breakindent
-"set breakindentopt=sbr,shift:4
-"set showbreak=>
+set breakindent
+set breakindentopt=sbr,shift:4
+set showbreak=>
 set linebreak
 let g:vim_indent_cont = &shiftwidth
 filetype plugin indent on
@@ -207,6 +208,7 @@ lua require("dotenv").setup()
 " enable folding, but disable it by default
 set foldmethod=expr
 set foldexpr=nvim_treesitter#foldexpr()
+set nofoldenable
 set foldlevelstart=99
 
 " generate a uuid
@@ -338,6 +340,7 @@ augroup different_indent_filetypes
     au FileType html setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType java setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType json setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType jsonnet setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType make setlocal noexpandtab
     au FileType markdown setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType svelte setlocal tabstop=2 softtabstop=2 shiftwidth=2
