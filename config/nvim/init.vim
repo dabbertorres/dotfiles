@@ -155,9 +155,9 @@ set tabstop=4
 set expandtab
 set textwidth=0
 set wrap
-set breakindent
-set breakindentopt=sbr,shift:4
-set showbreak=>
+" set breakindent
+" set breakindentopt=sbr,shift:4
+" set showbreak=>
 set linebreak
 let g:vim_indent_cont = &shiftwidth
 filetype plugin indent on

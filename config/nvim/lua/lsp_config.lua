@@ -246,7 +246,7 @@ lsp.gopls.setup {
                 "-**/node_modules",
             },
             templateExtensions = { "gotmpl", "tmpl", "gohtml" },
-            allowModfileModifications = true,
+            allowModfileModifications = false,
             allowImplicitNetworkAccess = true,
 
             -- Formatting
