@@ -1,4 +1,4 @@
-#zmodload zsh/zprof
+# zmodload zsh/zprof
 
 if [[ $(uname) == "Linux" ]]; then
     IS_LINUX=true
@@ -13,35 +13,52 @@ elif [[ $(uname) == "Darwin" ]]; then
     fi
 fi
 
-export HISTFILE=$HOME/.histfile
+export HISTFILE=${HOME}/.histfile
 export HISTSIZE=1000
 export SAVEHIST=1000
-setopt appendhistory complete_aliases autocd nomatch notify prompt_subst
-unsetopt beep extendedglob
-bindkey -v
 
-zstyle :compinstall filename "$HOME/.zshrc"
+setopt \
+    complete_aliases \
+    inc_append_history \
+    nomatch \
+    notify \
+    prompt_subst
+
+unsetopt \
+    beep \
+    extended_glob
+
+zstyle :compinstall filename "${HOME}/.zshrc"
 
 export KEYTIMEOUT=1 # https://zsh.sourceforge.io/Doc/Release/Parameters.html#:~:text=set%20to%20empty.-,KEYTIMEOUT,-The%20time%20the
 
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="/usr/local/bin:$PATH"
-export PATH="/usr/local/sbin:$PATH"
+function prepend_to_path()
+{
+    if [ -d "$1" ]; then
+        export PATH="$1:${PATH}"
+    fi
+}
 
-if [ $IS_LINUX ]; then
-    export PATH="/usr/local/go/bin:$PATH"
-elif [ $IS_OSX ]; then
+prepend_to_path "${HOME}/.local/bin"
+prepend_to_path "/usr/local/bin"
+prepend_to_path "/usr/local/sbin"
+
+if [ ${IS_LINUX} ]; then
+    prepend_to_path "/usr/local/go/bin:${PATH}"
+elif [ ${IS_OSX} ]; then
     export HOMEBREW_NO_AUTO_UPDATE=1
 
-    export PATH="/usr/local/opt/llvm/bin:$PATH"
-    export PATH="/usr/local/opt/gcc/bin:$PATH"
-    export PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
-    export PATH="/usr/local/opt/openssl/bin:$PATH"
-    export PATH="/usr/local/opt/ruby/bin:$PATH"
-    export PATH="/usr/local/lib/ruby/gems/3.1.0/gems/rubocop-1.35.0/exe:$PATH"
-    export PATH="/usr/local/lib/ruby/gems/3.1.0/gems/sorbet-0.5.10324/bin:$PATH"
+    if [ -n "${BREW_PREFIX}" ]; then
+        prepend_to_path "${BREW_PREFIX}/opt/llvm/bin"
+        prepend_to_path "${BREW_PREFIX}/opt/gcc/bin"
+        prepend_to_path "${BREW_PREFIX}/opt/make/libexec/gnubin"
+        prepend_to_path "${BREW_PREFIX}/opt/openssl/bin"
+        prepend_to_path "${BREW_PREFIX}/opt/ruby/bin"
+        prepend_to_path "${BREW_PREFIX}/opt/ruby/lib/ruby/gems/3.1.0/gems/rubocop-1.35.0/exe"
+        prepend_to_path "${BREW_PREFIX}/opt/ruby/lib/ruby/gems/3.1.0/gems/sorbet-0.5.10324/bin"
+    fi
 
-    export PATH="$HOME/Library/Python/3.10/bin:$PATH"
+    prepend_to_path "${HOME}/Library/Python/3.10/bin"
     # alias lldb='PATH=/usr/bin lldb' # force using system python for lldb - avoids a python import error
 fi
 
@@ -49,23 +66,20 @@ if [ -f "${HOME}/.cargo/env" ]; then
     source "${HOME}/.cargo/env"
 fi
 
-autoload -Uz compinit
-compinit
+# autoload -U +X bashcompinit && bashcompinit
 
-autoload -U +X bashcompinit && bashcompinit
-
-if [ -d "$HOME/.zsh/completion" ]; then
-    fpath=($HOME/.zsh/completion ${fpath[@]})
+if [ -d "${HOME}/.zsh/completion" ]; then
+    fpath=(${HOME}/.zsh/completion ${fpath[@]})
 fi
 
 if [ "${commands[dotnet]}" ]; then
     export DOTNET_CLI_TELEMETRY_OPTOUT=1
-    export PATH="$HOME/.dotnet/tools:$PATH"
+    prepend_to_path "${HOME}/.dotnet/tools"
 fi
 
 if [ "${commands[gcloud]}" ]; then
     export CLOUDSDK_PYTHON_SITEPACKAGES=1
-    if [ $IS_OSX ]; then
+    if [ ${IS_OSX} ]; then
         source "${BREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
         source "${BREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
     fi
@@ -80,17 +94,17 @@ if [ "${commands[gcloud]}" ]; then
 fi
 
 if [ "${commands[go]}" ]; then
-    export GOPATH="$HOME/Code/Go"
-    export PATH="$GOPATH/bin:$PATH"
+    export GOPATH="${HOME}/Code/Go"
+    prepend_to_path "${GOPATH}/bin"
 fi
 
 if [ "${commands[java]}" ]; then
-    if [ $IS_OSX ]; then
+    if [ ${IS_OSX} ]; then
         export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-17.jdk/Contents/Home
     fi
 
     export _JAVA_AWT_WM_NONREPARENTING=1
-    export PATH="$JAVA_HOME/bin:$PATH"
+    prepend_to_path "$JAVA_HOME/bin"
 fi
 
 if [ "${commands[kubebuilder]}" ] && [ ! -f "${fpath[1]}/_kubebuilder" ]; then
@@ -106,7 +120,7 @@ if [ "${commands[kubectl]}" ]; then
         if [ ! -f "${fpath[1]}/_kubectl_krew" ]; then
             kubectl krew completion zsh > "${fpath[1]}/_kubectl_krew"
         fi
-        export PATH="$HOME/.krew/bin:$PATH"
+        prepend_to_path "${HOME}/.krew/bin"
     fi
 
     function watch_pods()
@@ -148,40 +162,41 @@ if [ "${commands[upterm]}" ] && [ ! -f "${fpath[1]}/_upterm" ]; then
 fi
 
 if [ "${commands[vagrant]}" ]; then
-    if [ $IS_LINUX ]; then
+    if [ ${IS_LINUX} ]; then
         true
-    elif [ $IS_OSX ]; then
+    elif [ ${IS_OSX} ]; then
         fpath=(/opt/vagrant/embedded/gems/2.2.14/gems/vagrant-2.2.14/contrib/zsh ${fpath[@]})
     fi
 fi
 
 if [ "${commands[yarn]}" ]; then
-    export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+    prepend_to_path "${HOME}/.yarn/bin"
+    prepend_to_path "${HOME}/.config/yarn/global/node_modules/.bin"
 fi
 
 # fancy completion
-if [ -d "$HOME/.local/share/zsh-autosuggestions" ]; then
-    source "$HOME/.local/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+if [ -d "${HOME}/.local/share/zsh-autosuggestions" ]; then
+    source "${HOME}/.local/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 elif [ -d "/usr/local/share/zsh-autosuggestions" ]; then
     source "/usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 fi
 
-if [ $IS_OSX ]; then
+if [ ${IS_OSX} ]; then
     if [ -d "${BREW_PREFIX}/opt/gitstatus" ]; then
         source "${BREW_PREFIX}/opt/gitstatus/gitstatus.prompt.zsh"
     fi
-elif [ -d "$HOME/.local/share/gitstatus" ]; then
-    source "$HOME/.local/share/gitstatus/gitstatus.prompt.zsh"
+elif [ -d "${HOME}/.local/share/gitstatus" ]; then
+    source "${HOME}/.local/share/gitstatus/gitstatus.prompt.zsh"
 fi
 
 # OSX specific settings for using non-default compiler toolchains
-if [[ $IS_OSX ]]; then
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib"
+if [[ ${IS_OSX} ]]; then
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${BREW_PREFIX}/lib"
     export TOOLCHAINS=swift
 
     # Use clang from Homebrew
-    export CC=/usr/local/opt/llvm/bin/clang
-    export CXX=/usr/local/opt/llvm/bin/clang++
+    export CC="${BREW_PREFIX}/opt/llvm/bin/clang"
+    export CXX="${BREW_PREFIX}/opt/llvm/bin/clang++"
 
     # Since I want to use Homebrew Clang, I have to specify where the system root is, for finding system headers and libraries.
     # In order for Go to be able to compile C code, I need to set a few of its CGO_* env vars for it to work properly.
@@ -190,22 +205,30 @@ if [[ $IS_OSX ]]; then
     export CGO_CXXFLAGS="$(go env CGO_CXXFLAGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
     export CGO_FFLAGS="$(go env CGO_FFLAGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
     export CGO_LDFLAGS="$(go env CGO_LDFLAGS) -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/ -L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
-elif [[ $IS_WSL ]]; then
+elif [[ ${IS_WSL} ]]; then
     export DISPLAY=$(awk '/nameserver/ { print $2 }' < /etc/resolv.conf):0.0
 fi
+
+autoload -Uz compinit
+
+for dump in ~/.zcompdump(N.mh+24); do
+    compinit
+done
+
+compinit -C
 
 ### aliases
 
 alias cl=clear
-if [[ $IS_OSX ]]; then
+if [[ ${IS_OSX} ]]; then
     alias ls='ls -G'
 else
     alias ls='ls --color=auto'
 fi
 alias grep='grep --color=auto'
 
-LUAMAKE_DIR="$HOME/Code/lsps/lua-language-server/3rd/luamake"
-if [ -d "$LUAMAKE_DIR" ]; then
+LUAMAKE_DIR="${HOME}/Code/lsps/lua-language-server/3rd/luamake"
+if [ -d "${LUAMAKE_DIR}" ]; then
     alias luamake="${LUAMAKE_DIR}/luamake"
 fi
 
@@ -228,15 +251,15 @@ function show-jobs()
 {
     read num_jobs < <(jobs -d | wc -l | xargs printf "%d / 2\n" | bc)
     if [[ num_jobs -gt 0 ]]; then
-        printf " %%F{cyan}[%d job(s)]%%f" "$num_jobs"
+        printf " %%F{cyan}[%d job(s)]%%f" "${num_jobs}"
     fi
 }
 
 function show-dirs()
 {
     local num_dirs=$(( $(dirs | sed -e 's/ /\n/g' | wc -l) - 1))
-    if [[ $num_dirs -gt 0 ]]; then
-        printf " %%F{magenta}[%d dir(s)]%%f" $num_dirs
+    if [[ ${num_dirs} -gt 0 ]]; then
+        printf " %%F{magenta}[%d dir(s)]%%f" ${num_dirs}
     fi
 }
 
@@ -289,7 +312,7 @@ function generate_random_text()
 function generate_password()
 {
     local length=$1
-    openssl rand -hex "${length:-32}" \
+    openssl rand -base64 "${length:-32}" \
         | tr -d '\n'
 }
 
@@ -302,7 +325,7 @@ fi
 
 function view_path()
 {
-    echo "$PATH" | sed 's/:/\n/g'
+    echo "${PATH}" | sed 's/:/\n/g'
 }
 
 ## kitty specific stuff
@@ -314,9 +337,17 @@ if [[ "${TERM}" == 'xterm-kitty' ]]; then
     ### key bindings
     bindkey "\001" beginning-of-line
     bindkey "\005" end-of-line
+    bindkey "\eOH" beginning-of-line
+    bindkey "\eOF" end-of-line
     bindkey "\e[1;5D" backward-word
     bindkey "\e[1;5C" forward-word
     bindkey "\^[3~" delete-char
 fi
 
-#zprof
+bindkey -v
+
+# match current input to history (up and down arrows)
+# bindkey '^[[A' history-beginning-search-backward
+# bindkey '^[[B' history-beginning-search-forward
+
+# zprof
