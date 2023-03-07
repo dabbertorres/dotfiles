@@ -99,8 +99,6 @@ local function find_and_load_dotenv()
     end)
 end
 
--- TODO: watch the .env file for changes?
-
 -- M.loaded = false
 M.setup = function()
     local group = vim.api.nvim_create_augroup("Dotenv", { clear = true })

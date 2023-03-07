@@ -43,9 +43,9 @@ Plug 'rcarriga/nvim-dap-ui'
 
 " language tooling
 Plug 'neovim/nvim-lspconfig'
-Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdateSync' }
+Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
 Plug 'nvim-treesitter/nvim-treesitter-textobjects'
-" Plug 'nvim-treesitter/playground'
+Plug 'nvim-treesitter/playground'
 Plug 'mfussenegger/nvim-jdtls'
 Plug 'mfussenegger/nvim-dap-python'
 Plug 'leoluz/nvim-dap-go'
@@ -59,6 +59,7 @@ Plug 'ziglang/zig.vim'
 Plug 'hrsh7th/nvim-cmp'
 Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-calc'
+Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
 Plug 'hrsh7th/cmp-nvim-lua'
@@ -66,7 +67,7 @@ Plug 'hrsh7th/cmp-path'
 Plug 'rcarriga/cmp-dap'
 Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'L3MON4D3/LuaSnip'
-" Plug 'f3fora/cmp-spell'
+Plug 'f3fora/cmp-spell'
 
 " quality of life
 Plug 'Raimondi/delimitMate'
@@ -77,7 +78,6 @@ Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-commentary'
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
 Plug 'tpope/vim-eunuch'
-Plug 'lewis6991/spellsitter.nvim'
 "Plug 'wannesm/wmgraphviz.vim'
 Plug 'sindrets/diffview.nvim'
 Plug 'tpope/vim-surround'
@@ -179,9 +179,7 @@ set nowritebackup
 set shortmess+=c
 set signcolumn=yes:1
 
-""" spelling
-" set spelllang=en_us
-" set spell
+let g:python3_host_prog = $HOME . '/.local/share/nvim/py-venv/bin/python3'
 
 lua require("gruvbox_config")
 
@@ -202,7 +200,6 @@ lua require("neotest_config")
 lua require("toggleterm_config")
 " lua require("refactoring_config")
 lua require("rest_config")
-lua require("spellsitter").setup{ enable = true }
 lua require("dotenv").setup()
 
 " enable folding, but disable it by default
@@ -299,7 +296,6 @@ let g:black#settings = {
     \ 'fast': 1,
     \ 'line_length': 100,
 \}
-let g:python3_host_prog = $HOME . '/.local/share/nvim/py-venv/bin/python'
 
 " customize built-in terminal
 augroup terminal_buf
@@ -376,5 +372,5 @@ function! s:read_large_file()
 endfunction
 
 augroup large_files
-    au BufReadPre * if getfsize(expand("%")) > 512 * 1024 | exec s:read_large_file() | endif
+    au BufReadPre * if getfsize(expand("%")) > 1024 * 1024 | exec s:read_large_file() | endif
 augroup END

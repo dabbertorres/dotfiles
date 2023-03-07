@@ -235,7 +235,7 @@ lsp.dotls.setup {
 lsp.gopls.setup {
     capabilities = capabilities,
     on_attach = on_attach,
-    cmd = { "gopls", "-remote=auto", "-logfile=auto", "-remote.logfile=auto" },
+    cmd = { "gopls", "-remote=auto", "-logfile=auto", "-remote.logfile=auto", "-v" },
     settings = {
         gopls = {
             -- Build
@@ -366,7 +366,7 @@ lsp.gradle_ls.setup {
     capabilities = capabilities,
     on_attach = on_attach,
     cmd = { home ..
-        "/Code/lsps/vscode-gradle/gradle-language-server/build/install/gradle-language-server/bin/gradle-language-server" },
+    "/Code/lsps/vscode-gradle/gradle-language-server/build/install/gradle-language-server/bin/gradle-language-server" },
     filetypes = { "groovy" }, -- TODO: kotlin-script files (e.g. build.gradle.kts)
     root_dir = lsp.util.root_pattern("build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"),
     init_options = {
@@ -423,11 +423,11 @@ lsp.html.setup {
     },
 }
 
-lsp.jsonls.setup {
-    capabilities = capabilities,
-    on_attach = on_attach,
-    single_file_support = true,
-}
+-- lsp.jsonls.setup {
+--     capabilities = capabilities,
+--     on_attach = on_attach,
+--     single_file_support = true,
+-- }
 
 lsp.kotlin_language_server.setup {
     capabilities = capabilities,
@@ -472,6 +472,104 @@ lsp.kotlin_language_server.setup {
     --         },
     --     },
     -- },
+}
+
+lsp.lua_ls.setup {
+    capabilities = capabilities,
+    on_attach = on_attach,
+    single_file_support = true,
+    settings = {
+        Lua = {
+            completion = {
+                displayContent = 2,
+                -- nvim-cmp-buffer makes these unnecessary
+                showWord = "Disable",
+                workspaceWord = false,
+            },
+            diagnostics = {
+                globals = {
+                    "vim"
+                },
+            },
+            format = {
+                defaultConfig = {
+                    indent_style                                 = "space",
+                    indent_size                                  = 4,
+                    quote_style                                  = "double",
+                    call_arg_parentheses                         = "remove_table_only",
+                    continuation_indent                          = 4,
+                    max_line_length                              = 120,
+                    end_of_line                                  = "unset",
+                    trailing_table_separator                     = "smart",
+
+                    -- let neovim handle newlines
+                    detect_end_of_line                           = false,
+                    insert_final_newline                         = false,
+
+                    space_around_table_field_list                = false,
+                    space_before_attribute                       = true,
+                    space_before_function_open_parenthesis       = false, -- misspelled intentionally...
+                    space_before_function_call_open_parenthesis  = false, -- misspelled intentionally...
+                    space_before_closure_open_parenthesis        = false, -- misspelled intentionally...
+                    space_before_function_call_single_arg        = false,
+                    space_before_open_square_bracket             = false,
+                    space_inside_function_call_parentheses       = false,
+                    space_inside_function_param_list_parentheses = false,
+                    space_inside_square_brackets                 = false,
+                    space_around_table_append_operator           = false,
+                    ignore_spaces_inside_function_call           = false,
+                    space_before_inline_comment                  = 1,
+                    space_around_math_operator                   = true,
+                    space_after_comma                            = true,
+                    space_after_comma_in_for_statement           = true,
+                    space_around_concat_operator                 = true,
+                    align_call_args                              = true,
+                    align_function_params                        = true,
+                    align_continuous_assign_statement            = true,
+                    align_continuous_rect_table_field            = true,
+                    align_if_branch                              = true,
+                    align_array_table                            = true,
+                    never_indent_before_if_condition             = false,
+                    line_space_after_if_statement                = "fixed(1)",
+                    line_space_after_do_statement                = "fixed(1)",
+                    line_space_after_while_statement             = "fixed(1)",
+                    line_space_after_repeat_statement            = "fixed(1)",
+                    line_space_after_for_statement               = "fixed(1)",
+                    line_space_after_local_or_assign_statement   = "max(1)",
+                    line_space_after_function_statement          = "fixed(1)",
+                    line_space_after_expression_statement        = "max(1)",
+                    line_space_after_comment                     = "max(1)",
+                    break_all_list_when_line_exceed              = true,
+                    auto_collapse_lines                          = false,
+                    ignore_space_after_colon                     = true,
+                    remove_call_expression_list_finish_comma     = true,
+                },
+            },
+            hint = {
+                arrayIndex = "Disable",
+                enable     = true,
+                setType    = true,
+            },
+            hover = {
+                viewStringMax = 100,
+            },
+            runtime = {
+                version = "LuaJIT",
+                path = {
+                    "?.lua",
+                    "?/init.lua",
+                    home .. "/.local/share/nvim/plugged/?/lua/?.lua",
+                    home .. "/.local/share/nvim/plugged/?/lua/init.lua",
+                },
+            },
+            telemetry = {
+                enable = false,
+            },
+            workspace = {
+                library = vim.api.nvim_get_runtime_file("", true),
+            },
+        },
+    },
 }
 
 local pid = vim.fn.getpid()
@@ -544,36 +642,6 @@ lsp.sorbet.setup {
 --         end
 --     end,
 -- }
-
-lsp.sumneko_lua.setup {
-    capabilities = capabilities,
-    on_attach = on_attach,
-    settings = {
-        Lua = {
-            diagnostics = {
-                globals = { "vim" },
-            },
-            -- runtime = {
-            --     version = "Lua 5.4",
-            --     path = {
-            --         "?.lua",
-            --         "?/init.lua",
-            --     }
-            -- },
-            telemetry = {
-                enable = false,
-            },
-            workspace = {
-                library = vim.api.nvim_get_runtime_file("", true),
-            },
-        },
-    },
-    -- on_init = function(client)
-    --     if client.config.settings then
-    --         client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
-    --     end
-    -- end,
-}
 
 -- official Ruby LSP
 -- lsp.typeprof.setup {}
@@ -734,7 +802,7 @@ lint.linters.tfsec = {
 Impact (%s): %s
 Resolution: %s
 See:
-]]           .. string.rep("* %s", #result.links, "\n")
+]] .. string.rep("* %s", #result.links, "\n")
                 .. "\n"
 
             local msg = string.format(fmt,
@@ -856,9 +924,7 @@ Snippet:
 
 lint.linters_by_ft = {
     dockerfile = { "hadolint", },
-    markdown = { "markdownlint", "proselint", },
-    text = { "proselint", },
-    rst = { "proselint", },
+    markdown = { "markdownlint", },
     ruby = { "ruby", "rubocop", },
     -- sh = { "shellcheck", },
     terraform = { "tfsec", "terraform_validate", },
@@ -963,7 +1029,7 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
 
     local client = vim.lsp.get_client_by_id(ctx.client_id)
 
-    -- ignore sumneko_lua spamming Diagnosing notifications
+    -- ignore lua_ls spamming Diagnosing notifications
     if client.name == "sumneko_lua" then
         if result.value.title == "Diagnosing" then return end
     end

@@ -1,18 +1,23 @@
 --local profile_start_time = vim.loop.hrtime()
 
-local treesitter = require("nvim-treesitter.configs")
+local treesitter = require("nvim-treesitter")
+local configs = require("nvim-treesitter.configs")
 
 -- constants for selection_modes
 local charwise = "v"
 local linewise = "V"
 local blockwise = "<c-v>"
 
-treesitter.setup {
+configs.setup {
     ensure_installed = "all",
     sync_install = true,
     highlight = {
         enable = true,
         additional_vim_regex_highlighting = false,
+        is_supported = function()
+            return vim.fn.strwidth(vim.fn.getline(".")) <= 300
+                and vim.fn.getfsize(vim.fn.expand("%")) <= 1024 * 1024
+        end,
     },
     incremental_selection = {
         enable = true,
@@ -47,6 +52,43 @@ treesitter.setup {
                 ["@class.outer"] = linewise,
             },
         },
+    },
+    playground = {
+        enable = true,
+        disable = {},
+        updatime = 25,
+        persist_queries = false,
+        keybindings = {
+            toggle_query_editor = 'o',
+            toggle_hl_groups = 'i',
+            toggle_injected_languages = 't',
+            toggle_anonymous_nodes = 'a',
+            toggle_language_display = 'I',
+            focus_language = 'f',
+            unfocus_language = 'F',
+            update = 'R',
+            goto_node = '<cr>',
+            show_help = '?',
+        },
+    },
+    query_linter = {
+        enable = true,
+        use_virtual_text = true,
+        lint_events = { "BufWrite", "CursorHold" },
+    },
+}
+
+treesitter.define_modules {
+    nginx = {
+        attach = function(bufnr, lang)
+
+        end,
+        detach = function(bufnr)
+
+        end,
+        is_supported = function(lang)
+
+        end,
     },
 }
 
