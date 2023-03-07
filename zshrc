@@ -46,7 +46,7 @@ prepend_to_path "/usr/local/sbin"
 if [ ${IS_LINUX} ]; then
     prepend_to_path "/usr/local/go/bin:${PATH}"
 elif [ ${IS_OSX} ]; then
-    export HOMEBREW_NO_AUTO_UPDATE=1
+    # export HOMEBREW_NO_AUTO_UPDATE=1
 
     if [ -n "${BREW_PREFIX}" ]; then
         prepend_to_path "${BREW_PREFIX}/opt/llvm/bin"
@@ -58,13 +58,22 @@ elif [ ${IS_OSX} ]; then
         prepend_to_path "${BREW_PREFIX}/opt/ruby/lib/ruby/gems/3.1.0/gems/sorbet-0.5.10324/bin"
     fi
 
-    prepend_to_path "${HOME}/Library/Python/3.10/bin"
+    # prepend_to_path "${HOME}/Library/Python/3.10/bin"
     # alias lldb='PATH=/usr/bin lldb' # force using system python for lldb - avoids a python import error
+    prepend_to_path "/usr/local/go/bin"
 fi
 
 if [ -f "${HOME}/.cargo/env" ]; then
     source "${HOME}/.cargo/env"
 fi
+
+autoload -Uz compinit
+
+for dump in ~/.zcompdump(N.mh+24); do
+    compinit
+done
+
+compinit -C
 
 # autoload -U +X bashcompinit && bashcompinit
 
@@ -208,14 +217,6 @@ if [[ ${IS_OSX} ]]; then
 elif [[ ${IS_WSL} ]]; then
     export DISPLAY=$(awk '/nameserver/ { print $2 }' < /etc/resolv.conf):0.0
 fi
-
-autoload -Uz compinit
-
-for dump in ~/.zcompdump(N.mh+24); do
-    compinit
-done
-
-compinit -C
 
 ### aliases
 
