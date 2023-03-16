@@ -36,10 +36,13 @@ Plug 'TimUntersberger/neogit'
 " testing tooling
 Plug 'nvim-neotest/neotest'
 Plug 'nvim-neotest/neotest-go'
+Plug 'nvim-neotest/neotest-python'
 
 " debugging tooling
 Plug 'mfussenegger/nvim-dap'
 Plug 'rcarriga/nvim-dap-ui'
+Plug 'mfussenegger/nvim-dap-python'
+Plug 'leoluz/nvim-dap-go'
 
 " language tooling
 Plug 'neovim/nvim-lspconfig'
@@ -47,13 +50,10 @@ Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
 Plug 'nvim-treesitter/nvim-treesitter-textobjects'
 Plug 'nvim-treesitter/playground'
 Plug 'mfussenegger/nvim-jdtls'
-Plug 'mfussenegger/nvim-dap-python'
-Plug 'leoluz/nvim-dap-go'
 Plug 'nanotee/sqls.nvim'
 Plug 'mfussenegger/nvim-lint'
 Plug 'a-vrma/black-nvim', { 'do': ':UpdateRemotePlugins' }
-" Plug 'ThePrimeagen/refactoring.nvim'
-Plug 'ziglang/zig.vim'
+Plug 'ThePrimeagen/refactoring.nvim'
 
 " autocompletion
 Plug 'hrsh7th/nvim-cmp'
@@ -65,9 +65,9 @@ Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
 Plug 'hrsh7th/cmp-nvim-lua'
 Plug 'hrsh7th/cmp-path'
 Plug 'rcarriga/cmp-dap'
+Plug 'f3fora/cmp-spell'
 Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'L3MON4D3/LuaSnip'
-Plug 'f3fora/cmp-spell'
 
 " quality of life
 Plug 'Raimondi/delimitMate'
@@ -78,7 +78,6 @@ Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-commentary'
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
 Plug 'tpope/vim-eunuch'
-"Plug 'wannesm/wmgraphviz.vim'
 Plug 'sindrets/diffview.nvim'
 Plug 'tpope/vim-surround'
 Plug 'junegunn/vim-easy-align'
@@ -198,7 +197,7 @@ lua require("neogit_config")
 lua require("gitsigns_config")
 lua require("neotest_config")
 lua require("toggleterm_config")
-" lua require("refactoring_config")
+lua require("refactoring_config")
 lua require("rest_config")
 lua require("dotenv").setup()
 
