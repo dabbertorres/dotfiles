@@ -320,7 +320,7 @@ augroup END
 augroup extra_file_types
     autocmd!
     au BufFilePre,BufNewFile,BufReadPost *.tpp set filetype=cpp
-    au BufFilePre,BufNewFile,BufReadPost Dockerfile.* set filetype=Dockerfile
+    au BufFilePre,BufNewFile,BufReadPost Dockerfile.* set filetype=dockerfile
     au BufFilePre,BufNewFile,BufReadPost *.fs set filetype=fsharp
     au BufFilePre,BufNewFile,BufReadPost *.frag set filetype=glsl
     au BufFilePre,BufNewFile,BufReadPost go.mod set filetype=gomod
