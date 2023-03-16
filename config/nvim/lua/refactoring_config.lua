@@ -33,9 +33,7 @@ refactoring.setup {
 
 -- require("telescope").load_extension("refactoring")
 
-vim.keymap.set("v", "<leader>rr", function()
-    refactoring.select_refactor()
-end, {
+vim.keymap.set("v", "<leader>rr", refactoring.select_refactor, {
     silent = true,
     noremap = true,
 })
