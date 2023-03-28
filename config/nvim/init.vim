@@ -99,7 +99,7 @@ set ttimeoutlen=10
 set updatetime=100
 set encoding=utf-8
 set clipboard+=unnamedplus
-set synmaxcol=500
+set synmaxcol=300
 set shortmess=filmnrxoOtTIcF
 
 if has('mac')
@@ -163,8 +163,7 @@ filetype plugin indent on
 
 " persistent undo
 set undofile
-set undodir=~/.config/nvim/undo
-set undolevels=100
+set undolevels=1000
 set undoreload=1000
 " ensure undo directory exists
 silent !mkdir -p "$HOME/.config/nvim/undo"
@@ -326,6 +325,7 @@ augroup extra_file_types
     au BufFilePre,BufNewFile,BufReadPost go.mod set filetype=gomod
     au BufFilePre,BufNewFile,BufReadPost *.cshtml set filetype=html
     au BufFilePre,BufNewFile,BufReadPost *.gohtml set filetype=html
+    au BufFilePre,BufNewFile,BufReadPost *.ftlh set filetype=html
 augroup END
 
 augroup different_indent_filetypes
@@ -362,6 +362,11 @@ function! s:read_large_file()
     if exists(':TSBufDisable')
         exec 'TSBufDisable incremental_selection highlight indent matchup'
     endif
+
+    if exists(':LspStop')
+        exec 'LspStop'
+    endif
+
     setlocal syntax=off
     setlocal foldmethod=manual
     setlocal filetype=off
