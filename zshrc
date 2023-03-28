@@ -116,6 +116,19 @@ if [ "${commands[java]}" ]; then
     prepend_to_path "$JAVA_HOME/bin"
 fi
 
+if [ "${commands[jq]}" ]; then
+    # colon separated list (effect;color:...), in this order:
+    # * null
+    # * false
+    # * true
+    # * numbers
+    # * strings
+    # * arrays
+    # * objects
+    # see `man jq`
+    export JQ_COLORS="1;31:0;35:0;35:0;33:0;32:1;39:1;39"
+fi
+
 if [ "${commands[kubebuilder]}" ] && [ ! -f "${fpath[1]}/_kubebuilder" ]; then
     kubebuilder completion zsh > "${fpath[1]}/_kubebuilder"
 fi
