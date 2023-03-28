@@ -248,10 +248,8 @@ lsp.gopls.setup {
             templateExtensions = { "gotmpl", "tmpl", "gohtml" },
             allowModfileModifications = false,
             allowImplicitNetworkAccess = true,
-
             -- Formatting
             gofumpt = true,
-
             -- UI
             codelenses = {
                 gc_details = true,
@@ -264,10 +262,8 @@ lsp.gopls.setup {
                 vendor = false,
             },
             semanticTokens = true,
-
             -- Completion
             usePlaceholders = false,
-
             -- Diagnostic
             analyses = {
                 asmdecl = true,
@@ -324,12 +320,10 @@ lsp.gopls.setup {
                 inline = true,
                 ["nil"] = true,
             },
-
             -- Documentation
             hoverKind = "FullDocumentation",
             linkTarget = "pkg.go.dev",
             linksInHover = true,
-
             -- Inlay Hint
             hints = {
                 assignVariableTypes = false,
@@ -337,10 +331,9 @@ lsp.gopls.setup {
                 compositeLiteralTypes = false,
                 constantValues = true,
                 functionTypeParameters = false,
-                parameterNames = false,
+                parameterNames = true,
                 rangeVariableTypes = false,
             },
-
             -- Navigation
             importShortcut = "Link",
         },
@@ -348,6 +341,7 @@ lsp.gopls.setup {
     on_new_config = function(new_config, new_root_dir)
         local Job = require("plenary.job")
 
+        -- identify the local package for use when sorting imports
         Job:new({
             command = "go",
             args = { "list", "-m" },
@@ -501,11 +495,9 @@ lsp.lua_ls.setup {
                     max_line_length                              = 120,
                     end_of_line                                  = "unset",
                     trailing_table_separator                     = "smart",
-
                     -- let neovim handle newlines
                     detect_end_of_line                           = false,
                     insert_final_newline                         = false,
-
                     space_around_table_field_list                = false,
                     space_before_attribute                       = true,
                     space_before_function_open_parenthesis       = false, -- misspelled intentionally...
@@ -945,10 +937,10 @@ vim.api.nvim_create_autocmd("FileType", {
     callback = jdtls.setup,
 })
 
-vim.fn.sign_define("DiagnosticSignError", { text = " ", texthl = "GruvboxRed" })
-vim.fn.sign_define("DiagnosticSignWarn", { text = " ", texthl = "GruvboxYellow" })
+vim.fn.sign_define("DiagnosticSignError", { text = "󰅚 ", texthl = "GruvboxRed" })
+vim.fn.sign_define("DiagnosticSignWarn", { text = "󰀪 ", texthl = "GruvboxYellow" })
 vim.fn.sign_define("DiagnosticSignInfo", { text = " ", texthl = "GruvboxBlue" })
-vim.fn.sign_define("DiagnosticSignHint", { text = " ", texthl = "GruvboxAqua" })
+vim.fn.sign_define("DiagnosticSignHint", { text = "󰌶", texthl = "GruvboxAqua" })
 
 vim.diagnostic.config {
     underline = true,
@@ -962,13 +954,13 @@ vim.diagnostic.config {
         focus = false,
         prefix = function(diagnostic, _, _)
             if diagnostic == vim.diagnostic.severity.ERROR then
-                return " ", ""
+                return "󰅚 ", ""
             elseif diagnostic == vim.diagnostic.severity.WARN then
-                return " ", ""
+                return "󰀪 ", ""
             elseif diagnostic == vim.diagnostic.severity.INFO then
                 return " ", ""
             elseif diagnostic == vim.diagnostic.severity.HINT then
-                return " ", ""
+                return "󰌶", ""
             else
                 return "", ""
             end
@@ -1012,7 +1004,7 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
 -- if err then
 --     vim.notify("Error: " .. err.message, vim.log.levels.ERROR, {
 --         title = notifications.format_title(result.command.title, client.name),
---         icon = " ",
+--         icon = "󰅚 ",
 --         timeout = 5000,
 --     })
 -- else
@@ -1066,13 +1058,13 @@ end
 
 local function lsp_message_type_to_icon_and_neovim(message_type)
     if message_type == vim.lsp.protocol.MessageType.Error then
-        return log.levels.ERROR, " "
+        return log.levels.ERROR, "󰅚 "
     elseif message_type == vim.lsp.protocol.MessageType.Warning then
-        return log.levels.WARN, " "
+        return log.levels.WARN, "󰀪 "
     elseif message_type == vim.lsp.protocol.MessageType.Info then
         return log.levels.INFO, " "
     elseif message_type == vim.lsp.protocol.MessageType.Log then
-        return log.levels.TRACE, " "
+        return log.levels.TRACE, "󰌶"
     else
         return log.levels.DEBUG, "? "
     end
