@@ -68,6 +68,9 @@ Plug 'rcarriga/cmp-dap'
 Plug 'f3fora/cmp-spell'
 Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'L3MON4D3/LuaSnip'
+Plug 'SmiteshP/nvim-navic'
+Plug 'MunifTanjim/nui.nvim'
+Plug 'SmiteshP/nvim-navbuddy'
 
 " quality of life
 Plug 'Raimondi/delimitMate'

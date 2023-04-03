@@ -8,6 +8,8 @@ local cmp_lsp = require("cmp_nvim_lsp")
 local lint = require("lint")
 local lightbulb = require("nvim-lightbulb")
 
+local navbuddy = require("nvim-navbuddy")
+
 local util = require("my_util")
 
 vim.o.updatetime = 250
@@ -25,6 +27,14 @@ local mappings_opts = {
     noremap = true,
     silent = true,
 }
+
+navbuddy.setup {
+    lsp = {
+        auto_attach = true,
+    },
+}
+
+vim.keymap.set("n", "gsb", navbuddy.open, mappings_opts)
 
 local capabilities = cmp_lsp.default_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
