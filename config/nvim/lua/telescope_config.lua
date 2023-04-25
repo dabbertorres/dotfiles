@@ -6,16 +6,10 @@ local builtin = require("telescope.builtin")
 
 telescope.setup {
     defaults = {
-        vimgrep_arguments = {
-            "rg",
-            "--color=never",
-            "--no-heading",
-            "--with-filename",
-            "--line-number",
-            "--column",
-            "--smart-case",
-            "--glob", "!vcpkg/**",
+        layout_config = {
+            preview_height = 50,
         },
+        layout_strategy = "vertical",
         mappings = {
             i = {
                 ["<C-n>"] = false,
@@ -29,16 +23,28 @@ telescope.setup {
         },
         -- path_display = "smart",
         selection_strategy = "follow",
+        vimgrep_arguments = {
+            "rg",
+            "--color=never",
+            "--no-heading",
+            "--with-filename",
+            "--line-number",
+            "--column",
+            "--smart-case",
+            "--glob", "!vcpkg/**",
+        },
     },
     extensions = {
-        file_browser = {},
+        file_browser = {
+        },
         fzf = {
             fuzzy = true,
             override_generic_sorter = true,
             override_file_sorter = true,
             case_mode = "smart_case",
         },
-        ["ui-select"] = {},
+        ["ui-select"] = {
+        },
     },
 }
 
@@ -63,7 +69,7 @@ vim.keymap.set("n", "<leader>fe", function()
     telescope.extensions.file_browser.file_browser(file_browser_opts)
 end, mappings_opts)
 vim.keymap.set("n", "<leader>ff", builtin.find_files, mappings_opts)
-vim.keymap.set("n", "<leader>s", builtin.live_grep, mappings_opts)
+vim.keymap.set("n", "<leader>ss", builtin.live_grep, mappings_opts)
 vim.keymap.set("n", "<leader>b", builtin.buffers, mappings_opts)
 vim.keymap.set("n", "<leader>h", builtin.help_tags, mappings_opts)
 vim.keymap.set("n", "<leader>C", builtin.builtin, mappings_opts)
