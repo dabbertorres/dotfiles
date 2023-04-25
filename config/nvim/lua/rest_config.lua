@@ -20,19 +20,11 @@ rest.setup {
     env_file = ".env",
     custom_dynamic_variables = {
         ["$gcloud_auth"] = function()
-            local h = io.popen("gcloud auth print-access-token --quiet")
-            if h == nil then error("failed to run gcloud auth print-access-token") end
-
-            local token = h:read("a")
-            h:close()
+            local token = vim.fn.system { "gcloud", "auth", "print-access-token", "--quiet" }
             return string.gsub(token, "%s+", "")
         end,
         ["$gcloud_id_token"] = function()
-            local h = io.popen("gcloud auth print-identity-token --quiet")
-            if h == nil then error("failed to run gcloud auth print-identity-token") end
-
-            local token = h:read("a")
-            h:close()
+            local token = vim.fn.system { "gcloud", "auth", "print-identity-token", "--quiet" }
             return string.gsub(token, "%s+", "")
         end,
     },
