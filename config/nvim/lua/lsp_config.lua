@@ -52,7 +52,7 @@ local function on_attach(client, bufnr)
     vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
 
     if client.server_capabilities.definitionProvider then
-        vim.keymap.set("n", "mpd", function()
+        vim.keymap.set("n", "<leader>pd", function()
             local params = vim.lsp.util.make_position_params()
             return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
                 if result == nil or vim.tbl_isempty(result) then return nil end
@@ -88,7 +88,7 @@ local function on_attach(client, bufnr)
     end
 
     if client.server_capabilities.signatureHelpProvider then
-        vim.keymap.set("n", "mk", vim.lsp.buf.signature_help, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>k", vim.lsp.buf.signature_help, util.copy_with(mappings_opts, { buffer = bufnr }))
     end
 
     if client.server_capabilities.referencesProvider then
@@ -102,10 +102,8 @@ local function on_attach(client, bufnr)
     end
 
     if client.server_capabilities.renameProvider then
-        vim.keymap.set("n", "mrn", vim.lsp.buf.rename, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, util.copy_with(mappings_opts, { buffer = bufnr }))
     end
-
-    -- vim.keymap.set({"n", "v"}, "ms", "<Plug>(sqls-execute-query)", { buffer = bufnr })
 
     -- if client.server_capabilities.diagnosticProvider then
     vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
@@ -127,8 +125,9 @@ local function on_attach(client, bufnr)
             end,
         })
 
-        vim.keymap.set("n", "mca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
-        vim.keymap.set("v", "mca", vim.lsp.buf.range_code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("v", "<leader>ca", vim.lsp.buf.range_code_action,
+        util.copy_with(mappings_opts, { buffer = bufnr }))
     end
 
     if client.server_capabilities.codeLensProvider then
@@ -139,7 +138,7 @@ local function on_attach(client, bufnr)
             end,
         })
 
-        vim.keymap.set("n", "mcl", vim.lsp.codelens.run, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>cl", vim.lsp.codelens.run, util.copy_with(mappings_opts, { buffer = bufnr }))
     end
 
     if client.server_capabilities.documentFormattingProvider then
@@ -150,7 +149,7 @@ local function on_attach(client, bufnr)
             end,
         })
 
-        vim.keymap.set("n", "mfa", vim.lsp.buf.formatting, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>fa", vim.lsp.buf.formatting, util.copy_with(mappings_opts, { buffer = bufnr }))
     end
 
     if client.server_capabilities.documentHighlightProvider then
@@ -271,7 +270,7 @@ lsp.gopls.setup {
                 upgrade_dependency = true,
                 vendor = false,
             },
-            semanticTokens = true,
+            semanticTokens = false,
             -- Completion
             usePlaceholders = false,
             -- Diagnostic
@@ -729,7 +728,7 @@ lsp.zls.setup {
         enable_autofix = true,
         enable_import_embedfile_argument_completions = true,
         warn_style = true,
-        enable_semantic_tokens = true,
+        enable_semantic_tokens = false,
         enable_inlay_hints = true,
         inlay_hints_show_builtin = true,
         inlay_hints_exclude_single_argument = false,
@@ -1026,6 +1025,7 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
 -- end
 -- end
 
+---@diagnostic disable-next-line: duplicate-set-field
 vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
     if not result.value.kind then return end
 
@@ -1080,6 +1080,7 @@ local function lsp_message_type_to_icon_and_neovim(message_type)
     end
 end
 
+---@diagnostic disable-next-line: duplicate-set-field
 vim.lsp.handlers["window/showMessage"] = function(_, result, ctx, _)
     if not result then return end
 
