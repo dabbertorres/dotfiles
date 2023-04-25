@@ -321,7 +321,8 @@ augroup END
 
 augroup extra_file_types
     autocmd!
-    au BufFilePre,BufNewFile,BufReadPost *.tpp set filetype=cpp
+    au BufFilePre,BufNewFile,BufReadPost *.tpp set filetype=cpp " C++ template implementation files
+    au BufFilePre,BufNewFile,BufReadPost *.cppm set filetype=cpp " C++ importable module unit
     au BufFilePre,BufNewFile,BufReadPost Dockerfile.* set filetype=dockerfile
     au BufFilePre,BufNewFile,BufReadPost *.fs set filetype=fsharp
     au BufFilePre,BufNewFile,BufReadPost *.frag set filetype=glsl
