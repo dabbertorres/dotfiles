@@ -127,7 +127,7 @@ local function on_attach(client, bufnr)
 
         vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
         vim.keymap.set("v", "<leader>ca", vim.lsp.buf.range_code_action,
-        util.copy_with(mappings_opts, { buffer = bufnr }))
+            util.copy_with(mappings_opts, { buffer = bufnr }))
     end
 
     if client.server_capabilities.codeLensProvider then
@@ -264,7 +264,7 @@ lsp.gopls.setup {
                 gc_details = true,
                 generate = true,
                 regenerate_cgo = true,
-                run_vulncheck_exp = true,
+                run_vulncheck = true,
                 test = false,
                 tidy = true,
                 upgrade_dependency = true,
@@ -274,6 +274,9 @@ lsp.gopls.setup {
             -- Completion
             usePlaceholders = false,
             -- Diagnostic
+            diagnosticsDelay = "1s",
+            vulncheck = "Imports",
+            staticcheck = true,
             analyses = {
                 asmdecl = true,
                 assign = true,
@@ -285,9 +288,10 @@ lsp.gopls.setup {
                 composites = true,
                 copylocks = true,
                 deepequalerrors = true,
+                directive = true,
                 embed = true,
                 errorsas = true,
-                fieldalignment = false,
+                fieldalignment = true,
                 fillreturns = true,
                 fillstruct = true,
                 httpresponse = true,
@@ -345,6 +349,7 @@ lsp.gopls.setup {
             },
             -- Navigation
             importShortcut = "Link",
+            newDiff = "new",
         },
     },
     on_new_config = function(new_config, new_root_dir)
@@ -571,6 +576,11 @@ lsp.lua_ls.setup {
             },
         },
     },
+}
+
+lsp.marksman.setup {
+    capabilities = capabilities,
+    on_attach = on_attach,
 }
 
 local pid = vim.fn.getpid()
