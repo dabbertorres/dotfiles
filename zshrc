@@ -14,12 +14,20 @@ elif [[ $(uname) == "Darwin" ]]; then
 fi
 
 export HISTFILE=${HOME}/.histfile
-export HISTSIZE=1000
-export SAVEHIST=1000
+export HISTSIZE=10000
+export SAVEHIST=10000
 
 setopt \
     complete_aliases \
     inc_append_history \
+    hist_expire_dups_first \
+    hist_find_no_dups \
+    hist_ignore_dups \
+    hist_ignore_all_dups \
+    hist_ignore_space \
+    hist_save_no_dups \
+    hist_reduce_blanks \
+    hist_verify \
     nomatch \
     notify \
     prompt_subst
