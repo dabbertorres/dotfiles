@@ -50,7 +50,8 @@ Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
 Plug 'nvim-treesitter/nvim-treesitter-textobjects'
 Plug 'nvim-treesitter/playground'
 Plug 'mfussenegger/nvim-jdtls'
-Plug 'nanotee/sqls.nvim'
+" Plug 'nanotee/sqls.nvim'
+Plug 'kndndrj/nvim-dbee'
 Plug 'mfussenegger/nvim-lint'
 Plug 'a-vrma/black-nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'ThePrimeagen/refactoring.nvim'
@@ -202,6 +203,7 @@ lua require("toggleterm_config")
 lua require("refactoring_config")
 lua require("rest_config")
 lua require("dotenv").setup()
+lua require("dbee_config")
 
 " enable folding, but disable it by default
 set foldmethod=expr

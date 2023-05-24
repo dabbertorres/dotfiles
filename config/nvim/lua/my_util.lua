@@ -55,4 +55,89 @@ function M.buffer_dir(bufnr)
     return dirname(path)
 end
 
+function M.parent_dir(dir)
+    local last_slash = dir:find("/[^/]*$")
+    if last_slash == nil or last_slash == 1 then return "/" end
+
+    return dir:sub(1, last_slash - 1)
+end
+
+function M.find_file(start_dir, pattern, load_callback)
+    local matcher = nil
+    if type(pattern) == "function" then
+        matcher = pattern
+    else
+        matcher = function(name) return name:find(pattern) end
+    end
+
+    local found = false
+
+    local function handle_entry(entry)
+        local name, file_type = uv.fs_scandir_next(entry)
+        if name == nil and file_type == nil then
+            if found or start_dir == "/" then return end
+
+            local parent = M.parent_dir(start_dir)
+            M.find_file(parent, pattern, load_callback)
+            return
+        end
+
+        if file_type == "file" and matcher(name) then
+            local full_path = start_dir .. "/" .. name
+            local is_json = name:find("%.json$") ~= nil
+            M.load_file(full_path, function(ok, data)
+                if ok then
+                    load_callback(data, is_json, full_path)
+                    found = true
+                end
+
+                handle_entry(entry)
+            end)
+        else
+            handle_entry(entry)
+        end
+    end
+
+    uv.fs_scandir(start_dir, function(err, entry)
+        if err then
+            print(err)
+            return
+        end
+
+        handle_entry(entry)
+    end)
+end
+
+function M.load_file(path, callback)
+    uv.fs_lstat(path, function(err, stat)
+        if err or stat.type ~= "file" then
+            callback(false, nil)
+            return
+        end
+
+        uv.fs_open(path, "r", 0400, function(err, fd)
+            if err then
+                callback(false, nil)
+                return
+            end
+
+            uv.fs_read(fd, stat.size, 0, function(err, data)
+                if err then
+                    callback(false, nil)
+                    return
+                end
+
+                uv.fs_close(fd, function(err)
+                    if err then
+                        callback(false, nil)
+                        return
+                    end
+
+                    callback(true, data)
+                end)
+            end)
+        end)
+    end)
+end
+
 return M

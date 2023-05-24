@@ -1,5 +1,6 @@
 local lualine = require("lualine")
 local toggleterm_status = require("toggleterm_lualine")
+local treesitter = require("nvim-treesitter")
 
 lualine.setup {
     options = {
@@ -38,8 +39,8 @@ lualine.setup {
             },
         },
         lualine_x = {
-            "MatchupStatusOffscreen",
-            { function() return vim.fn["nvim_treesitter#statusline"](90) end },
+            -- "MatchupStatusOffscreen",
+            { function() return treesitter.statusline(90) end },
             "filetype",
         },
         lualine_y = { "encoding", "fileformat" },
@@ -73,16 +74,16 @@ lualine.setup {
             },
         },
         lualine_y = {
-            { toggleterm_status, id = 1 },
-            { toggleterm_status, id = 2 },
-            { toggleterm_status, id = 3 },
-            { toggleterm_status, id = 4 },
-            { toggleterm_status, id = 5 },
-            { toggleterm_status, id = 6 },
-            { toggleterm_status, id = 7 },
-            { toggleterm_status, id = 8 },
-            { toggleterm_status, id = 9 },
-            { toggleterm_status, id = 10 },
+            { toggleterm_status,                id = 1 },
+            { toggleterm_status,                id = 2 },
+            { toggleterm_status,                id = 3 },
+            { toggleterm_status,                id = 4 },
+            { toggleterm_status,                id = 5 },
+            { toggleterm_status,                id = 6 },
+            { toggleterm_status,                id = 7 },
+            { toggleterm_status,                id = 8 },
+            { toggleterm_status,                id = 9 },
+            { toggleterm_status,                id = 10 },
             { toggleterm_status.terminal_icon() },
         },
         lualine_z = { "tabs" },
