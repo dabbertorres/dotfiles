@@ -38,6 +38,19 @@ vim.keymap.set("n", "gsb", navbuddy.open, mappings_opts)
 
 local capabilities = cmp_lsp.default_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
+if not capabilities.workspace then
+    capabilities.workspace = {
+        didChangeWatchedFiles = {
+            dynamicRegistration = true,
+        },
+    }
+elseif not capabilities.workspace.didChangeWatchedFiles then
+    capabilities.workspace.didChangeWatchedFiles = {
+        dynamicRegistration = true,
+    }
+else
+    capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
+end
 
 lightbulb.setup {
     sign = {
@@ -120,14 +133,10 @@ local function on_attach(client, bufnr)
     if client.server_capabilities.codeActionProvider then
         vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
             buffer = bufnr,
-            callback = function()
-                lightbulb.update_lightbulb()
-            end,
+            callback = function() lightbulb.update_lightbulb() end,
         })
 
         vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
-        vim.keymap.set("v", "<leader>ca", vim.lsp.buf.range_code_action,
-            util.copy_with(mappings_opts, { buffer = bufnr }))
     end
 
     if client.server_capabilities.codeLensProvider then
@@ -145,11 +154,12 @@ local function on_attach(client, bufnr)
         vim.api.nvim_create_autocmd("BufWritePre", {
             buffer = bufnr,
             callback = function()
-                vim.lsp.buf.format({ formatting_options = formatting_options }, 500)
+                vim.lsp.buf.format({ formatting_options = formatting_options })
             end,
         })
 
-        vim.keymap.set("n", "<leader>fa", vim.lsp.buf.formatting, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>fa", function() vim.lsp.buf.format { async = true } end,
+            util.copy_with(mappings_opts, { buffer = bufnr }))
     end
 
     if client.server_capabilities.documentHighlightProvider then
@@ -1041,10 +1051,8 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
 
     local client = vim.lsp.get_client_by_id(ctx.client_id)
 
-    -- ignore lua_ls spamming Diagnosing notifications
-    if client.name == "sumneko_lua" then
-        if result.value.title == "Diagnosing" then return end
-    end
+    -- ignore lua_ls spamming notifications
+    if client.name == "lua_ls" then return end
 
     local data = notifications.get(ctx.client_id, result.token)
 
