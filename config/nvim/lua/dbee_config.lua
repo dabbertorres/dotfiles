@@ -1,28 +1,32 @@
 local util = require("my_util")
 local dbee = require("dbee")
+local dbee_sources = require("dbee.sources")
+
+local sources = {
+}
 
 util.find_file(
     vim.loop.cwd(),
     function(name) return name:find("%.dbee.json$") end,
-    function(data, _, _)
-        vim.schedule(function() dbee.install() end)
-        vim.schedule(function()
-            local configs = vim.json.decode(data, { luanil = { object = true, array = true } })
-            dbee.setup {
-                connections = configs,
-                ui = {
-                    -- Layout saving and restoring appears to be broken (2023-05-22), which is done in the default
-                    -- implementations of these functions. So, override them to do nothing.
-                    pre_open_hook = function()
-                    end,
-                    post_open_hook = function()
-                    end,
-                    post_close_hook = function()
-                    end,
-                },
-            }
-        end)
+    function(_, _, path)
+        table.insert(sources, dbee_sources.FileSource:new(path))
     end)
+
+dbee.install()
+dbee.setup {
+    lazy = true,
+    sources = sources,
+    ui = {
+        -- Layout saving and restoring appears to be broken (2023-05-22), which is done in the default
+        -- implementations of these functions. So, override them to do nothing.
+        pre_open_hook = function()
+        end,
+        post_open_hook = function()
+        end,
+        post_close_hook = function()
+        end,
+    },
+}
 
 vim.api.nvim_create_user_command("DBOpen", dbee.open, {
     desc = "Open the dbee UI.",
