@@ -12,7 +12,6 @@ util.find_file(
         table.insert(sources, dbee_sources.FileSource:new(path))
     end)
 
-dbee.install()
 dbee.setup {
     lazy = true,
     sources = sources,
