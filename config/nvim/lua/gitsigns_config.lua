@@ -51,7 +51,7 @@ gitsigns.setup {
         vim.keymap.set("n", "<leader>gd", gs.diffthis, { buffer = bufnr })
         vim.keymap.set("n", "<leader>gD", function() gs.diffthis("~") end, { buffer = bufnr })
 
-        vim.keymap.set("n", "<leader>gb", function() gs.blame_line { full = true } end, { buffer = bufnr })
+        vim.keymap.set("n", "<leader>bl", function() gs.blame_line { full = true } end, { buffer = bufnr })
 
         vim.keymap.set("n", "<leader>gc", gs.toggle_deleted, { buffer = bufnr })
     end,
