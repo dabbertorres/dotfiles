@@ -3,20 +3,16 @@
 local treesitter = require("nvim-treesitter")
 local configs = require("nvim-treesitter.configs")
 
--- constants for selection_modes
-local charwise = "v"
-local linewise = "V"
-local blockwise = "<c-v>"
-
 configs.setup {
     ensure_installed = "all",
     sync_install = true,
     highlight = {
         enable = true,
         additional_vim_regex_highlighting = false,
-        is_supported = function()
-            return vim.fn.strwidth(vim.fn.getline(".")) <= 300
-                and vim.fn.getfsize(vim.fn.expand("%")) <= 1024 * 1024
+        use_languagetree = true,
+        disable = function(lang, bufnr)
+            return vim.fn.strlen(vim.fn.getbufoneline(bufnr, 1)) > 300
+                or vim.fn.getfsize(vim.fn.expand("%")) > 1024 * 1024
         end,
     },
     incremental_selection = {
@@ -37,6 +33,23 @@ configs.setup {
         disable = {},
     },
     textobjects = {
+        -- lsp_interop = {
+        --     enable = true,
+        --     floating_preview_opts = {
+        --         border = 'none',
+        --     },
+        --     peek_definition_code = {
+        --         ["<leader>pd"] = {
+        --             query = {
+        --             "@class.outer",
+        --             "@function.outer",
+        --             "@assignment.outer",
+        --             "@attribute.outer",
+        --             "@parameter.outer",
+        --             },
+        --         },
+        --     },
+        -- },
         select = {
             enable = true,
             lookahead = true,
@@ -47,9 +60,9 @@ configs.setup {
                 ["ic"] = "@class.inner",
             },
             selection_modes = {
-                ["@parameter.outer"] = charwise,
-                ["@function.outer"] = linewise,
-                ["@class.outer"] = linewise,
+                ["@parameter.outer"] = "v",
+                ["@function.outer"] = "V",
+                ["@class.outer"] = "V",
             },
         },
     },
