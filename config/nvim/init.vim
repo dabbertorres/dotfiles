@@ -212,7 +212,7 @@ set nofoldenable
 set foldlevelstart=99
 
 " generate a uuid
-command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen'), '\n$', '', '')
+command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen | tr "[A-Z]" "[a-z]"'), '\n$', '', '')
 
 let g:asmsyntax = 'nasm'
 
