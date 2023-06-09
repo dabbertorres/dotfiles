@@ -3,6 +3,8 @@ local dbee = require("dbee")
 local dbee_sources = require("dbee.sources")
 
 local sources = {
+    dbee_sources.EnvSource:new("DBEE_CONNECTIONS"),
+    dbee_sources.FileSource:new(vim.fn.stdpath("cache") .. "/dbee/persistence.json"),
 }
 
 util.find_file(
