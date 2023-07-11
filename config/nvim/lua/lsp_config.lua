@@ -274,17 +274,14 @@ lsp.gopls.setup {
                 gc_details = true,
                 generate = true,
                 regenerate_cgo = true,
-                run_vulncheck = true,
-                test = false,
+                run_govulncheck = true,
                 tidy = true,
                 upgrade_dependency = true,
                 vendor = false,
             },
-            semanticTokens = false,
             -- Completion
             usePlaceholders = false,
             -- Diagnostic
-            diagnosticsDelay = "1s",
             vulncheck = "Imports",
             staticcheck = true,
             analyses = {
@@ -954,8 +951,15 @@ lint.linters_by_ft = {
 -- plugins for specific LSP servers
 local lsp_plugins_au = vim.api.nvim_create_augroup("lsp_plugins", {})
 
-vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
+vim.api.nvim_create_autocmd("FileType", {
     group = lsp_plugins_au,
+    pattern = {
+        "Dockerfile", "Dockerfile.*",
+        "*.md",
+        "*.ruby",
+        --"*.sh",
+        "*.tf",
+    },
     callback = function() lint.try_lint() end,
 })
 
@@ -1086,15 +1090,15 @@ end
 
 local function lsp_message_type_to_icon_and_neovim(message_type)
     if message_type == vim.lsp.protocol.MessageType.Error then
-        return log.levels.ERROR, "󰅚 "
+        return log.levels.ERROR, "󰅚"
     elseif message_type == vim.lsp.protocol.MessageType.Warning then
-        return log.levels.WARN, "󰀪 "
+        return log.levels.WARN, "󰀪"
     elseif message_type == vim.lsp.protocol.MessageType.Info then
-        return log.levels.INFO, " "
+        return log.levels.INFO, ""
     elseif message_type == vim.lsp.protocol.MessageType.Log then
         return log.levels.TRACE, "󰌶"
     else
-        return log.levels.DEBUG, "? "
+        return log.levels.DEBUG, "?"
     end
 end
 

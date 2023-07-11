@@ -35,6 +35,8 @@ gitsigns.setup {
     },
     -- word_diff = true,
     on_attach = function(bufnr)
+        if not vim.api.nvim_buf_is_loaded(bufnr) then return end
+
         local gs = package.loaded.gitsigns
 
         vim.keymap.set("n", "<leader>gj", next_hunk(gs), { buffer = bufnr, expr = true })
@@ -51,7 +53,7 @@ gitsigns.setup {
         vim.keymap.set("n", "<leader>gd", gs.diffthis, { buffer = bufnr })
         vim.keymap.set("n", "<leader>gD", function() gs.diffthis("~") end, { buffer = bufnr })
 
-        vim.keymap.set("n", "<leader>bl", function() gs.blame_line { full = true } end, { buffer = bufnr })
+        vim.keymap.set("n", "<leader>gl", function() gs.blame_line { full = true } end, { buffer = bufnr })
 
         vim.keymap.set("n", "<leader>gc", gs.toggle_deleted, { buffer = bufnr })
     end,
