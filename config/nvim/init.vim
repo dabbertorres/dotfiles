@@ -53,7 +53,7 @@ Plug 'mfussenegger/nvim-jdtls'
 " Plug 'nanotee/sqls.nvim'
 Plug 'kndndrj/nvim-dbee', { 'do': ':lua require(\"nvim-dbee\").install()' }
 Plug 'mfussenegger/nvim-lint'
-Plug 'a-vrma/black-nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'averms/black-nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'ThePrimeagen/refactoring.nvim'
 
 " autocompletion
