@@ -13,7 +13,7 @@ local navbuddy = require("nvim-navbuddy")
 local util = require("my_util")
 
 vim.o.updatetime = 250
-log.set_level(log.levels.WARN)
+log.set_level(log.levels.ERROR)
 
 local home = os.getenv("HOME")
 
@@ -1060,32 +1060,31 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
 
     local data = notifications.get(ctx.client_id, result.token)
 
-    if result.value.kind == "begin" then
-        local msg = notifications.format_message(result.value.message, result.value.percentage)
+    local msg = notifications.format_message(result.value.message) or "Complete"
+    local opts = nil
 
-        local opts = notifications.init_spinner(ctx.client_id, result.token, data, {
+    if result.value.kind == "begin" then
+        opts = notifications.init_spinner(ctx.client_id, result.token, data, {
             title = notifications.format_title(result.value.title, client.name),
-            timeout = false,
             hide_from_history = false,
         })
-        data.notification = vim.notify(msg, vim.log.levels.INFO, opts)
-    elseif result.value.kind == "report" and data then
-        local msg = notifications.format_message(result.value.message, result.value.percentage)
-        data.notification = vim.notify(msg, vim.log.levels.INFO, {
+    elseif result.value.kind == "report" then
+        opts = {
             replace = data.notification,
             hide_from_history = false,
-        })
-    elseif result.value.kind == "end" and data then
-        local msg = result.value.message and notifications.format_message(result.value.message) or "Complete"
-
-        data.notification = vim.notify(msg, vim.log.levels.INFO, {
+        }
+    elseif result.value.kind == "end" then
+        opts = {
             title = notifications.format_title(result.value.title, client.name),
             icon = "",
             replace = data.notification,
             timeout = 3000,
-        })
+            on_close = function() notifications.delete(ctx.client_id, result.token) end,
+        }
         notifications.stop_spinner(data)
     end
+
+    data.notification = vim.notify(msg, vim.log.levels.INFO, opts)
 end
 
 local function lsp_message_type_to_icon_and_neovim(message_type)

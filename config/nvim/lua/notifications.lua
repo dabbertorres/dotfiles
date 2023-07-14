@@ -1,7 +1,7 @@
 local notify = require("notify")
 
 notify.setup {
-    level = "info",
+    level = vim.log.levels.INFO,
     timeout = 5000,
     background_color = "#000000",
 }
@@ -37,10 +37,15 @@ function M.get(client_id, token)
     end
 
     if not client_notifications[client_id][token] then
-        client_notifications[client_id][token] = {}
+        return {}
     end
 
     return client_notifications[client_id][token]
+end
+
+function M.delete(client_id, token)
+    if not client_notifications[client_id] then return end
+    client_notifications[client_id][token] = nil
 end
 
 function M.init_spinner(client_id, token, data, notify_opts)
