@@ -77,11 +77,11 @@ fi
 
 autoload -Uz compinit
 
-for dump in ~/.zcompdump(N.mh+24); do
+if [[ -n ${HOME}/.zcompdump(N.mh+24) ]]; then
     compinit
-done
-
-compinit -C
+else
+    compinit -C
+fi
 
 # autoload -U +X bashcompinit && bashcompinit
 
