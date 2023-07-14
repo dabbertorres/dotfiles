@@ -134,6 +134,7 @@ set ruler
 set wildmenu
 set scrolloff=5
 set inccommand=nosplit
+set nrformats=alpha,octal,hex,bin
 
 " unset visualbell terminal code
 set visualbell
