@@ -110,6 +110,10 @@ if [ "${commands[gcloud]}" ]; then
     }
 fi
 
+if [ ! "${commands[go]}" ] && [ -d "/usr/local/go" ]; then
+    prepend_to_path "/usr/local/go/bin"
+fi
+
 if [ "${commands[go]}" ]; then
     export GOPATH="${HOME}/Code/Go"
     prepend_to_path "${GOPATH}/bin"
@@ -378,4 +382,3 @@ bindkey -v
 # bindkey '^[[B' history-beginning-search-forward
 
 # zprof
-export PATH=/usr/local/go/bin:$PATH
