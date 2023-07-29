@@ -172,6 +172,11 @@ if [ "${commands[kustomize]}" ] && [ ! -f "${fpath[1]}/_kustomize" ]; then
     complete -o nospace -C "${commands[kustomize]}" kustomize
 fi
 
+# neovim version manager (https://github.com/MordechaiHadad/bob)
+if [ "${commands[bob]}" ]; then
+    export PATH="${HOME}/.local/share/bob/nvim-bin:${PATH}"
+fi
+
 if [ "${commands[nvim]}" ]; then
     export EDITOR=nvim
     export VISUAL=nvim
@@ -373,3 +378,4 @@ bindkey -v
 # bindkey '^[[B' history-beginning-search-forward
 
 # zprof
+export PATH=/usr/local/go/bin:$PATH
