@@ -141,15 +141,7 @@ if [ "${commands[jq]}" ]; then
     export JQ_COLORS="1;31:0;35:0;35:0;33:0;32:1;39:1;39"
 fi
 
-if [ "${commands[kubebuilder]}" ] && [ ! -f "${fpath[1]}/_kubebuilder" ]; then
-    kubebuilder completion zsh > "${fpath[1]}/_kubebuilder"
-fi
-
 if [ "${commands[kubectl]}" ]; then
-    if [ ! -f "${fpath[1]}/_kubectl" ]; then
-        kubectl completion zsh > "${fpath[1]}/_kubectl"
-    fi
-
     if [ "${commands[kubectl-krew]}" ]; then
         if [ ! -f "${fpath[1]}/_kubectl_krew" ]; then
             kubectl krew completion zsh > "${fpath[1]}/_kubectl_krew"
@@ -170,10 +162,6 @@ if [ "${commands[kubectl]}" ]; then
     {
         kubectl config get-contexts | fzf | awk '{ print $1 }' | xargs kubectl config use-context
     }
-fi
-
-if [ "${commands[kustomize]}" ] && [ ! -f "${fpath[1]}/_kustomize" ]; then
-    complete -o nospace -C "${commands[kustomize]}" kustomize
 fi
 
 # neovim version manager (https://github.com/MordechaiHadad/bob)
@@ -331,14 +319,6 @@ function precmd
 #fi
 
 ### misc functions
-
-function generate_random_text()
-{
-    local url="https://qrng.anu.edu.au/API/jsonI.php?type=hex16&length=1&size=${1:-32}"
-    curl -SsL "${url}"       \
-        | jq -rcM '.data[0]' \
-        | tr -d '\n'
-}
 
 function generate_password()
 {

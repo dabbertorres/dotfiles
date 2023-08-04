@@ -17,12 +17,6 @@ log.set_level(log.levels.ERROR)
 
 local home = os.getenv("HOME")
 
-local formatting_options = {
-    trimTrailingWhitespace = true,
-    insertFinalNewline = true,
-    trimFinalNewlines = true,
-}
-
 local mappings_opts = {
     noremap = true,
     silent = true,
@@ -59,6 +53,9 @@ lightbulb.setup {
     },
 }
 
+-- local lsp_autocmds_au = vim.api.nvim_create_augroup("lsp_autocmds", {})
+local lsp_autocmds_au = nil
+
 local function on_attach(client, bufnr)
     local telescope = require("telescope.builtin")
 
@@ -76,6 +73,7 @@ local function on_attach(client, bufnr)
         vim.keymap.set("n", "gd", function()
             telescope.lsp_definitions {
                 jump_type = nil,
+                fname_width = 120,
                 ignore_filename = false,
                 trim_text = false,
             }
@@ -83,13 +81,16 @@ local function on_attach(client, bufnr)
     end
 
     if client.server_capabilities.declarationProvider then
-        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, util.copy_with(mappings_opts, {
+            buffer = bufnr,
+        }))
     end
 
     if client.server_capabilities.implementationProvider then
         vim.keymap.set("n", "gi", function()
             telescope.lsp_implementations {
                 jump_type = nil,
+                fname_width = 120,
                 ignore_filename = false,
                 trim_text = false,
             }
@@ -97,7 +98,9 @@ local function on_attach(client, bufnr)
     end
 
     if client.server_capabilities.hoverProvider then
-        vim.keymap.set("n", "K", vim.lsp.buf.hover, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, util.copy_with(mappings_opts, {
+            buffer = bufnr,
+        }))
     end
 
     if client.server_capabilities.signatureHelpProvider then
@@ -107,6 +110,7 @@ local function on_attach(client, bufnr)
     if client.server_capabilities.referencesProvider then
         vim.keymap.set("n", "gu", function()
             telescope.lsp_references({
+                fname_width = 120,
                 include_declaration = true,
                 include_current_line = true,
                 trim_text = false,
@@ -115,62 +119,97 @@ local function on_attach(client, bufnr)
     end
 
     if client.server_capabilities.renameProvider then
-        vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, util.copy_with(mappings_opts, {
+            buffer = bufnr,
+        }))
     end
 
     -- if client.server_capabilities.diagnosticProvider then
     vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
+        group = lsp_autocmds_au,
         buffer = bufnr,
         callback = function()
             vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
         end,
     })
 
-    vim.keymap.set("n", "<c-k>", vim.diagnostic.goto_prev, util.copy_with(mappings_opts, { buffer = bufnr }))
-    vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, util.copy_with(mappings_opts, { buffer = bufnr }))
+    vim.keymap.set("n", "<c-k>", vim.diagnostic.goto_prev, util.copy_with(mappings_opts, {
+        buffer = bufnr,
+    }))
+    vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, util.copy_with(mappings_opts, {
+        buffer = bufnr,
+    }))
     -- end
 
     if client.server_capabilities.codeActionProvider then
         vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
+            group = lsp_autocmds_au,
             buffer = bufnr,
             callback = function() lightbulb.update_lightbulb() end,
         })
 
-        vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, {
+            buffer = bufnr,
+        }))
     end
 
     if client.server_capabilities.codeLensProvider then
         vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
+            group = lsp_autocmds_au,
             buffer = bufnr,
             callback = function()
                 vim.lsp.codelens.refresh()
             end,
         })
 
-        vim.keymap.set("n", "<leader>cl", vim.lsp.codelens.run, util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>cl", vim.lsp.codelens.run, util.copy_with(mappings_opts, {
+            buffer = bufnr,
+        }))
     end
 
     if client.server_capabilities.documentFormattingProvider then
+        local formatting_options = {
+            tabSize                = vim.bo.tabstop,
+            insertSpaces           = true,
+            trimTrailingWhitespace = true,
+            insertFinalNewline     = true,
+            trimFinalNewlines      = true,
+        }
+
+        local function do_format(async)
+            return function()
+                vim.lsp.buf.format {
+                    formatting_options = formatting_options,
+                    bufnr = bufnr,
+                    async = async,
+                }
+            end
+        end
+
         vim.api.nvim_create_autocmd("BufWritePre", {
+            group = lsp_autocmds_au,
             buffer = bufnr,
-            callback = function()
-                vim.lsp.buf.format({ formatting_options = formatting_options })
-            end,
+            callback = do_format(false),
         })
 
-        vim.keymap.set("n", "<leader>fa", function() vim.lsp.buf.format { async = true } end,
-            util.copy_with(mappings_opts, { buffer = bufnr }))
+        vim.keymap.set("n", "<leader>fa", do_format(true), util.copy_with(mappings_opts, {
+            buffer = bufnr,
+        }))
     end
 
     if client.server_capabilities.documentHighlightProvider then
         vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+            group = lsp_autocmds_au,
             buffer = bufnr,
             callback = vim.lsp.buf.document_highlight,
         })
+
         vim.api.nvim_create_autocmd("CursorMoved", {
+            group = lsp_autocmds_au,
             buffer = bufnr,
             callback = vim.lsp.buf.clear_references,
         })
+
         vim.cmd [[
             hi! LspReferenceRead guibg=#5b5e5b
             hi! LspReferenceText guibg=#5b5e5b
@@ -672,16 +711,19 @@ lsp.tsserver.setup {
 lsp.terraformls.setup {
     capabilities = capabilities,
     on_attach = on_attach,
-    flags = {
-        debounce_text_changes = 1000,
-    },
-    init_options = {
+    settings = {
+        terraform = {
+            timeout = "5s",
+        },
+        indexing = {
+            ignoreDirectoryNames = {
+                "tools",
+                "ops",
+            },
+        },
         experimentalFeatures = {
             validateOnSave = false,
             prefillRequiredFields = true,
-        },
-        terraform = {
-            timeout = "5s",
         },
     },
 }

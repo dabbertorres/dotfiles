@@ -345,8 +345,9 @@ augroup different_indent_filetypes
     au FileType jsonnet setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType make setlocal noexpandtab
     au FileType markdown setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType sql setlocal tabstop=2 softtabstop=2 shiftwidth=2 commentstring=--%s
     au FileType svelte setlocal tabstop=2 softtabstop=2 shiftwidth=2
-    au FileType terraform setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    au FileType terraform setlocal tabstop=2 softtabstop=2 shiftwidth=2 commentstring=#%s
     au FileType typescript setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType vue setlocal tabstop=2 softtabstop=2 shiftwidth=2
     au FileType xml setlocal tabstop=2 softtabstop=2 shiftwidth=2

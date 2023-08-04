@@ -7,7 +7,7 @@ local builtin = require("telescope.builtin")
 telescope.setup {
     defaults = {
         layout_config = {
-            preview_height = 50,
+            -- preview_height = 50,
         },
         layout_strategy = "vertical",
         mappings = {
@@ -21,7 +21,17 @@ telescope.setup {
                 ["<C-[>"] = actions.close,
             },
         },
-        -- path_display = "smart",
+        path_display = {
+            "absolute",
+            -- truncate = 3,
+            -- shorten = {
+            --     len = 3,
+            --     exclude = { 1, -1 },
+            -- },
+        },
+        preview = {
+            treesitter = true,
+        },
         selection_strategy = "follow",
         vimgrep_arguments = {
             "rg",
@@ -32,6 +42,11 @@ telescope.setup {
             "--column",
             "--smart-case",
             "--glob", "!vcpkg/**",
+        },
+    },
+    pickers = {
+        find_files = {
+            find_command = { "fd", "--type", "f", "--strip-cwd-prefix", },
         },
     },
     extensions = {
@@ -73,7 +88,12 @@ vim.keymap.set("n", "<leader>fb", builtin.current_buffer_fuzzy_find, mappings_op
 vim.keymap.set("n", "<leader>fg", builtin.git_files, mappings_opts)
 vim.keymap.set("n", "<leader>gb", builtin.git_branches, mappings_opts)
 vim.keymap.set("n", "<leader>ss", builtin.live_grep, mappings_opts)
-vim.keymap.set("n", "<leader>sb", builtin.lsp_document_symbols, mappings_opts)
+vim.keymap.set("n", "<leader>sb", function()
+    builtin.lsp_document_symbols {
+        fname_width = 120,
+        show_line = true,
+    }
+end, mappings_opts)
 vim.keymap.set("n", "<leader>b", builtin.buffers, mappings_opts)
 vim.keymap.set("n", "<leader>h", builtin.help_tags, mappings_opts)
 vim.keymap.set("n", "<leader>t", builtin.builtin, mappings_opts)
