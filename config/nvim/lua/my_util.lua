@@ -140,4 +140,43 @@ function M.load_file(path, callback)
     end)
 end
 
+local function escape_json_text(text)
+    local result = string.gsub(text, "([\"\\\b\f\n\r\t])", "\\%1")
+    return result
+end
+
+function M.escape_json(text)
+    if type(text) == "string" then
+        return escape_json_text(text)
+    elseif type(text) == "table" then
+        local out = {}
+        for _, line in ipairs(text) do
+            table.insert(out, escape_json_text(line))
+        end
+        return table.concat(out, "\\n")
+    end
+end
+
+vim.api.nvim_create_user_command("EscapeJSON", function(opts)
+    local vstart = vim.fn.getpos("'<")
+    local vend = vim.fn.getpos("'>")
+
+    local start_row = vstart[2] - 1
+    local start_col = vstart[3] - 1
+    local end_row = vend[2] - 1
+    local end_col = vend[3] - 1
+
+    local text = vim.api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
+    local output = M.escape_json(text)
+    if opts.args == "q" or opts.args == "quote" then
+        output = "\"" .. output .. "\""
+    end
+
+    vim.api.nvim_buf_set_text(0, start_row, start_col, end_row, end_col, { output })
+end, {
+    desc = "Escape some text for use as as JSON string.",
+    nargs = "?",
+    range = true,
+})
+
 return M
