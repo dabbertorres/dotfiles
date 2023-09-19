@@ -14,6 +14,7 @@ local spinner_frames = { "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷" 
 
 local function update_spinner(client_id, token)
     local data = M.get(client_id, token)
+    if data == nil then return end
 
     if data.spinner then
         local new_spinner = (data.spinner + 1) % #spinner_frames
@@ -37,10 +38,12 @@ function M.get(client_id, token)
     end
 
     if not client_notifications[client_id][token] then
-        return {}
+        client_notifications[client_id][token] = { spinner = 1 }
     end
 
-    return client_notifications[client_id][token]
+    local data = client_notifications[client_id][token]
+    if data.spinner == nil then return nil end
+    return data
 end
 
 function M.delete(client_id, token)
@@ -48,14 +51,46 @@ function M.delete(client_id, token)
     client_notifications[client_id][token] = nil
 end
 
-function M.init_spinner(client_id, token, data, notify_opts)
-    data.spinner = 1
+function M.init_spinner(client_id, token, message, notify_opts)
+    local data = M.get(client_id, token)
+    if data == nil then return end
+
+    if notify_opts == nil then notify_opts = {} end
+
     notify_opts.icon = spinner_frames[1]
-    vim.defer_fn(function() update_spinner(client_id, token) end, 100)
-    return notify_opts
+    notify_opts.timeout = false
+    notify_opts.hide_from_history = false
+
+    data.notification = vim.notify(message, vim.log.levels.INFO, notify_opts)
+    data.spinner = 1
+
+    update_spinner(client_id, token)
 end
 
-function M.stop_spinner(data)
+function M.update_spinner(client_id, token, message, notify_opts)
+    local data = M.get(client_id, token)
+    if data == nil then return end
+
+    if notify_opts == nil then notify_opts = {} end
+
+    notify_opts.replace = data.notification
+    notify_opts.hide_from_history = false
+
+    data.notification = vim.notify(message, vim.log.levels.INFO, notify_opts)
+end
+
+function M.stop_spinner(client_id, token, message, notify_opts)
+    local data = M.get(client_id, token)
+    if data == nil then return end
+
+    if notify_opts == nil then notify_opts = {} end
+
+    notify_opts.icon = ""
+    notify_opts.replace = data.notification
+    notify_opts.timeout = 3000
+    notify_opts.on_close = function() M.delete(client_id, token) end
+
+    data.notification = vim.notify(message, vim.log.levels.INFO, notify_opts)
     data.spinner = nil
 end
 
