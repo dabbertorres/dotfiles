@@ -53,174 +53,186 @@ lightbulb.setup {
     },
 }
 
--- local lsp_autocmds_au = vim.api.nvim_create_augroup("lsp_autocmds", {})
-local lsp_autocmds_au = nil
-
-local function on_attach(client, bufnr)
-    local telescope = require("telescope.builtin")
-
-    vim.o.omnifunc = "v:lua.vim.lsp.omnifunc"
-
-    if client.server_capabilities.definitionProvider then
-        vim.keymap.set("n", "<leader>pd", function()
-            local params = vim.lsp.util.make_position_params()
-            return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
-                if result == nil or vim.tbl_isempty(result) then return nil end
-                vim.lsp.util.preview_location(result[1])
-            end)
-        end, util.copy_with(mappings_opts, { buffer = bufnr }))
-
-        vim.keymap.set("n", "gd", function()
-            telescope.lsp_definitions {
-                jump_type = nil,
-                fname_width = 120,
-                ignore_filename = false,
-                trim_text = false,
-            }
-        end, util.copy_with(mappings_opts, { buffer = bufnr }))
-    end
-
-    if client.server_capabilities.declarationProvider then
-        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, util.copy_with(mappings_opts, {
-            buffer = bufnr,
-        }))
-    end
-
-    if client.server_capabilities.implementationProvider then
-        vim.keymap.set("n", "gi", function()
-            telescope.lsp_implementations {
-                jump_type = nil,
-                fname_width = 120,
-                ignore_filename = false,
-                trim_text = false,
-            }
-        end, util.copy_with(mappings_opts, { buffer = bufnr }))
-    end
-
-    if client.server_capabilities.hoverProvider then
-        vim.keymap.set("n", "K", vim.lsp.buf.hover, util.copy_with(mappings_opts, {
-            buffer = bufnr,
-        }))
-    end
-
-    if client.server_capabilities.signatureHelpProvider then
-        vim.keymap.set("n", "<leader>k", vim.lsp.buf.signature_help, util.copy_with(mappings_opts, { buffer = bufnr }))
-    end
-
-    if client.server_capabilities.referencesProvider then
-        vim.keymap.set("n", "gu", function()
-            telescope.lsp_references({
-                fname_width = 120,
-                include_declaration = true,
-                include_current_line = true,
-                trim_text = false,
-            })
-        end, util.copy_with(mappings_opts, { buffer = bufnr }))
-    end
-
-    if client.server_capabilities.renameProvider then
-        vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, util.copy_with(mappings_opts, {
-            buffer = bufnr,
-        }))
-    end
-
-    -- if client.server_capabilities.diagnosticProvider then
-    vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
-        group = lsp_autocmds_au,
-        buffer = bufnr,
-        callback = function()
-            vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
-        end,
+local function create_buf_augroup(name, bufnr, cmds)
+    local au = vim.api.nvim_create_augroup(name, {
+        clear = false,
     })
 
-    vim.keymap.set("n", "<c-k>", vim.diagnostic.goto_prev, util.copy_with(mappings_opts, {
+    vim.api.nvim_clear_autocmds({
         buffer = bufnr,
-    }))
-    vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, util.copy_with(mappings_opts, {
-        buffer = bufnr,
-    }))
-    -- end
+        group = au,
+    })
 
-    if client.server_capabilities.codeActionProvider then
-        vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
-            group = lsp_autocmds_au,
-            buffer = bufnr,
-            callback = function() lightbulb.update_lightbulb() end,
-        })
-
-        vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, util.copy_with(mappings_opts, {
-            buffer = bufnr,
-        }))
+    if cmds ~= nil then
+        for _, cmd in ipairs(cmds) do
+            vim.api.nvim_create_autocmd(cmd.events, util.copy_with(cmd.opts, {
+                group = au,
+                buffer = bufnr,
+            }))
+        end
     end
 
-    if client.server_capabilities.codeLensProvider then
-        vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
-            group = lsp_autocmds_au,
-            buffer = bufnr,
-            callback = function()
-                vim.lsp.codelens.refresh()
-            end,
-        })
+    return au
+end
 
-        vim.keymap.set("n", "<leader>cl", vim.lsp.codelens.run, util.copy_with(mappings_opts, {
-            buffer = bufnr,
-        }))
-    end
+local lsp_autocmds_au = vim.api.nvim_create_augroup("lsp_user_config", {})
 
-    if client.server_capabilities.documentFormattingProvider then
-        local formatting_options = {
-            tabSize                = vim.bo.tabstop,
-            insertSpaces           = true,
-            trimTrailingWhitespace = true,
-            insertFinalNewline     = true,
-            trimFinalNewlines      = true,
-        }
+vim.api.nvim_create_autocmd("LspAttach", {
+    group = lsp_autocmds_au,
+    callback = function(args)
+        local telescope = require("telescope.builtin")
 
-        local function do_format(async)
-            return function()
-                vim.lsp.buf.format {
-                    formatting_options = formatting_options,
-                    bufnr = bufnr,
-                    async = async,
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+
+        local map_opts = util.copy_with(mappings_opts, { buffer = args.buf })
+
+        vim.bo[args.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
+
+        if client.server_capabilities.definitionProvider then
+            vim.keymap.set("n", "<leader>pd", function()
+                local params = vim.lsp.util.make_position_params()
+                return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
+                    if result == nil or vim.tbl_isempty(result) then return nil end
+                    vim.lsp.util.preview_location(result[1])
+                end)
+            end, map_opts)
+
+            vim.keymap.set("n", "gd", function()
+                telescope.lsp_definitions {
+                    jump_type = nil,
+                    fname_width = 120,
+                    ignore_filename = false,
+                    trim_text = false,
                 }
-            end
+            end, map_opts)
         end
 
-        vim.api.nvim_create_autocmd("BufWritePre", {
-            group = lsp_autocmds_au,
-            buffer = bufnr,
-            callback = do_format(false),
+        if client.server_capabilities.declarationProvider then
+            vim.keymap.set("n", "gD", vim.lsp.buf.declaration, map_opts)
+        end
+
+        if client.server_capabilities.implementationProvider then
+            vim.keymap.set("n", "gi", function()
+                telescope.lsp_implementations {
+                    jump_type = nil,
+                    fname_width = 120,
+                    ignore_filename = false,
+                    trim_text = false,
+                }
+            end, map_opts)
+        end
+
+        if client.server_capabilities.hoverProvider then
+            vim.keymap.set("n", "K", vim.lsp.buf.hover, map_opts)
+        end
+
+        if client.server_capabilities.signatureHelpProvider then
+            vim.keymap.set("n", "<leader>k", vim.lsp.buf.signature_help, map_opts)
+        end
+
+        if client.server_capabilities.referencesProvider then
+            vim.keymap.set("n", "gu", function()
+                telescope.lsp_references({
+                    fname_width = 120,
+                    include_declaration = true,
+                    include_current_line = true,
+                    trim_text = false,
+                })
+            end, map_opts)
+        end
+
+        if client.server_capabilities.renameProvider then
+            vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, map_opts)
+        end
+
+        -- if client.server_capabilities.diagnosticProvider then
+        create_buf_augroup("lsp_diagnostics", args.buf, {
+            {
+                events = { "BufEnter", "CursorHold", "CursorHoldI" },
+                opts = {
+                    callback = function()
+                        vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
+                    end,
+                }
+            },
         })
 
-        vim.keymap.set("n", "<leader>fa", do_format(true), util.copy_with(mappings_opts, {
-            buffer = bufnr,
-        }))
-    end
+        vim.keymap.set("n", "<c-k>", vim.diagnostic.goto_prev, map_opts)
+        vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, map_opts)
+        -- end
 
-    if client.server_capabilities.documentHighlightProvider then
-        vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-            group = lsp_autocmds_au,
-            buffer = bufnr,
-            callback = vim.lsp.buf.document_highlight,
-        })
+        if client.server_capabilities.codeActionProvider then
+            create_buf_augroup("lsp_code_actions", args.buf, {
+                {
+                    events = { "BufEnter", "CursorHold", "InsertLeave" },
+                    opts = { callback = lightbulb.update_lightbulb },
+                },
+            })
 
-        vim.api.nvim_create_autocmd("CursorMoved", {
-            group = lsp_autocmds_au,
-            buffer = bufnr,
-            callback = vim.lsp.buf.clear_references,
-        })
+            vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, map_opts)
+        end
 
-        vim.cmd [[
-            hi! LspReferenceRead guibg=#5b5e5b
-            hi! LspReferenceText guibg=#5b5e5b
-            hi! LspReferenceWrite guibg=#5b5e5b
-        ]]
-    end
-end
+        if client.server_capabilities.codeLensProvider then
+            create_buf_augroup("lsp_codelens", args.buf, {
+                {
+                    events = { "BufEnter", "CursorHold", "InsertLeave" },
+                    opts = { callback = vim.lsp.codelens.refresh },
+                },
+            })
+
+            vim.keymap.set("n", "<leader>cl", vim.lsp.codelens.run, map_opts)
+        end
+
+        if client.server_capabilities.documentFormattingProvider then
+            local function do_format(async)
+                return function()
+                    vim.lsp.buf.format {
+                        formatting_options = {
+                            tabSize                = vim.bo.tabstop,
+                            insertSpaces           = true,
+                            trimTrailingWhitespace = true,
+                            insertFinalNewline     = true,
+                            trimFinalNewlines      = true,
+                        },
+                        bufnr = args.buf,
+                        async = async,
+                    }
+                end
+            end
+
+            create_buf_augroup("lsp_document_format", args.buf, {
+                {
+                    events = { "BufWritePre" },
+                    opts = { callback = do_format(false) },
+                },
+            })
+
+            vim.keymap.set("n", "<leader>fa", do_format(true), map_opts)
+        end
+
+        if client.server_capabilities.documentHighlightProvider then
+            create_buf_augroup("lsp_document_highlight", args.buf, {
+                {
+                    events = { "CursorHold", "CursorHoldI" },
+                    opts = { callback = vim.lsp.buf.document_highlight },
+                },
+                {
+                    events = { "CursorMoved", "CursorMovedI" },
+                    opts = { callback = vim.lsp.buf.clear_references },
+                }
+            })
+
+            vim.cmd [[
+                hi! LspReferenceRead guibg=#5b5e5b
+                hi! LspReferenceText guibg=#5b5e5b
+                hi! LspReferenceWrite guibg=#5b5e5b
+            ]]
+        end
+    end,
+})
 
 lsp.bashls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.clangd.setup {
@@ -237,22 +249,18 @@ lsp.clangd.setup {
         "--query-driver=/usr/local/Cellar/llvm/**/bin/clang++"
     },
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.cmake.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.cssls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.dockerls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     settings = {
         docker = {
             languageserver = {
@@ -287,12 +295,10 @@ lsp.dockerls.setup {
 
 lsp.dotls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.gopls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     cmd = { "gopls", "-remote=auto", "-logfile=auto", "-remote.logfile=auto", "-v" },
     settings = {
         gopls = {
@@ -418,7 +424,6 @@ lsp.gopls.setup {
 
 lsp.gradle_ls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     cmd = { home ..
     "/Code/lsps/vscode-gradle/gradle-language-server/build/install/gradle-language-server/bin/gradle-language-server" },
     filetypes = { "groovy" }, -- TODO: kotlin-script files (e.g. build.gradle.kts)
@@ -432,7 +437,6 @@ lsp.gradle_ls.setup {
 
 lsp.html.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     init_options = {
         configurationSection = { "html", "css", "javascript" },
         embeddedLanguages = {
@@ -479,13 +483,11 @@ lsp.html.setup {
 
 -- lsp.jsonls.setup {
 --     capabilities = capabilities,
---     on_attach = on_attach,
 --     single_file_support = true,
 -- }
 
 lsp.kotlin_language_server.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     cmd = { home .. "/Code/lsps/kotlin-language-server/server/build/install/server/bin/kotlin-language-server" },
     filetypes = { "kotlin" },
     root_dir = function(fname)
@@ -493,44 +495,27 @@ lsp.kotlin_language_server.setup {
         local fallback = lsp.util.root_pattern("build.gradle", "build.gradle.kts")
         return primary(fname) or fallback(fname)
     end,
-    -- settings = {
-    --     kotlin = {
-    --         compiler = {
-    --             jvm = {
-    --                 target = "default",
-    --             },
-    --         },
-    --         completion = {
-    --             snippets = {
-    --                 enabled = true,
-    --             },
-    --         },
-    --         debugAdapter = {
-    --             enabled = false,
-    --             path = "",
-    --         },
-    --         linting = {
-    --             debounceTime = 250,
-    --         },
-    --         indexing = {
-    --             enabled = true,
-    --         },
-    --         externalSources = {
-    --             useKlsScheme = false,
-    --             autoConvertToKotlin = false,
-    --         },
-    --         languageServer = {
-    --             enabled = true,
-    --             port = 0,
-    --             transport = "tcp",
-    --         },
-    --     },
-    -- },
+    settings = {
+        completion = {
+            snippets = {
+                enabled = true,
+            },
+        },
+        linting = {
+            debounceTime = 250,
+        },
+        indexing = {
+            enabled = true,
+        },
+        externalSources = {
+            useKlsScheme = false,
+            autoConvertToKotlin = false,
+        },
+    },
 }
 
 lsp.lua_ls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     single_file_support = true,
     settings = {
         Lua = {
@@ -626,12 +611,10 @@ lsp.lua_ls.setup {
 
 lsp.marksman.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 local pid = vim.fn.getpid()
 lsp.omnisharp.setup {
-    on_attach = on_attach,
     capabilities = capabilities,
     cmd = { home .. "/Code/lsps/omnisharp/OmniSharp", "--languageserver", "--hostPID", tostring(pid) },
     root_dir = lsp.util.root_pattern("*.csproj"),
@@ -655,7 +638,6 @@ lsp.omnisharp.setup {
 
 lsp.pyright.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     settings = {
         python = {
             disableLanguageServices = false,
@@ -673,19 +655,16 @@ lsp.pyright.setup {
 
 lsp.rust_analyzer.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.sorbet.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     cmd = { "srb", "tc", "--lsp", "--disable-watchman", },
 }
 
 -- lsp.sqls.setup {
 --     capabilities = capabilities,
 --     on_attach = function(client, bufnr)
---         on_attach(client, bufnr)
 --         require('sqls').on_attach(client, bufnr)
 --     end,
 --     root_dir = lsp.util.root_pattern(".sqls.yaml"),
@@ -705,12 +684,10 @@ lsp.sorbet.setup {
 
 lsp.tsserver.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.terraformls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     settings = {
         terraform = {
             timeout = "5s",
@@ -731,22 +708,18 @@ lsp.terraformls.setup {
 lsp.tflint.setup {
     cmd = { "tflint", "--langserver" },
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.vimls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.vuels.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
 }
 
 lsp.yamlls.setup {
     capabilities = capabilities,
-    on_attach = on_attach,
     settings = {
         redhat = {
             telemetry = {
@@ -780,7 +753,6 @@ lsp.zls.setup {
     cmd = { home .. "/Code/zig/zls/zig-out/bin/zls" }, --"--config-path=" .. home .. "/.config/zls/zls.json" },
     root_dir = lsp.util.root_pattern("build.zig", "zls.build.json", "zls.json"),
     capabilities = capabilities,
-    on_attach = on_attach,
     settings = {
         enable_snippets = true,
         enable_ast_check_diagnostics = true,
@@ -802,103 +774,105 @@ lsp.zls.setup {
     },
 }
 
-local tfsec_root_dir = lsp.util.root_pattern(".tfsec")
+-- local tfsec_root_dir = lsp.util.root_pattern(".tfsec")
 
-lint.linters.tfsec = {
-    cmd = "tfsec",
-    stdin = true, -- if false, nvim-lint automatically adds the filename as an argument, which we don't want
-    args = {
-        "--soft-fail",
-        "--format=json",
-        function()
-            local root_dir = tfsec_root_dir(util.buffer_dir(0))
-            if root_dir then
-                local config_file = root_dir .. "/.tfsec/config.yml"
-                if vim.fn.filereadable(config_file) == 1 then
-                    return "--config-file=" .. config_file
-                end
-            end
-            return nil
-        end,
-        function()
-            local root_path = vim.api.nvim_buf_get_name(0)
-            if not lsp.util.path.is_dir(root_path) then
-                root_path = lsp.util.path.dirname(root_path)
-            end
-            return root_path
-        end,
-    },
-    stream = "stdout",
-    ignore_exitcode = false,
-    env = nil,
-    parser = function(output, bufnr)
-        local body = vim.json.decode(output)
-        if not body or body.results == vim.NIL then return {} end
+-- lint.linters.tfsec = {
+--     name = "tfsec",
+--     cmd = "tfsec",
+--     stdin = true, -- if false, nvim-lint automatically adds the filename as an argument, which we don't want
+--     args = {
+--         "--soft-fail",
+--         "--format=json",
+--         function()
+--             local root_dir = tfsec_root_dir(util.buffer_dir(0))
+--             if root_dir then
+--                 local config_file = root_dir .. "/.tfsec/config.yml"
+--                 if vim.fn.filereadable(config_file) == 1 then
+--                     return "--config-file=" .. config_file
+--                 end
+--             end
+--             return nil
+--         end,
+--         function()
+--             local root_path = vim.api.nvim_buf_get_name(0)
+--             if not lsp.util.path.is_dir(root_path) then
+--                 root_path = lsp.util.path.dirname(root_path)
+--             end
+--             return root_path
+--         end,
+--     },
+--     stream = "stdout",
+--     ignore_exitcode = false,
+--     env = nil,
+--     parser = function(output, bufnr)
+--         local body = vim.json.decode(output)
+--         if not body or body.results == vim.NIL then return {} end
 
-        local diagnostics = {}
+--         local diagnostics = {}
 
-        for _, result in ipairs(body.results) do
-            local diag_bufnr = vim.fn.bufnr(vim.fs.normalize(result.location.filename))
-            if diag_bufnr ~= bufnr then
-                goto skip_to_next
-            end
+--         for _, result in ipairs(body.results) do
+--             local diag_bufnr = vim.fn.bufnr(vim.fs.normalize(result.location.filename))
+--             if diag_bufnr ~= bufnr then
+--                 goto skip_to_next
+--             end
 
-            -- exclude duplicates (e.g. for multiple values in the same block)
-            for _, dup in ipairs(diagnostics) do
-                if dup.lnum == result.location.start_line and
-                    dup.end_lnum == result.location.end_line and
-                    dup.code == result.long_id then
-                    goto skip_to_next
-                end
-            end
+--             -- exclude duplicates (e.g. for multiple values in the same block)
+--             for _, dup in ipairs(diagnostics) do
+--                 if dup.lnum == result.location.start_line and
+--                     dup.end_lnum == result.location.end_line and
+--                     dup.code == result.long_id then
+--                     goto skip_to_next
+--                 end
+--             end
 
-            local severity = vim.diagnostic.severity.WARN
-            if result.warning then
-                severity = vim.diagnostic.severity.INFO
-            end
+--             local severity = vim.diagnostic.severity.WARN
+--             if result.warning then
+--                 severity = vim.diagnostic.severity.INFO
+--             end
 
-            local fmt = [[
-%s (%s)
-Impact (%s): %s
-Resolution: %s
-See:
-]] .. string.rep("* %s", #result.links, "\n")
-                .. "\n"
+--             local fmt = [[
+-- %s (%s)
+-- Impact (%s): %s
+-- Resolution: %s
+-- See:
+-- ]] .. string.rep("* %s", #result.links, "\n")
+--                 .. "\n"
 
-            local msg = string.format(fmt,
-                result.description,
-                result.long_id,
-                result.severity,
-                result.impact,
-                result.resolution,
-                unpack(result.links)
-            )
+--             local msg = string.format(fmt,
+--                 result.description,
+--                 result.long_id,
+--                 result.severity,
+--                 result.impact,
+--                 result.resolution,
+--                 unpack(result.links)
+--             )
 
-            local diag = {
-                bufnr = diag_bufnr,
-                lnum = result.location.start_line,
-                end_lnum = result.location.end_line,
-                col = 0,
-                end_col = -1,
-                severity = severity,
-                message = msg,
-                source = "tfsec",
-                code = result.long_id,
-                user_data = {
-                    links = result.links,
-                },
-            }
+--             local diag = {
+--                 bufnr = diag_bufnr,
+--                 lnum = result.location.start_line,
+--                 end_lnum = result.location.end_line,
+--                 col = 0,
+--                 end_col = -1,
+--                 severity = severity,
+--                 message = msg,
+--                 source = "tfsec",
+--                 code = result.long_id,
+--                 user_data = {
+--                     links = result.links,
+--                 },
+--             }
 
-            table.insert(diagnostics, diag)
+--             table.insert(diagnostics, diag)
 
-            ::skip_to_next::
-        end
+--             ::skip_to_next::
+--         end
 
-        return diagnostics
-    end,
-}
+--         return diagnostics
+--     end,
+-- }
 
 lint.linters.terraform_validate = {
+    name = "terraform_validate",
     cmd = "terraform",
     stdin = true, -- if false, nvim-lint automatically adds the filename as an argument, which we don't want
     args = {
@@ -986,7 +960,7 @@ lint.linters_by_ft = {
     dockerfile = { "hadolint", },
     markdown = { "markdownlint", },
     ruby = { "ruby", "rubocop", },
-    -- sh = { "shellcheck", },
+    sh = { "shellcheck", },
     terraform = { "tfsec", "terraform_validate", },
 }
 
@@ -999,7 +973,7 @@ vim.api.nvim_create_autocmd("FileType", {
         "Dockerfile", "Dockerfile.*",
         "*.md",
         "*.ruby",
-        --"*.sh",
+        "*.sh",
         "*.tf",
     },
     callback = function() lint.try_lint() end,
@@ -1098,35 +1072,21 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
     local client = vim.lsp.get_client_by_id(ctx.client_id)
 
     -- ignore lua_ls spamming notifications
-    if client.name == "lua_ls" then return end
+    -- if client.name == "lua_ls" then return end
 
-    local data = notifications.get(ctx.client_id, result.token)
-
-    local msg = notifications.format_message(result.value.message) or "Complete"
-    local opts = nil
+    local msg = notifications.format_message(result.value.message, result.value.percentage) or "Complete"
 
     if result.value.kind == "begin" then
-        opts = notifications.init_spinner(ctx.client_id, result.token, data, {
+        notifications.init_spinner(ctx.client_id, result.token, msg, {
             title = notifications.format_title(result.value.title, client.name),
-            hide_from_history = false,
         })
     elseif result.value.kind == "report" then
-        opts = {
-            replace = data.notification,
-            hide_from_history = false,
-        }
+        notifications.update_spinner(ctx.client_id, result.token, msg, {})
     elseif result.value.kind == "end" then
-        opts = {
+        notifications.stop_spinner(ctx.client_id, result.token, msg, {
             title = notifications.format_title(result.value.title, client.name),
-            icon = "",
-            replace = data.notification,
-            timeout = 3000,
-            on_close = function() notifications.delete(ctx.client_id, result.token) end,
-        }
-        notifications.stop_spinner(data)
+        })
     end
-
-    data.notification = vim.notify(msg, vim.log.levels.INFO, opts)
 end
 
 local function lsp_message_type_to_icon_and_neovim(message_type)
