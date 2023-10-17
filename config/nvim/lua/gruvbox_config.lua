@@ -12,6 +12,7 @@ gruvbox.setup {
         String = { italic = false },
         Operator = { italic = false },
     },
+    dim_inactive = true,
 }
 
 vim.cmd [[
