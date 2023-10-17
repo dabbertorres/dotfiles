@@ -151,7 +151,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
                 events = { "BufEnter", "CursorHold", "CursorHoldI" },
                 opts = {
                     callback = function()
-                        vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
+                        vim.diagnostic.open_float(nil, {
+                            focus = false,
+                            scope = "cursor",
+                        })
                     end,
                 }
             },
@@ -300,6 +303,9 @@ lsp.dotls.setup {
 lsp.gopls.setup {
     capabilities = capabilities,
     cmd = { "gopls", "-remote=auto", "-logfile=auto", "-remote.logfile=auto", "-v" },
+    flags = {
+        debounce_text_changes = 250,
+    },
     settings = {
         gopls = {
             -- Build
@@ -1001,6 +1007,8 @@ vim.diagnostic.config {
         scope = "line",
         focusable = false,
         focus = false,
+        source = "if_many",
+        zindex = 1,
         prefix = function(diagnostic, _, _)
             if diagnostic == vim.diagnostic.severity.ERROR then
                 return "󰅚 ", ""
