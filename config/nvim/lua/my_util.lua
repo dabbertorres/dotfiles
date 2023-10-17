@@ -140,6 +140,64 @@ function M.load_file(path, callback)
     end)
 end
 
+function M.get_visual_range()
+    local vstart = vim.fn.getpos("'<")
+    local vend = vim.fn.getpos("'>")
+
+    local start_row = vstart[2] - 1
+    local start_col = vstart[3] - 1
+    local end_row = vend[2] - 1
+    local end_col = vend[3] - 1
+
+    return start_row, start_col, end_row, end_col
+end
+
+function M.replace_visual_range(bufnr, callback)
+    local start_row, start_col, end_row, end_col = M.get_visual_range()
+
+    local text = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
+    local output = callback(text)
+
+    vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, { output })
+end
+
+function M.replace_visual_range_or_word(bufnr, callback)
+    local start_row, start_col, end_row, end_col = M.get_visual_range()
+
+    local text = nil
+    if end_row == 2147483647 then                     -- max signed 32-bit int; returned when no visual selection
+        local current_word = vim.fn.expand("<cWORD>") -- cWORD instead of cword to take into account potential digit separators
+        local curpos = vim.fn.getcurpos()
+        local line_num = curpos[2] - 1
+        local col_num = curpos[3] - 1
+
+        local lines = vim.api.nvim_buf_get_lines(bufnr, line_num, line_num + 1, false)
+        if #lines == 0 then
+            -- nothing to do
+            return
+        end
+
+        -- find start and end of current word
+        local word_start, word_end = string.find(lines[1], current_word, col_num + 1 - #current_word, true)
+
+        text = current_word
+        start_row = line_num
+        start_col = word_start - 1
+        end_row = line_num + 1
+        end_col = word_end - 1
+    else
+        text = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
+    end
+
+    local output = callback(text)
+    if output == nil then
+        vim.print("failed to replace text")
+        return
+    end
+
+    vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, { output })
+end
+
 local function escape_json_text(text)
     local result = string.gsub(text, "([\"\\\b\f\n\r\t])", "\\%1")
     return result
@@ -158,24 +216,61 @@ function M.escape_json(text)
 end
 
 vim.api.nvim_create_user_command("EscapeJSON", function(opts)
-    local vstart = vim.fn.getpos("'<")
-    local vend = vim.fn.getpos("'>")
-
-    local start_row = vstart[2] - 1
-    local start_col = vstart[3] - 1
-    local end_row = vend[2] - 1
-    local end_col = vend[3] - 1
-
-    local text = vim.api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
-    local output = M.escape_json(text)
-    if opts.args == "q" or opts.args == "quote" then
-        output = "\"" .. output .. "\""
-    end
-
-    vim.api.nvim_buf_set_text(0, start_row, start_col, end_row, end_col, { output })
+    M.replace_visual_range(0, function(text)
+        local output = M.escape_json(text)
+        if opts.args == "q" or opts.args == "quote" then
+            output = "\"" .. output .. "\""
+        end
+        return output
+    end)
 end, {
     desc = "Escape some text for use as as JSON string.",
     nargs = "?",
+    range = true,
+})
+
+local function convert_number(text, format)
+    if string.find(text, ".", 1, true) ~= nil then return nil end
+
+    local num = tonumber(text)
+    if num == nil then return nil end
+
+    return string.format(format, num)
+end
+
+local function number_conversion(format)
+    return function(text)
+        if type(text) == "table" and #text == 1 then
+            text = text[1]
+        else
+            return nil
+        end
+
+        return convert_number(text, format)
+    end
+end
+
+vim.api.nvim_create_user_command("ToDec", function(opts)
+    M.replace_visual_range_or_word(0, number_conversion("%d"))
+end, {
+    desc = "Convert a number via visual selection or under the cursor to hexadecimal.",
+    nargs = 0,
+    range = true,
+})
+
+vim.api.nvim_create_user_command("ToHex", function(opts)
+    M.replace_visual_range_or_word(0, number_conversion("%#x"))
+end, {
+    desc = "Convert a number via visual selection or under the cursor to hexadecimal.",
+    nargs = 0,
+    range = true,
+})
+
+vim.api.nvim_create_user_command("ToOct", function(opts)
+    M.replace_visual_range_or_word(0, number_conversion("%#o"))
+end, {
+    desc = "Convert a number via visual selection or under the cursor to hexadecimal.",
+    nargs = 0,
     range = true,
 })
 
