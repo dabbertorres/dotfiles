@@ -85,6 +85,7 @@ Plug 'tpope/vim-eunuch'
 Plug 'sindrets/diffview.nvim'
 Plug 'tpope/vim-surround'
 Plug 'junegunn/vim-easy-align'
+Plug 'willothy/flatten.nvim'
 
 call plug#end()
 
@@ -205,6 +206,7 @@ lua require("refactoring_config")
 lua require("rest_config")
 lua require("dotenv").setup()
 lua require("dbee_config")
+lua require("flatten_config")
 
 " enable folding, but disable it by default
 set foldmethod=expr
