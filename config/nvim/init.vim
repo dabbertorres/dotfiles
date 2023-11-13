@@ -86,6 +86,7 @@ Plug 'sindrets/diffview.nvim'
 Plug 'tpope/vim-surround'
 Plug 'junegunn/vim-easy-align'
 Plug 'willothy/flatten.nvim'
+Plug 'b0o/schemastore.nvim'
 
 call plug#end()
 
@@ -185,9 +186,8 @@ set signcolumn=yes:1
 
 let g:python3_host_prog = $HOME . '/.local/share/nvim/py-venv/bin/python3'
 
-lua require("gruvbox_config")
-
 " my lua configs
+lua require("gruvbox_config")
 lua require("notifications")
 lua require("lsp_config")
 lua require("cmp_config")
@@ -292,7 +292,7 @@ function! s:trim_whitespace()
 endfunction
 
 " trim trailing whitespace on write
-autocmd! BufWritePre * call <SID>trim_whitespace()
+" autocmd! BufWritePre * call <SID>trim_whitespace()
 
 augroup python_black
     autocmd!

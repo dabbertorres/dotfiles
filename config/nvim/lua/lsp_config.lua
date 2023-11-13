@@ -12,6 +12,8 @@ local navbuddy = require("nvim-navbuddy")
 
 local util = require("my_util")
 
+local schemastore = require("schemastore")
+
 vim.o.updatetime = 250
 log.set_level(log.levels.ERROR)
 
@@ -487,10 +489,15 @@ lsp.html.setup {
     },
 }
 
--- lsp.jsonls.setup {
---     capabilities = capabilities,
---     single_file_support = true,
--- }
+lsp.jsonls.setup {
+    capabilities = capabilities,
+    settings = {
+        json = {
+            schemas = schemastore.json.schemas(),
+            validate = { enable = true },
+        },
+    },
+}
 
 lsp.kotlin_language_server.setup {
     capabilities = capabilities,
@@ -746,12 +753,25 @@ lsp.yamlls.setup {
             },
             hover = true,
             schemaStore = {
-                enable = true,
-                url = "https://www.schemastore.org/api/json/catalog.json",
+                enable = false,
+                url = "", -- "https://www.schemastore.org/api/json/catalog.json",
+            },
+            schemas = schemastore.yaml.schemas {
+                extra = {
+                    {
+                        description = "Custom references to OpenAPI specs",
+                        fileMatch = {
+                            "docs/**/*.yaml",
+                            "docs/**/*.yml",
+                        },
+                        name = "openapi.json",
+                        url = "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/schemas/v3.1/schema.json",
+                    },
+                },
             },
             validate = true,
             yamlVersion = "1.2",
-        }
+        },
     },
 }
 
@@ -985,12 +1005,12 @@ vim.api.nvim_create_autocmd("FileType", {
     callback = function() lint.try_lint() end,
 })
 
-local jdtls = require("jdtls_setup")
-vim.api.nvim_create_autocmd("FileType", {
-    group = lsp_plugins_au,
-    pattern = "java",
-    callback = jdtls.setup,
-})
+-- local jdtls = require("jdtls_setup")
+-- vim.api.nvim_create_autocmd("FileType", {
+--     group = lsp_plugins_au,
+--     pattern = "java",
+--     callback = jdtls.setup,
+-- })
 
 vim.fn.sign_define("DiagnosticSignError", { text = "󰅚 ", texthl = "GruvboxRed" })
 vim.fn.sign_define("DiagnosticSignWarn", { text = "󰀪 ", texthl = "GruvboxYellow" })
