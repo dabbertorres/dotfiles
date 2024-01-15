@@ -15,7 +15,7 @@ local util = require("my_util")
 local schemastore = require("schemastore")
 
 vim.o.updatetime = 250
-log.set_level(log.levels.ERROR)
+vim.lsp.set_log_level(log.levels.OFF)
 
 local home = os.getenv("HOME")
 
