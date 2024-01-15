@@ -121,11 +121,11 @@ fi
 
 if [ "${commands[java]}" ]; then
     if [ ${IS_OSX} ]; then
-        export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-17.jdk/Contents/Home
+        # export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-17.jdk/Contents/Home
     fi
 
     export _JAVA_AWT_WM_NONREPARENTING=1
-    prepend_to_path "$JAVA_HOME/bin"
+    # prepend_to_path "$JAVA_HOME/bin"
 fi
 
 if [ "${commands[jq]}" ]; then
