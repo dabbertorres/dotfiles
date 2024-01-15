@@ -36,8 +36,8 @@
 [rebase]
     missingCommitsCheck = error
 
-[url "git@bitbucket.org:myndshft"]
-    insteadOf = https://bitbucket.org/myndshft
+[url "git@bitbucket.org:"]
+    insteadOf = https://bitbucket.org/
 
 [alias]
     graph = log --all --decorate --oneline --graph --color
