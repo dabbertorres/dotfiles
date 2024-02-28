@@ -17,16 +17,6 @@ util.find_file(
 dbee.setup {
     lazy = true,
     sources = sources,
-    ui = {
-        -- Layout saving and restoring appears to be broken (2023-05-22), which is done in the default
-        -- implementations of these functions. So, override them to do nothing.
-        pre_open_hook = function()
-        end,
-        post_open_hook = function()
-        end,
-        post_close_hook = function()
-        end,
-    },
 }
 
 vim.api.nvim_create_user_command("DBOpen", dbee.open, {
@@ -35,14 +25,6 @@ vim.api.nvim_create_user_command("DBOpen", dbee.open, {
 
 vim.api.nvim_create_user_command("DBClose", dbee.close, {
     desc = "Close the dbee UI.",
-})
-
-vim.api.nvim_create_user_command("DBNext", dbee.next, {
-    desc = "Go to next page of results.",
-})
-
-vim.api.nvim_create_user_command("DBPrev", dbee.prev, {
-    desc = "Go to previous page of results.",
 })
 
 if not table.unpack then

@@ -15,7 +15,7 @@ local util = require("my_util")
 local schemastore = require("schemastore")
 
 vim.o.updatetime = 250
-vim.lsp.set_log_level(log.levels.OFF)
+vim.lsp.set_log_level(log.levels.ERROR)
 
 local home = os.getenv("HOME")
 
@@ -250,8 +250,8 @@ lsp.clangd.setup {
         "--pch-storage=memory",
         "-j=8",
         "--offset-encoding=utf-8",
-        "--use-dirty-headers",
-        "--query-driver=/usr/local/Cellar/llvm/**/bin/clang++"
+        "--query-driver=/usr/local/Cellar/llvm/**/bin/clang++",
+        "--log=error",
     },
     capabilities = capabilities,
 }

@@ -51,7 +51,7 @@ Plug 'nvim-treesitter/nvim-treesitter-textobjects'
 Plug 'nvim-treesitter/playground'
 Plug 'mfussenegger/nvim-jdtls'
 " Plug 'nanotee/sqls.nvim'
-Plug 'kndndrj/nvim-dbee', { 'do': ':lua require(\"nvim-dbee\").install()' }
+Plug 'kndndrj/nvim-dbee', { 'do': ':lua require(\"dbee\").install()' }
 Plug 'mfussenegger/nvim-lint'
 Plug 'averms/black-nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'ThePrimeagen/refactoring.nvim'
