@@ -1,5 +1,12 @@
 --local profile_start_time = vim.loop.hrtime()
 
+require("mason").setup {
+}
+
+require("mason-lspconfig").setup {
+    automatic_installation = true,
+}
+
 local lsp = require("lspconfig")
 local log = require("vim.lsp.log")
 local notifications = require("notifications")

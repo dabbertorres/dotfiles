@@ -45,6 +45,8 @@ Plug 'mfussenegger/nvim-dap-python'
 Plug 'leoluz/nvim-dap-go'
 
 " language tooling
+Plug 'williamboman/mason.nvim'
+Plug 'williamboman/mason-lspconfig.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
 Plug 'nvim-treesitter/nvim-treesitter-textobjects'
