@@ -1,0 +1,90 @@
+# open terminal
+cmd - return : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d ~
+
+# focus window, or move across displays
+alt - h : yabai -m window --focus west \
+    || yabai -m window --focus $(yabai -m query --windows --display west | jq 'map(select(".is-visible")) | max_by(.frame.x) | .id')
+alt - j : yabai -m window --focus south \
+    || yabai -m window --focus $(yabai -m query --windows --display south | jq 'map(select(".is-visible")) | min_by(.frame.y) | .id')
+alt - k : yabai -m window --focus north \
+    || yabai -m window --focus $(yabai -m query --windows --display north | jq 'map(select(".is-visible")) | max_by(.frame.y) | .id')
+alt - l : yabai -m window --focus east \
+    || yabai -m window --focus $(yabai -m query --windows --display east | jq 'map(select(".is-visible")) | min_by(.frame.x) | .id')
+
+# move window
+shift + alt - h : yabai -m window --warp west \
+    || (MY_WIN=$(yabai -m query --windows --window | jq '.id'); \
+        yabai -m window --warp $(yabai -m query --windows --display west | jq 'map(select(".is-visible")) | max_by(.frame.x) | .id') \
+        && yabai -m window --focus $MY_WIN)
+
+shift + alt - j : yabai -m window --warp south \
+    || (MY_WIN=$(yabai -m query --windows --window | jq '.id'); \
+        yabai -m window --warp $(yabai -m query --windows --display south | jq 'map(select(".is-visible")) | min_by(.frame.y) | .id') \
+        && yabai -m window --focus $MY_WIN)
+
+shift + alt - k : yabai -m window --warp north \
+    || (MY_WIN=$(yabai -m query --windows --window | jq '.id'); \
+        yabai -m window --warp $(yabai -m query --windows --display north | jq 'map(select(".is-visible")) | max_by(.frame.y) | .id') \
+        && yabai -m window --focus $MY_WIN)
+
+shift + alt - l : yabai -m window --warp east \
+    || (MY_WIN=$(yabai -m query --windows --window | jq '.id'); \
+        yabai -m window --warp $(yabai -m query --windows --display east | jq 'map(select(".is-visible")) | min_by(.frame.x) | .id') \
+        && yabai -m window --focus $MY_WIN)
+
+# fast focus desktop
+alt - 1 : yabai -m display --focus 1
+alt - 2 : yabai -m display --focus 2
+alt - 3 : yabai -m display --focus 3
+
+# send window to monitor
+alt + shift - 1 : yabai -m window --display 1; yabai -m display --focus 1
+alt + shift - 2 : yabai -m window --display 2; yabai -m display --focus 2
+alt + shift - 3 : yabai -m window --display 3; yabai -m display --focus 3
+
+# mirror tree y-axis
+alt - y : yabai -m space --mirror y-axis
+
+# mirror tree x-axis
+alt - x : yabai -m space --mirror x-axis
+
+# rotate tree
+shift + alt - r : yabai -m space --rotate 90
+
+# toggle window fullscreen
+alt - f : yabai -m window --toggle zoom-fullscreen
+
+# toggle window native fullscreen
+shift + alt - f : yabai -m window --toggle native-fullscreen
+
+# toggle window parent zoom
+alt - d : yabai -m window --toggle zoom-parent
+
+# toggle window split type
+alt - e : yabai -m window --toggle split
+
+# float / unfloat window and center on screen
+alt - t : yabai -m window --toggle float;\
+          yabai -m window --grid 4:4:1:1:2:2
+
+# change layout of desktop
+alt - a : yabai -m space --layout bsp
+alt - s : yabai -m space --layout stack
+
+### resize mode
+:: resize
+alt - r ; resize
+resize < escape ; default
+resize < ctrl - 0x21 ; default
+
+## weird double command is used to emulate i3/sway resize behavior
+resize < h : yabai -m window --resize left:-50:0 ; yabai -m window --resize right:-50:0
+resize < j : yabai -m window --resize bottom:0:50 ; yabai -m window --resize top:0:50
+resize < k : yabai -m window --resize top:0:-50 ; yabai -m window --resize bottom:0:-50
+resize < l : yabai -m window --resize right:50:0 ; yabai -m window --resize left:50:0
+
+# resize < h : yabai -m window --ratio rel:-0.05
+# resize < l : yabai -m window --ratio rel:+0.05
+
+## equalize size of windows
+resize < m : yabai -m space --balance
