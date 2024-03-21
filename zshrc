@@ -1,5 +1,16 @@
 # zmodload zsh/zprof
 
+function prepend_to_path()
+{
+    if [ -d "$1" ]; then
+        export PATH="$1:${PATH}"
+    fi
+}
+
+prepend_to_path "${HOME}/.local/bin"
+prepend_to_path "/usr/local/bin"
+prepend_to_path "/usr/local/sbin"
+
 if [[ $(uname) == "Linux" ]]; then
     IS_LINUX=true
 
@@ -39,17 +50,6 @@ unsetopt \
 zstyle :compinstall filename "${HOME}/.zshrc"
 
 export KEYTIMEOUT=1 # https://zsh.sourceforge.io/Doc/Release/Parameters.html#:~:text=set%20to%20empty.-,KEYTIMEOUT,-The%20time%20the
-
-function prepend_to_path()
-{
-    if [ -d "$1" ]; then
-        export PATH="$1:${PATH}"
-    fi
-}
-
-prepend_to_path "${HOME}/.local/bin"
-prepend_to_path "/usr/local/bin"
-prepend_to_path "/usr/local/sbin"
 
 if [ ${IS_LINUX} ]; then
     prepend_to_path "/usr/local/go/bin:${PATH}"
