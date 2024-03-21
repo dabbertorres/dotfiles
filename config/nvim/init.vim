@@ -22,12 +22,13 @@ Plug 'akinsho/toggleterm.nvim'
 " dependencies
 Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-neotest/nvim-nio'
 
 " tools
 "Plug 'nvim-neorg/neorg'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-Plug 'rest-nvim/rest.nvim'
+Plug 'rest-nvim/rest.nvim', { 'commit': '91badd46c60df6bd9800c809056af2d80d33da4c' }
 
 " git
 Plug 'lewis6991/gitsigns.nvim'
