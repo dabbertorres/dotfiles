@@ -142,12 +142,12 @@ if [ "${commands[jq]}" ]; then
 fi
 
 if [ "${commands[kubectl]}" ]; then
-    if [ "${commands[kubectl-krew]}" ]; then
-        if [ ! -f "${fpath[1]}/_kubectl_krew" ]; then
-            kubectl krew completion zsh > "${fpath[1]}/_kubectl_krew"
-        fi
-        prepend_to_path "${HOME}/.krew/bin"
-    fi
+    # if [ "${commands[kubectl-krew]}" ]; then
+    #     if [ ! -f "${fpath[1]}/_kubectl_krew" ]; then
+    #         kubectl krew completion zsh > "${fpath[1]}/_kubectl_krew"
+    #     fi
+    #     prepend_to_path "${HOME}/.krew/bin"
+    # fi
 
     function watch_pods()
     {
