@@ -806,102 +806,130 @@ lsp.zls.setup {
     },
 }
 
--- local tfsec_root_dir = lsp.util.root_pattern(".tfsec")
+local trivy_root_dir = lsp.util.root_pattern("trivy.yaml", ".trivyignore", ".trivyignore.yaml")
 
--- lint.linters.tfsec = {
---     name = "tfsec",
---     cmd = "tfsec",
---     stdin = true, -- if false, nvim-lint automatically adds the filename as an argument, which we don't want
---     args = {
---         "--soft-fail",
---         "--format=json",
---         function()
---             local root_dir = tfsec_root_dir(util.buffer_dir(0))
---             if root_dir then
---                 local config_file = root_dir .. "/.tfsec/config.yml"
---                 if vim.fn.filereadable(config_file) == 1 then
---                     return "--config-file=" .. config_file
---                 end
---             end
---             return nil
---         end,
---         function()
---             local root_path = vim.api.nvim_buf_get_name(0)
---             if not lsp.util.path.is_dir(root_path) then
---                 root_path = lsp.util.path.dirname(root_path)
---             end
---             return root_path
---         end,
---     },
---     stream = "stdout",
---     ignore_exitcode = false,
---     env = nil,
---     parser = function(output, bufnr)
---         local body = vim.json.decode(output)
---         if not body or body.results == vim.NIL then return {} end
+lint.linters.trivy = {
+    name = "trivy",
+    cmd = "trivy",
+    stdin = true, -- if false, nvim-lint automatically adds the filename as an argument, which we don't want
+    args = {
+        "config",
+        "--exit-code=0",
+        "--format=json",
+        function()
+            local root_dir = trivy_root_dir(util.buffer_dir(0))
+            if root_dir then
+                local config_file = root_dir .. "/trivy.yaml"
+                if vim.fn.filereadable(config_file) == 1 then
+                    return "--config=" .. config_file
+                end
+            end
+            return nil
+        end,
+        function()
+            local root_path = vim.api.nvim_buf_get_name(0)
+            if not lsp.util.path.is_dir(root_path) then
+                root_path = lsp.util.path.dirname(root_path)
+            end
+            return root_path
+        end,
+    },
+    stream = "stdout",
+    ignore_exitcode = false,
+    env = nil,
+    parser = function(output, bufnr)
+        local body = vim.json.decode(output)
+        if not body or body.results == vim.NIL then return {} end
 
---         local diagnostics = {}
+        if body.SchemaVersion ~= 2 then
+            vim.notify("Got Version: " .. tostring(body.SchemaVersion), log.levels.WARN, {
+                title = "Unexpected Trivy Schema Version",
+                icon = "󰀪",
+            })
+            return {}
+        end
 
---         for _, result in ipairs(body.results) do
---             local diag_bufnr = vim.fn.bufnr(vim.fs.normalize(result.location.filename))
---             if diag_bufnr ~= bufnr then
---                 goto skip_to_next
---             end
+        local diagnostics = {}
 
---             -- exclude duplicates (e.g. for multiple values in the same block)
---             for _, dup in ipairs(diagnostics) do
---                 if dup.lnum == result.location.start_line and
---                     dup.end_lnum == result.location.end_line and
---                     dup.code == result.long_id then
---                     goto skip_to_next
---                 end
---             end
+        for _, result in ipairs(body.Results) do
+            local diag_bufnr = vim.fn.bufnr(vim.fs.normalize(result.Target))
+            if diag_bufnr ~= bufnr then
+                goto skip_to_next
+            end
 
---             local severity = vim.diagnostic.severity.WARN
---             if result.warning then
---                 severity = vim.diagnostic.severity.INFO
---             end
+            -- exclude duplicates (e.g. for multiple values in the same block)
+            -- for _, dup in ipairs(diagnostics) do
+            --     if dup.lnum == result.location.start_line and
+            --         dup.end_lnum == result.location.end_line and
+            --         dup.code == result.long_id then
+            --         goto skip_to_next
+            --     end
+            -- end
 
---             local fmt = [[
--- %s (%s)
--- Impact (%s): %s
--- Resolution: %s
--- See:
--- ]] .. string.rep("* %s", #result.links, "\n")
---                 .. "\n"
+            if result.Misconfigurations == nil then
+                goto skip_to_next
+            end
 
---             local msg = string.format(fmt,
---                 result.description,
---                 result.long_id,
---                 result.severity,
---                 result.impact,
---                 result.resolution,
---                 unpack(result.links)
---             )
+            for _, misconfig in ipairs(result.Misconfigurations) do
+                local severity = vim.diagnostic.severity.WARN
+                if misconfig.Severity == "LOW" then
+                    severity = vim.diagnostic.severity.HINT
+                elseif misconfig.Severity == "MEDIUM" then
+                    severity = vim.diagnostic.severity.INFO
+                elseif misconfig.Severity == "HIGH" then
+                    severity = vim.diagnostic.severity.WARN
+                elseif misconfig.Severity == "CRITICAL" then
+                    severity = vim.diagnostic.severity.ERROR
+                end
 
---             local diag = {
---                 bufnr = diag_bufnr,
---                 lnum = result.location.start_line,
---                 end_lnum = result.location.end_line,
---                 col = 0,
---                 end_col = -1,
---                 severity = severity,
---                 message = msg,
---                 source = "tfsec",
---                 code = result.long_id,
---                 user_data = {
---                     links = result.links,
---                 },
---             }
+                local template = table.concat({
+                    "%s",
+                    "Impact: %s",
+                    "Resolution: %s",
+                    "Details: %s",
+                    "See:",
+                    string.rep("* %s", #misconfig.References, "\n"),
+                }, "\n")
 
---             table.insert(diagnostics, diag)
+                local refs = { misconfig.PrimaryURL }
+                for _, ref in ipairs(misconfig.References) do
+                    if ref ~= misconfig.PrimaryURL then
+                        table.insert(refs, ref)
+                    end
+                end
 
---             ::skip_to_next::
---         end
+                local msg = string.format(template,
+                    misconfig.Message,
+                    misconfig.Severity,
+                    misconfig.Resolution,
+                    misconfig.Description,
+                    unpack(refs)
+                )
 
---         return diagnostics
---     end,
--- }
+                local diag = {
+                    bufnr = diag_bufnr,
+                    lnum = misconfig.CauseMetadata.StartLine,
+                    end_lnum = misconfig.CauseMetadata.EndLine,
+                    col = 0,
+                    end_col = -1,
+                    severity = severity,
+                    message = msg .. "\n",
+                    source = "trivy",
+                    code = misconfig.ID,
+                    user_data = {
+                        links = misconfig.References,
+                    },
+                }
+
+                table.insert(diagnostics, diag)
+            end
+
+            ::skip_to_next::
+        end
+
+        return diagnostics
+    end,
+}
 
 lint.linters.terraform_validate = {
     name = "terraform_validate",
@@ -993,7 +1021,7 @@ lint.linters_by_ft = {
     markdown = { "markdownlint", },
     ruby = { "ruby", "rubocop", },
     sh = { "shellcheck", },
-    terraform = { "tfsec", "terraform_validate", },
+    terraform = { "terraform_validate", "trivy", },
 }
 
 -- plugins for specific LSP servers
