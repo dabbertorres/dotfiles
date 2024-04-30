@@ -31,7 +31,7 @@ yabai -m config                   \
 yabai -m rule --add app="^System Preferences$" sub-layer=above manage=off
 yabai -m rule --add app="^System Settings$" sub-layer=above manage=off
 yabai -m rule --add app="^System Information$" sub-layer=above manage=off
-yabai -m rule --add app="^Mail$" title!=".*messages.*" manage=off
+yabai -m rule --add app="^Mail$" title!="^Inbox.*messages.*$" manage=off
 yabai -m rule --add app="^Calendar$" title!="^Calendar$" manage=off
 
 yabai -m signal --add \
