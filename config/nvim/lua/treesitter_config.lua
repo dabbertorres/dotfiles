@@ -105,5 +105,7 @@ treesitter.define_modules {
     },
 }
 
+vim.treesitter.language.register("bash", "zsh")
+
 --local profile_end_time = vim.loop.hrtime()
 --print("lsp_config.lua:", profile_end_time - profile_start_time)

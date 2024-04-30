@@ -247,6 +247,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 lsp.bashls.setup {
     capabilities = capabilities,
+    filetypes = {
+        "bash",
+        "sh",
+        "zsh",
+    },
 }
 
 lsp.clangd.setup {
