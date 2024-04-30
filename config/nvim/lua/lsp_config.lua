@@ -7,8 +7,6 @@ require("mason-lspconfig").setup {
     automatic_installation = true,
 }
 
-local mason = require("mason-registry")
-
 local lsp = require("lspconfig")
 local log = require("vim.lsp.log")
 local notifications = require("notifications")
@@ -255,19 +253,20 @@ lsp.bashls.setup {
 }
 
 lsp.clangd.setup {
-    cmd = {
-        mason.get_package("clangd"):get_install_path(),
-        "--background-index",
-        "--clang-tidy",
-        "--completion-style=detailed",
-        "--enable-config",
-        "--pch-storage=memory",
-        "-j=8",
-        "--offset-encoding=utf-8",
-        "--query-driver=/usr/local/Cellar/llvm/**/bin/clang++",
-        "--log=error",
-    },
     capabilities = capabilities,
+    on_new_config = function(new_config, new_root_dir)
+        vim.list_extend(new_config.cmd, {
+            "--background-index",
+            "--clang-tidy",
+            "--completion-style=detailed",
+            "--enable-config",
+            "--pch-storage=memory",
+            "-j=8",
+            "--offset-encoding=utf-8",
+            "--query-driver=/usr/local/Cellar/llvm/**/bin/clang++",
+            "--log=error",
+        })
+    end,
 }
 
 lsp.cmake.setup {
@@ -306,8 +305,9 @@ lsp.dockerls.setup {
     end,
     on_new_config = function(new_config, new_root_dir)
         if new_root_dir then
-            table.insert(new_config.cmd, "--source")
-            table.insert(new_config.cmd, new_root_dir)
+            vim.list_extend(new_config.cmd, {
+                "--source", new_root_dir,
+            })
         end
     end,
 }
@@ -318,7 +318,6 @@ lsp.dotls.setup {
 
 lsp.gopls.setup {
     capabilities = capabilities,
-    cmd = { mason.get_package("gopls"):get_install_path(), "-remote=auto", "-logfile=auto", "-remote.logfile=auto", "-v" },
     flags = {
         debounce_text_changes = 250,
     },
@@ -441,6 +440,13 @@ lsp.gopls.setup {
                 end
             end,
         }):sync()
+
+        vim.list_extend(new_config.cmd, {
+            "-remote=auto",
+            "-logfile=auto",
+            "-remote.logfile=auto",
+            "-v",
+        })
     end,
 }
 
@@ -640,7 +646,6 @@ lsp.marksman.setup {
 local pid = vim.fn.getpid()
 lsp.omnisharp.setup {
     capabilities = capabilities,
-    cmd = { mason.get_package("omnisharp"):get_install_path(), "--languageserver", "--hostPID", tostring(pid) },
     root_dir = lsp.util.root_pattern("*.csproj"),
     flags = {
         allow_incremental_sync = true,
@@ -653,9 +658,15 @@ lsp.omnisharp.setup {
         end
     end,
     on_new_config = function(new_config, new_root_dir)
+        vim.list_extend(new_config.cmd, {
+            "--languageserver",
+            "--hostPID", tostring(pid),
+        })
+
         if new_root_dir then
-            table.insert(new_config.cmd, "--source")
-            table.insert(new_config.cmd, new_root_dir)
+            vim.list_extend(new_config.cmd, {
+                "--source", new_root_dir,
+            })
         end
     end,
 }
@@ -683,7 +694,13 @@ lsp.rust_analyzer.setup {
 
 lsp.sorbet.setup {
     capabilities = capabilities,
-    cmd = { mason.get_package("sorbet"):get_install_path(), "tc", "--lsp", "--disable-watchman", },
+    on_new_config = function(new_config, new_root_dir)
+        vim.list_extend(new_config.cmd, {
+            "tc",
+            "--lsp",
+            "--disable-watchman",
+        })
+    end,
 }
 
 -- lsp.sqls.setup {
@@ -730,8 +747,12 @@ lsp.terraformls.setup {
 }
 
 lsp.tflint.setup {
-    cmd = { mason.get_package("tflint"):get_install_path(), "--langserver" },
     capabilities = capabilities,
+    on_new_config = function(new_config, new_root_dir)
+        vim.list_extend(new_config.cmd, {
+            "--langserver",
+        })
+    end,
 }
 
 lsp.vimls.setup {
@@ -787,7 +808,6 @@ lsp.yamlls.setup {
 }
 
 lsp.zls.setup {
-    cmd = { mason.get_package("zls"):get_install_path() }, --"--config-path=" .. home .. "/.config/zls/zls.json" },
     root_dir = lsp.util.root_pattern("build.zig", "zls.build.json", "zls.json"),
     capabilities = capabilities,
     settings = {
