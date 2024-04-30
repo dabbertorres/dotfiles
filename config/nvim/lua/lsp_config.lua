@@ -7,6 +7,8 @@ require("mason-lspconfig").setup {
     automatic_installation = true,
 }
 
+local mason = require("mason-registry")
+
 local lsp = require("lspconfig")
 local log = require("vim.lsp.log")
 local notifications = require("notifications")
@@ -249,7 +251,7 @@ lsp.bashls.setup {
 
 lsp.clangd.setup {
     cmd = {
-        "clangd",
+        mason.get_package("clangd"):get_install_path(),
         "--background-index",
         "--clang-tidy",
         "--completion-style=detailed",
@@ -311,7 +313,7 @@ lsp.dotls.setup {
 
 lsp.gopls.setup {
     capabilities = capabilities,
-    cmd = { "gopls", "-remote=auto", "-logfile=auto", "-remote.logfile=auto", "-v" },
+    cmd = { mason.get_package("gopls"):get_install_path(), "-remote=auto", "-logfile=auto", "-remote.logfile=auto", "-v" },
     flags = {
         debounce_text_changes = 250,
     },
@@ -439,8 +441,6 @@ lsp.gopls.setup {
 
 lsp.gradle_ls.setup {
     capabilities = capabilities,
-    cmd = { home ..
-    "/Code/lsps/vscode-gradle/gradle-language-server/build/install/gradle-language-server/bin/gradle-language-server" },
     filetypes = { "groovy" }, -- TODO: kotlin-script files (e.g. build.gradle.kts)
     root_dir = lsp.util.root_pattern("build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"),
     init_options = {
@@ -508,7 +508,6 @@ lsp.jsonls.setup {
 
 lsp.kotlin_language_server.setup {
     capabilities = capabilities,
-    cmd = { home .. "/Code/lsps/kotlin-language-server/server/build/install/server/bin/kotlin-language-server" },
     filetypes = { "kotlin" },
     root_dir = function(fname)
         local primary = lsp.util.root_pattern("settings.gradle", "settings.gradle.kts")
@@ -636,7 +635,7 @@ lsp.marksman.setup {
 local pid = vim.fn.getpid()
 lsp.omnisharp.setup {
     capabilities = capabilities,
-    cmd = { home .. "/Code/lsps/omnisharp/OmniSharp", "--languageserver", "--hostPID", tostring(pid) },
+    cmd = { mason.get_package("omnisharp"):get_install_path(), "--languageserver", "--hostPID", tostring(pid) },
     root_dir = lsp.util.root_pattern("*.csproj"),
     flags = {
         allow_incremental_sync = true,
@@ -679,7 +678,7 @@ lsp.rust_analyzer.setup {
 
 lsp.sorbet.setup {
     capabilities = capabilities,
-    cmd = { "srb", "tc", "--lsp", "--disable-watchman", },
+    cmd = { mason.get_package("sorbet"):get_install_path(), "tc", "--lsp", "--disable-watchman", },
 }
 
 -- lsp.sqls.setup {
@@ -726,7 +725,7 @@ lsp.terraformls.setup {
 }
 
 lsp.tflint.setup {
-    cmd = { "tflint", "--langserver" },
+    cmd = { mason.get_package("tflint"):get_install_path(), "--langserver" },
     capabilities = capabilities,
 }
 
@@ -783,7 +782,7 @@ lsp.yamlls.setup {
 }
 
 lsp.zls.setup {
-    cmd = { home .. "/Code/zig/zls/zig-out/bin/zls" }, --"--config-path=" .. home .. "/.config/zls/zls.json" },
+    cmd = { mason.get_package("zls"):get_install_path() }, --"--config-path=" .. home .. "/.config/zls/zls.json" },
     root_dir = lsp.util.root_pattern("build.zig", "zls.build.json", "zls.json"),
     capabilities = capabilities,
     settings = {
