@@ -5,11 +5,14 @@ local configs = require("nvim-treesitter.configs")
 
 configs.setup {
     ensure_installed = "all",
-    sync_install = true,
+    sync_install = false,
+    auto_install = true,
+    ignore_install = {},
     highlight = {
         enable = true,
         additional_vim_regex_highlighting = false,
         use_languagetree = true,
+        ---@diagnostic disable-next-line: unused-local
         disable = function(lang, bufnr)
             return vim.fn.strlen(vim.fn.getbufoneline(bufnr, 1)) > 300
                 or vim.fn.getfsize(vim.fn.expand("%")) > 1024 * 1024
@@ -67,7 +70,7 @@ configs.setup {
         },
     },
     playground = {
-        enable = true,
+        enable = false,
         disable = {},
         updatime = 25,
         persist_queries = false,
