@@ -239,14 +239,13 @@ elif [[ ${IS_WSL} ]]; then
     export DISPLAY=$(awk '/nameserver/ { print $2 }' < /etc/resolv.conf):0.0
 fi
 
+### Default to color enabled for common tools (ls, tree, etc)
+
+export CLICOLOR="1"
+
 ### aliases
 
 alias cl=clear
-if [[ ${IS_OSX} ]]; then
-    alias ls='ls -G'
-else
-    alias ls='ls --color=auto'
-fi
 alias grep='grep --color=auto'
 
 LUAMAKE_DIR="${HOME}/Code/lsps/lua-language-server/3rd/luamake"
