@@ -92,17 +92,18 @@ vim.api.nvim_create_autocmd("LspAttach", {
         local telescope = require("telescope.builtin")
 
         local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if client == nil then return end
 
         local map_opts = util.copy_with(mappings_opts, { buffer = args.buf })
 
         vim.bo[args.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
 
-        if client.server_capabilities.definitionProvider then
+        if client.supports_method("textDocument_definition") then
             vim.keymap.set("n", "<leader>pd", function()
                 local params = vim.lsp.util.make_position_params()
                 return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
                     if result == nil or vim.tbl_isempty(result) then return nil end
-                    vim.lsp.util.preview_location(result[1])
+                    vim.lsp.util.preview_location(result[1], {})
                 end)
             end, map_opts)
 
@@ -116,11 +117,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, map_opts)
         end
 
-        if client.server_capabilities.declarationProvider then
+        if client.supports_method("textDocument_declaration") then
             vim.keymap.set("n", "gD", vim.lsp.buf.declaration, map_opts)
         end
 
-        if client.server_capabilities.implementationProvider then
+        if client.supports_method("textDocument_implementation") then
             vim.keymap.set("n", "gi", function()
                 telescope.lsp_implementations {
                     jump_type = nil,
@@ -131,15 +132,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, map_opts)
         end
 
-        if client.server_capabilities.hoverProvider then
-            vim.keymap.set("n", "K", vim.lsp.buf.hover, map_opts)
-        end
-
-        if client.server_capabilities.signatureHelpProvider then
+        if client.supports_method("textDocument_signatureHelp") then
             vim.keymap.set("n", "<leader>k", vim.lsp.buf.signature_help, map_opts)
         end
 
-        if client.server_capabilities.referencesProvider then
+        if client.supports_method("textDocument_references") then
             vim.keymap.set("n", "gu", function()
                 telescope.lsp_references({
                     fname_width = 120,
@@ -150,11 +147,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, map_opts)
         end
 
-        if client.server_capabilities.renameProvider then
+        if client.supports_method("textDocument_rename") then
             vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, map_opts)
         end
 
-        -- if client.server_capabilities.diagnosticProvider then
+        -- if client.supports_method("textDocument_diagnostic") then
         create_buf_augroup("lsp_diagnostics", args.buf, {
             {
                 events = { "BufEnter", "CursorHold", "CursorHoldI" },
@@ -173,7 +170,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
         vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, map_opts)
         -- end
 
-        if client.server_capabilities.codeActionProvider then
+        if client.supports_method("textDocument_codeAction") then
             create_buf_augroup("lsp_code_actions", args.buf, {
                 {
                     events = { "BufEnter", "CursorHold", "InsertLeave" },
@@ -184,31 +181,67 @@ vim.api.nvim_create_autocmd("LspAttach", {
             vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, map_opts)
         end
 
-        if client.server_capabilities.codeLensProvider then
+        if client.supports_method("textDocument_codeLens") and client.server_capabilities.codeLensProvider ~= nil then
             create_buf_augroup("lsp_codelens", args.buf, {
                 {
                     events = { "BufEnter", "CursorHold", "InsertLeave" },
-                    opts = { callback = vim.lsp.codelens.refresh },
+                    opts = {
+                        callback = function()
+                            vim.lsp.codelens.refresh({ bufnr = args.buf })
+                        end,
+                    },
                 },
             })
 
             vim.keymap.set("n", "<leader>cl", vim.lsp.codelens.run, map_opts)
         end
 
-        if client.server_capabilities.documentFormattingProvider then
-            local function do_format(async)
-                return function()
-                    vim.lsp.buf.format {
-                        formatting_options = {
-                            tabSize                = vim.bo.tabstop,
-                            insertSpaces           = true,
-                            trimTrailingWhitespace = true,
-                            insertFinalNewline     = true,
-                            trimFinalNewlines      = true,
-                        },
-                        bufnr = args.buf,
-                        async = async,
-                    }
+        if client.supports_method("textDocument_formatting") then
+            local do_format = nil
+            if client.name == "gopls" then
+                do_format = function(async)
+                    return function()
+                        local params = vim.lsp.util.make_range_params()
+                        params.context = { only = { "source.organizeImports" } }
+
+                        local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params)
+                        for cid, res in pairs(result or {}) do
+                            for _, r in pairs(res.result or {}) do
+                                if r.edit then
+                                    local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
+                                    vim.lsp.util.apply_workspace_edit(r.edit, enc)
+                                end
+                            end
+                        end
+
+                        vim.lsp.buf.format {
+                            formatting_options = {
+                                tabSize                = vim.bo.tabstop,
+                                insertSpaces           = true,
+                                trimTrailingWhitespace = true,
+                                insertFinalNewline     = true,
+                                trimFinalNewlines      = true,
+                            },
+                            bufnr = args.buf,
+                            async = async,
+                        }
+                    end
+                end
+            else
+                do_format = function(async)
+                    return function()
+                        vim.lsp.buf.format {
+                            formatting_options = {
+                                tabSize                = vim.bo.tabstop,
+                                insertSpaces           = true,
+                                trimTrailingWhitespace = true,
+                                insertFinalNewline     = true,
+                                trimFinalNewlines      = true,
+                            },
+                            bufnr = args.buf,
+                            async = async,
+                        }
+                    end
                 end
             end
 
@@ -222,7 +255,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
             vim.keymap.set("n", "<leader>fa", do_format(true), map_opts)
         end
 
-        if client.server_capabilities.documentHighlightProvider then
+        if client.supports_method("textDocument_documentHighlight") then
             create_buf_augroup("lsp_document_highlight", args.buf, {
                 {
                     events = { "CursorHold", "CursorHoldI" },
@@ -351,6 +384,7 @@ lsp.gopls.setup {
             vulncheck = "Imports",
             staticcheck = true,
             analyses = {
+                appends = true,
                 asmdecl = true,
                 assign = true,
                 atomic = true,
@@ -361,12 +395,14 @@ lsp.gopls.setup {
                 composites = true,
                 copylocks = true,
                 deepequalerrors = true,
+                defers = true,
+                deprecated = true,
                 directive = true,
                 embed = true,
                 errorsas = true,
                 fieldalignment = true,
                 fillreturns = true,
-                fillstruct = true,
+                framepointer = true,
                 httpresponse = true,
                 ifaceassert = true,
                 infertypeargs = true,
@@ -379,11 +415,14 @@ lsp.gopls.setup {
                 printf = true,
                 shadow = false,
                 shift = true,
+                sigchanyzer = true,
                 simplifycompositelit = true,
                 simplifyrange = true,
                 simplifyslice = true,
+                slog = true,
                 sortslice = true,
                 stdmethods = true,
+                stdversion = true,
                 stringintconv = true,
                 structtag = true,
                 stubmethods = true,
@@ -436,6 +475,7 @@ lsp.gopls.setup {
             on_stdout = function(err, output, _)
                 if not err then
                     local module = string.gsub(output, "%s", "")
+                    vim.print("detected go module: " .. module)
                     new_config.settings.gopls["local"] = module
                 end
             end,
@@ -1157,6 +1197,7 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
     if not result.value.kind then return end
 
     local client = vim.lsp.get_client_by_id(ctx.client_id)
+    if client == nil then return end
 
     -- ignore lua_ls spamming notifications
     -- if client.name == "lua_ls" then return end

@@ -5,6 +5,8 @@ local notifications = require("notifications")
 -- returns current (sub-)package, root directory (containing go.mod)
 local function gomod_info(file_path)
     local mod_cmd = io.popen("go env GOMOD", "r")
+    if mod_cmd == nil then return nil, nil end
+
     local module = mod_cmd:read("l")
     local ok, _, _ = mod_cmd:close()
     if not ok or module == "/dev/null" or module == "NUL" then
@@ -12,6 +14,8 @@ local function gomod_info(file_path)
     end
 
     local pkg_cmd = io.popen("go mod edit -json", "r")
+    if pkg_cmd == nil then return nil, nil end
+
     local mod_info = pkg_cmd:read("a")
     ok, _, _ = pkg_cmd:close()
     if not ok then return nil, nil end
@@ -44,8 +48,8 @@ local function update_test(test, event)
         local output = vim.trim(event["Output"])
         if not vim.startswith(output, "---")
             and not vim.startswith(output, "===")
-            and not vim.startswith("PASS")
-            and not vim.startswith("ok")
+            and not vim.startswith(output, "PASS")
+            and not vim.startswith(output, "ok")
         then
             if test.short == nil then
                 test.short = output

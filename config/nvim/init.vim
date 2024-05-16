@@ -71,18 +71,16 @@ Plug 'hrsh7th/cmp-path'
 Plug 'rcarriga/cmp-dap'
 Plug 'f3fora/cmp-spell'
 Plug 'saadparwaiz1/cmp_luasnip'
-Plug 'L3MON4D3/LuaSnip'
+Plug 'L3MON4D3/LuaSnip', { 'do': 'make install_jsregexp' }
 Plug 'SmiteshP/nvim-navic'
 Plug 'MunifTanjim/nui.nvim'
 Plug 'SmiteshP/nvim-navbuddy'
 
 " quality of life
-Plug 'Raimondi/delimitMate'
-Plug 'andymass/vim-matchup'
+Plug 'windwp/nvim-autopairs'
 Plug 'tpope/vim-repeat'
 Plug 'editorconfig/editorconfig-vim'
 Plug 'tpope/vim-abolish'
-Plug 'tpope/vim-commentary'
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
 Plug 'tpope/vim-eunuch'
 Plug 'sindrets/diffview.nvim'
@@ -187,29 +185,31 @@ set nowritebackup
 set shortmess+=c
 set signcolumn=yes:1
 
-let g:python3_host_prog = $HOME . '/.local/share/nvim/py-venv/bin/python3'
+" let g:python3_host_prog = $HOME . '/.local/share/nvim/py-venv/bin/python3'
 
-" my lua configs
-lua require("gruvbox_config")
-lua require("notifications")
-lua require("lsp_config")
-lua require("cmp_config")
-lua require("treesitter_config")
-lua require("telescope_config")
-lua require("devicons_config")
-lua require("lualine_config")
-lua require("dap_config")
-lua require("diffview_config")
-"lua require("neorg_config")
-lua require("neogit_config")
-lua require("gitsigns_config")
-lua require("neotest_config")
-lua require("toggleterm_config")
-lua require("refactoring_config")
-lua require("rest_config")
-lua require("dotenv").setup()
-lua require("dbee_config")
-lua require("flatten_config")
+lua <<EOF
+require("gruvbox_config")
+require("notifications")
+require("lsp_config")
+require("nvim-autopairs").setup{}
+require("cmp_config")
+require("treesitter_config")
+require("telescope_config")
+require("devicons_config")
+require("lualine_config")
+require("dap_config")
+require("diffview_config")
+--lua require("neorg_config")
+require("neogit_config")
+require("gitsigns_config")
+require("neotest_config")
+require("toggleterm_config")
+require("refactoring_config")
+require("rest_config")
+require("dotenv").setup()
+require("dbee_config")
+require("flatten_config")
+EOF
 
 " enable folding, but disable it by default
 set foldmethod=expr
@@ -221,13 +221,6 @@ set foldlevelstart=99
 command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen | tr "[A-Z]" "[a-z]"'), '\n$', '', '')
 
 let g:asmsyntax = 'nasm'
-
-let delimitMate_expand_cr = 1
-let g:matchup_matchparen_deferred = 1
-let g:matchup_matchparen_offscreen = {
-    \ 'method': 'status_manual',
-    \ 'scrolloff': 1,
-    \ }
 
 " split-term
 let g:disable_key_mappings = 1
@@ -264,8 +257,6 @@ let g:prolog_swipl_timeout = 10
 " commands
 "
 
-" search for TODOs with ag
-"set grepprg=ag --vimgrep $* set grepformat=%f:%l:%c:%m
 command! Todo silent lgrep -i --ignore-dir=vendor/ '\/\/.*TODO.*' | lwindow
 command! TodoN lnext
 command! TodoP lprevious

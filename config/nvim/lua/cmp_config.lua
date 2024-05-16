@@ -1,6 +1,7 @@
 local cmp = require("cmp")
 local luasnip = require("luasnip")
 local util = require("my_util")
+local cmp_autopairs = require('nvim-autopairs.completion.cmp')
 
 vim.opt.completeopt = { "menu", "menuone", "preview" }
 
@@ -9,7 +10,7 @@ vim.opt.spelllang = { "en_us" }
 
 cmp.setup {
     enabled = function()
-        return vim.api.nvim_buf_get_option(0, "buftype") ~= "prompt"
+        return vim.api.nvim_get_option_value("buftype", { buf = 0 }) ~= "prompt"
             or require("cmp_dap").is_dap_buffer()
     end,
     snippet = {
@@ -128,3 +129,5 @@ cmp.setup.filetype({ "dap-repl", "dapui_watches", "dapui_hover" }, {
         { name = "dap" },
     },
 })
+
+cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())

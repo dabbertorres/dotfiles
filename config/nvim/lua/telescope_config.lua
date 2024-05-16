@@ -41,12 +41,20 @@ telescope.setup {
             "--line-number",
             "--column",
             "--smart-case",
+            "--follow",
             "--glob", "!vcpkg/**",
         },
     },
     pickers = {
         find_files = {
-            find_command = { "fd", "--type", "f", "--strip-cwd-prefix", },
+            find_command = {
+                "fd",
+                "--type",
+                "f",
+                "--strip-cwd-prefix=always",
+                "--follow",
+                "--color=never",
+            },
         },
     },
     extensions = {
