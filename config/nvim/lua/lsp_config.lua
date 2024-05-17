@@ -98,7 +98,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
         vim.bo[args.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
 
-        if client.supports_method("textDocument_definition") then
+        if client.supports_method("textDocument_definition") and client.server_capabilities.definitionProvider ~= nil then
             vim.keymap.set("n", "<leader>pd", function()
                 local params = vim.lsp.util.make_position_params()
                 return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
@@ -117,11 +117,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, map_opts)
         end
 
-        if client.supports_method("textDocument_declaration") then
+        if client.supports_method("textDocument_declaration") and client.server_capabilities.declarationProvider ~= nil then
             vim.keymap.set("n", "gD", vim.lsp.buf.declaration, map_opts)
         end
 
-        if client.supports_method("textDocument_implementation") then
+        if client.supports_method("textDocument_implementation") and client.server_capabilities.implementationProvider ~= nil then
             vim.keymap.set("n", "gi", function()
                 telescope.lsp_implementations {
                     jump_type = nil,
@@ -132,11 +132,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, map_opts)
         end
 
-        if client.supports_method("textDocument_signatureHelp") then
+        if client.supports_method("textDocument_signatureHelp") and client.server_capabilities.signatureHelpProvider ~= nil then
             vim.keymap.set("n", "<leader>k", vim.lsp.buf.signature_help, map_opts)
         end
 
-        if client.supports_method("textDocument_references") then
+        if client.supports_method("textDocument_references") and client.server_capabilities.referencesProvider ~= nil then
             vim.keymap.set("n", "gu", function()
                 telescope.lsp_references({
                     fname_width = 120,
@@ -147,7 +147,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, map_opts)
         end
 
-        if client.supports_method("textDocument_rename") then
+        if client.supports_method("textDocument_rename") and client.server_capabilities.renameProvider ~= nil then
             vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, map_opts)
         end
 
@@ -170,7 +170,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
         vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, map_opts)
         -- end
 
-        if client.supports_method("textDocument_codeAction") then
+        if client.supports_method("textDocument_codeAction") and client.server_capabilities.codeActionProvider ~= nil then
             create_buf_augroup("lsp_code_actions", args.buf, {
                 {
                     events = { "BufEnter", "CursorHold", "InsertLeave" },
@@ -196,7 +196,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
             vim.keymap.set("n", "<leader>cl", vim.lsp.codelens.run, map_opts)
         end
 
-        if client.supports_method("textDocument_formatting") then
+        if client.supports_method("textDocument_formatting") and client.server_capabilities.documentFormattingProvider ~= nil then
             local do_format = nil
             if client.name == "gopls" then
                 do_format = function(async)
@@ -255,7 +255,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
             vim.keymap.set("n", "<leader>fa", do_format(true), map_opts)
         end
 
-        if client.supports_method("textDocument_documentHighlight") then
+        if client.supports_method("textDocument_documentHighlight") and client.server_capabilities.documentHighlightProvider ~= nil then
             create_buf_augroup("lsp_document_highlight", args.buf, {
                 {
                     events = { "CursorHold", "CursorHoldI" },
