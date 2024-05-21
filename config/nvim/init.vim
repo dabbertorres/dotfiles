@@ -9,7 +9,7 @@ call plug#begin('~/.local/share/nvim/plugged')
 
 " interface
 Plug 'ellisonleao/gruvbox.nvim'
-Plug 'nvim-lualine/lualine.nvim', { 'commit': '1e53bf7386619722b7cfae0d541b45978f0152e4' }
+Plug 'nvim-lualine/lualine.nvim' ", { 'commit': '1e53bf7386619722b7cfae0d541b45978f0152e4' }
 Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
 Plug 'nvim-telescope/telescope-ui-select.nvim'
@@ -77,6 +77,7 @@ Plug 'MunifTanjim/nui.nvim'
 Plug 'SmiteshP/nvim-navbuddy'
 
 " quality of life
+Plug 'andymass/vim-matchup'
 Plug 'windwp/nvim-autopairs'
 Plug 'tpope/vim-repeat'
 Plug 'editorconfig/editorconfig-vim'
@@ -221,6 +222,12 @@ set foldlevelstart=99
 command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen | tr "[A-Z]" "[a-z]"'), '\n$', '', '')
 
 let g:asmsyntax = 'nasm'
+
+let g:matchup_matchparen_deferred = 1
+let g:matchup_matchparen_offscreen = {
+    \ 'method': 'status_manual',
+    \ 'scrolloff': 5,
+    \ }
 
 " split-term
 let g:disable_key_mappings = 1
