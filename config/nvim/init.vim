@@ -9,7 +9,7 @@ call plug#begin('~/.local/share/nvim/plugged')
 
 " interface
 Plug 'ellisonleao/gruvbox.nvim'
-Plug 'nvim-lualine/lualine.nvim' ", { 'commit': '1e53bf7386619722b7cfae0d541b45978f0152e4' }
+Plug 'nvim-lualine/lualine.nvim', { 'commit': '1e53bf7386619722b7cfae0d541b45978f0152e4' }
 Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
 Plug 'nvim-telescope/telescope-ui-select.nvim'
@@ -236,45 +236,38 @@ let g:matchup_matchparen_offscreen = {
 " Using <Cmd> in the matchup mappings instead of :<c-u> (as matchup does out
 " of the box) avoids any mode flickering in the status line.
 " See https://github.com/andymass/vim-matchup/blob/ff3bea611696f5cfdfe61a939149daadff41f2af/autoload/matchup.vim#L242
-let g:matchup_mappings_enabled = 0
+let g:matchup_mappings_enabled = 1
 
-" the basic motions % and g%
-nnoremap <silent> % <Cmd>call matchup#motion#find_matching_pair(0, 1)<CR>
-nnoremap <silent> g% <Cmd>call matchup#motion#find_matching_pair(0, 0)<CR>
-
-" visual and operator-pending
-xnoremap <silent> % <Cmd>call matchup#motion#find_matching_pair(1, 1)<CR>
-xmap     <silent> % <Cmd>call matchup#motion#find_matching_pair(1, 1)<CR>
-onoremap <silent> % <Cmd>call matchup#motion#op('%')<CR>
-
-xnoremap <silent> g% <Cmd>call matchup#motion#find_matching_pair(1, 0)<CR>
-xmap     <silent> g% <Cmd>call matchup#motion#find_matching_pair(1, 0)<CR>
-onoremap <silent> g% <Cmd>call matchup#motion#op('g%')<CR>
-
-" ]% and [%
-nnoremap <silent> ]% <Cmd>call matchup#motion#find_unmatched(0, 1)<CR>
-xnoremap <silent> ]% <Cmd>call matchup#motion#find_unmatched(1, 1)<CR>
-xmap     <silent> ]% <Cmd>call matchup#motion#find_unmatched(1, 1)<CR>
-onoremap <silent> ]% <Cmd>call matchup#motion#op(']%')<CR>
-
-nnoremap <silent> [% <Cmd>call matchup#motion#find_unmatched(0, 0)<CR>
-xnoremap <silent> [% <Cmd>call matchup#motion#find_unmatched(1, 0)<CR>
-xmap     <silent> [% <Cmd>call matchup#motion#find_unmatched(1, 0)<CR>
-onoremap <silent> [% <Cmd>call matchup#motion#op('[%')<CR>
-
-" jump inside z%
-nnoremap <silent> z% <Cmd>call matchup#motion#jump_inside(0)<CR>
-xnoremap <silent> z% <Cmd>call matchup#motion#jump_inside(1)<CR>
-xmap     <silent> z% <Cmd>call matchup#motion#jump_inside(1)<CR>
-onoremap <silent> z% <Cmd>call matchup#motion#op('z%')<CR>
-
-" 'opposite' of z%
-nnoremap <silent> Z% <Cmd>call matchup#motion#jump_inside_prev(0)<CR>
-xnoremap <silent> Z% <Cmd>call matchup#motion#jump_inside_prev(1)<CR>
-xmap     <silent> Z% <Cmd>call matchup#motion#jump_inside_prev(1)<CR>
-onoremap <silent> Z% <Cmd>call matchup#motion#op('Z%')<CR>
-inoremap <silent> <C-g>% <Cmd>call matchup#motion#insert_mode()<CR>
-
+"" the basic motions % and g%
+"nnoremap <silent> % <Cmd>call matchup#motion#find_matching_pair(0, 1)<CR>
+"nnoremap <silent> g% <Cmd>call matchup#motion#find_matching_pair(0, 0)<CR>
+"
+"" visual and operator-pending
+"xnoremap <silent> % <Cmd>call matchup#motion#find_matching_pair(1, 1)<CR>
+"xmap     <silent> % <Cmd>call matchup#motion#find_matching_pair(1, 1)<CR>
+"
+"xnoremap <silent> g% <Cmd>call matchup#motion#find_matching_pair(1, 0)<CR>
+"xmap     <silent> g% <Cmd>call matchup#motion#find_matching_pair(1, 0)<CR>
+"
+"" ]% and [%
+"nnoremap <silent> ]% <Cmd>call matchup#motion#find_unmatched(0, 1)<CR>
+"nnoremap <silent> [% <Cmd>call matchup#motion#find_unmatched(0, 0)<CR>
+"
+"xnoremap <silent> ]% <Cmd>call matchup#motion#find_unmatched(1, 1)<CR>
+"xnoremap <silent> [% <Cmd>call matchup#motion#find_unmatched(1, 0)<CR>
+"xmap     <silent> ]% <Cmd>call matchup#motion#find_unmatched(1, 1)<CR>
+"xmap     <silent> [% <Cmd>call matchup#motion#find_unmatched(1, 0)<CR>
+"
+"" jump inside z%
+"nnoremap <silent> z% <Cmd>call matchup#motion#jump_inside(0)<CR>
+"xnoremap <silent> z% <Cmd>call matchup#motion#jump_inside(1)<CR>
+"xmap     <silent> z% <Cmd>call matchup#motion#jump_inside(1)<CR>
+"
+"" 'opposite' of z%
+"nnoremap <silent> Z% <Cmd>call matchup#motion#jump_inside_prev(0)<CR>
+"xnoremap <silent> Z% <Cmd>call matchup#motion#jump_inside_prev(1)<CR>
+"xmap     <silent> Z% <Cmd>call matchup#motion#jump_inside_prev(1)<CR>
+"inoremap <silent> <C-g>% <C-\><C-o><Cmd>call matchup#motion#insert_mode()<CR>
 
 " split-term
 let g:disable_key_mappings = 1
