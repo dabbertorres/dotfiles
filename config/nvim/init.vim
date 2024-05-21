@@ -223,11 +223,58 @@ command! -nargs=0 UUID :exe 'norm i' . substitute(system('uuidgen | tr "[A-Z]" "
 
 let g:asmsyntax = 'nasm'
 
+"
+" vim-matchup
+"
+
 let g:matchup_matchparen_deferred = 1
 let g:matchup_matchparen_offscreen = {
-    \ 'method': 'status_manual',
+    \ 'method': 'popup',
     \ 'scrolloff': 5,
     \ }
+
+" Using <Cmd> in the matchup mappings instead of :<c-u> (as matchup does out
+" of the box) avoids any mode flickering in the status line.
+" See https://github.com/andymass/vim-matchup/blob/ff3bea611696f5cfdfe61a939149daadff41f2af/autoload/matchup.vim#L242
+let g:matchup_mappings_enabled = 0
+
+" the basic motions % and g%
+nnoremap <silent> % <Cmd>call matchup#motion#find_matching_pair(0, 1)<CR>
+nnoremap <silent> g% <Cmd>call matchup#motion#find_matching_pair(0, 0)<CR>
+
+" visual and operator-pending
+xnoremap <silent> % <Cmd>call matchup#motion#find_matching_pair(1, 1)<CR>
+xmap     <silent> % <Cmd>call matchup#motion#find_matching_pair(1, 1)<CR>
+onoremap <silent> % <Cmd>call matchup#motion#op('%')<CR>
+
+xnoremap <silent> g% <Cmd>call matchup#motion#find_matching_pair(1, 0)<CR>
+xmap     <silent> g% <Cmd>call matchup#motion#find_matching_pair(1, 0)<CR>
+onoremap <silent> g% <Cmd>call matchup#motion#op('g%')<CR>
+
+" ]% and [%
+nnoremap <silent> ]% <Cmd>call matchup#motion#find_unmatched(0, 1)<CR>
+xnoremap <silent> ]% <Cmd>call matchup#motion#find_unmatched(1, 1)<CR>
+xmap     <silent> ]% <Cmd>call matchup#motion#find_unmatched(1, 1)<CR>
+onoremap <silent> ]% <Cmd>call matchup#motion#op(']%')<CR>
+
+nnoremap <silent> [% <Cmd>call matchup#motion#find_unmatched(0, 0)<CR>
+xnoremap <silent> [% <Cmd>call matchup#motion#find_unmatched(1, 0)<CR>
+xmap     <silent> [% <Cmd>call matchup#motion#find_unmatched(1, 0)<CR>
+onoremap <silent> [% <Cmd>call matchup#motion#op('[%')<CR>
+
+" jump inside z%
+nnoremap <silent> z% <Cmd>call matchup#motion#jump_inside(0)<CR>
+xnoremap <silent> z% <Cmd>call matchup#motion#jump_inside(1)<CR>
+xmap     <silent> z% <Cmd>call matchup#motion#jump_inside(1)<CR>
+onoremap <silent> z% <Cmd>call matchup#motion#op('z%')<CR>
+
+" 'opposite' of z%
+nnoremap <silent> Z% <Cmd>call matchup#motion#jump_inside_prev(0)<CR>
+xnoremap <silent> Z% <Cmd>call matchup#motion#jump_inside_prev(1)<CR>
+xmap     <silent> Z% <Cmd>call matchup#motion#jump_inside_prev(1)<CR>
+onoremap <silent> Z% <Cmd>call matchup#motion#op('Z%')<CR>
+inoremap <silent> <C-g>% <Cmd>call matchup#motion#insert_mode()<CR>
+
 
 " split-term
 let g:disable_key_mappings = 1
@@ -274,15 +321,15 @@ xmap ga <Plug>(EasyAlign)
 nmap ga <Plug>(EasyAlign)
 
 " end search
-nnoremap <silent> <leader>/ :let @/ = ""<CR>
+nnoremap <silent> <leader>/ <Cmd>let @/ = ""<CR>
 
 " switch buffers
-nnoremap <silent> gb :bp<CR>
-nnoremap <silent> gB :bn<CR>
+nnoremap <silent> gb <Cmd>bp<CR>
+nnoremap <silent> gB <Cmd>bn<CR>
 
 " move tabs around
-nnoremap <silent> ght :-tabmove<CR>
-nnoremap <silent> glt :+tabmove<CR>
+nnoremap <silent> ght <Cmd>-tabmove<CR>
+nnoremap <silent> glt <Cmd>+tabmove<CR>
 
 "nnoremap ,f <Plug>(fzf-complete-file)
 
