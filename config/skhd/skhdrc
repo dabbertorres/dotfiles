@@ -3,33 +3,33 @@ cmd - return : /Applications/kitty.app/Contents/MacOS/kitty --single-instance -d
 
 # focus window, or move across displays
 alt - h : yabai -m window --focus west \
-    || yabai -m window --focus $(yabai -m query --windows --display west | jq 'map(select(".is-visible")) | max_by(.frame.x) | .id')
+    || yabai -m window --focus $(yabai -m query --windows --display west | jq 'map(select(."is-visible")) | max_by(.frame.x) | .id')
 alt - j : yabai -m window --focus south \
-    || yabai -m window --focus $(yabai -m query --windows --display south | jq 'map(select(".is-visible")) | min_by(.frame.y) | .id')
+    || yabai -m window --focus $(yabai -m query --windows --display south | jq 'map(select(."is-visible")) | min_by(.frame.y) | .id')
 alt - k : yabai -m window --focus north \
-    || yabai -m window --focus $(yabai -m query --windows --display north | jq 'map(select(".is-visible")) | max_by(.frame.y) | .id')
+    || yabai -m window --focus $(yabai -m query --windows --display north | jq 'map(select(."is-visible")) | max_by(.frame.y) | .id')
 alt - l : yabai -m window --focus east \
-    || yabai -m window --focus $(yabai -m query --windows --display east | jq 'map(select(".is-visible")) | min_by(.frame.x) | .id')
+    || yabai -m window --focus $(yabai -m query --windows --display east | jq 'map(select(."is-visible")) | min_by(.frame.x) | .id')
 
 # move window
 shift + alt - h : yabai -m window --warp west \
     || (MY_WIN=$(yabai -m query --windows --window | jq '.id'); \
-        yabai -m window --warp $(yabai -m query --windows --display west | jq 'map(select(".is-visible")) | max_by(.frame.x) | .id') \
+        yabai -m window --warp $(yabai -m query --windows --display west | jq 'map(select(."is-visible")) | max_by(.frame.x) | .id') \
         && yabai -m window --focus $MY_WIN)
 
 shift + alt - j : yabai -m window --warp south \
     || (MY_WIN=$(yabai -m query --windows --window | jq '.id'); \
-        yabai -m window --warp $(yabai -m query --windows --display south | jq 'map(select(".is-visible")) | min_by(.frame.y) | .id') \
+        yabai -m window --warp $(yabai -m query --windows --display south | jq 'map(select(."is-visible")) | min_by(.frame.y) | .id') \
         && yabai -m window --focus $MY_WIN)
 
 shift + alt - k : yabai -m window --warp north \
     || (MY_WIN=$(yabai -m query --windows --window | jq '.id'); \
-        yabai -m window --warp $(yabai -m query --windows --display north | jq 'map(select(".is-visible")) | max_by(.frame.y) | .id') \
+        yabai -m window --warp $(yabai -m query --windows --display north | jq 'map(select(."is-visible")) | max_by(.frame.y) | .id') \
         && yabai -m window --focus $MY_WIN)
 
 shift + alt - l : yabai -m window --warp east \
     || (MY_WIN=$(yabai -m query --windows --window | jq '.id'); \
-        yabai -m window --warp $(yabai -m query --windows --display east | jq 'map(select(".is-visible")) | min_by(.frame.x) | .id') \
+        yabai -m window --warp $(yabai -m query --windows --display east | jq 'map(select(."is-visible")) | min_by(.frame.x) | .id') \
         && yabai -m window --focus $MY_WIN)
 
 # fast focus desktop
