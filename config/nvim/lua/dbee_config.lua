@@ -8,7 +8,7 @@ local sources = {
 }
 
 util.find_file(
-    vim.loop.cwd(),
+    vim.uv.cwd(),
     function(name) return name:find("%.dbee.json$") end,
     function(_, _, path)
         table.insert(sources, dbee_sources.FileSource:new(path))
