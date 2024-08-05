@@ -364,8 +364,8 @@ lsp.gopls.setup {
                 "-**/node_modules",
             },
             templateExtensions = { "gotmpl", "tmpl", "gohtml" },
-            allowModfileModifications = false,
-            allowImplicitNetworkAccess = true,
+            -- allowModfileModifications = false,
+            -- allowImplicitNetworkAccess = true,
             -- Formatting
             gofumpt = true,
             -- UI
@@ -461,7 +461,7 @@ lsp.gopls.setup {
             },
             -- Navigation
             importShortcut = "Link",
-            newDiff = "new",
+            -- newDiff = "new",
         },
     },
     on_new_config = function(new_config, new_root_dir)
@@ -475,7 +475,6 @@ lsp.gopls.setup {
             on_stdout = function(err, output, _)
                 if not err then
                     local module = string.gsub(output, "%s", "")
-                    vim.print("detected go module: " .. module)
                     new_config.settings.gopls["local"] = module
                 end
             end,
@@ -728,20 +727,20 @@ lsp.pyright.setup {
     },
 }
 
-lsp.rust_analyzer.setup {
-    capabilities = capabilities,
-}
+-- lsp.rust_analyzer.setup {
+--     capabilities = capabilities,
+-- }
 
-lsp.sorbet.setup {
-    capabilities = capabilities,
-    on_new_config = function(new_config, new_root_dir)
-        vim.list_extend(new_config.cmd, {
-            "tc",
-            "--lsp",
-            "--disable-watchman",
-        })
-    end,
-}
+-- lsp.sorbet.setup {
+--     capabilities = capabilities,
+--     on_new_config = function(new_config, new_root_dir)
+--         vim.list_extend(new_config.cmd, {
+--             "tc",
+--             "--lsp",
+--             "--disable-watchman",
+--         })
+--     end,
+-- }
 
 -- lsp.sqls.setup {
 --     capabilities = capabilities,
