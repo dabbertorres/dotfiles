@@ -335,14 +335,14 @@ endfunction
 " trim trailing whitespace on write
 " autocmd! BufWritePre * call <SID>trim_whitespace()
 
-augroup python_black
-    autocmd!
-    au BufWritePre *.py call Black()
-augroup END
-let g:black#settings = {
-    \ 'fast': 1,
-    \ 'line_length': 100,
-\}
+"augroup python_black
+"    autocmd!
+"    au BufWritePre *.py call Black()
+"augroup END
+"let g:black#settings = {
+"    \ 'fast': 1,
+"    \ 'line_length': 100,
+"\}
 
 " customize built-in terminal
 augroup terminal_buf
