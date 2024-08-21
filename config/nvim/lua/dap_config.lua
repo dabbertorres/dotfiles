@@ -5,9 +5,35 @@ local dapui = require("dapui")
 local dapgo = require("dap-go")
 local dappy = require("dap-python")
 local notifications = require("notifications")
---local dapvs = require("dap.ext.vscode")
+local dapvs = require("dap.ext.vscode")
 
 local home = os.getenv("HOME")
+
+local function pick_executable()
+    local pickers = require("telescope.pickers")
+    local finders = require("telescope.finders")
+    local conf = require("telescope.config").values
+    local actions = require("telescope.actions")
+    local action_state = require("telescope.actions.state")
+
+    return coroutine.create(function(coro)
+        local opts = {}
+        pickers.new(opts, {
+            prompt_title = "Path to executable",
+            finder = finders.new_oneshot_job({ "fd", "--hidden", "--no-ignore", "--type", "x" }, {}),
+            sorter = conf.generic_sorter(opts),
+            attach_mappings = function(buffer_number)
+                actions.select_default:replace(function()
+                    actions.close(buffer_number)
+                    coroutine.resume(coro, action_state.get_selected_entry()[1])
+                end)
+                return true
+            end,
+        })
+            :find()
+    end)
+    -- return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+end
 
 dap.adapters.kotlin = {
     type    = "executable",
@@ -20,9 +46,34 @@ dap.adapters.kotlin = {
     },
 }
 
+dap.adapters.gdb = {
+    type = "executable",
+    name = "gdb",
+    command = "gdb", --does this need be absolute?
+    args = { "-i", "dap" },
+}
+
+dap.adapters.lldb = {
+    type = "executable",
+    name = "lldb",
+    command = "/usr/local/opt/llvm/bin/lldb-dap", -- can this be not absolute?
+}
+
+dap.configurations.cpp = {
+    {
+        name = "Launch",
+        type = "lldb",
+        request = "launch",
+        program = pick_executable,
+        cwd = "${workspaceFolder}",
+        stopOnEntry = false,
+        args = {},
+    },
+}
+
 dapgo.setup()
 dappy.setup(home .. "/.python-venvs/debugpy/bin/python")
---dapvs.load_launchjs()
+dapvs.load_launchjs()
 
 dap.defaults.fallback.terminal_win_cmd = '50vsplit new'
 dap.set_log_level("INFO")
@@ -89,17 +140,17 @@ dapui.setup {
     layouts = {
         {
             elements = {
-                { id = 'scopes', size = 0.25 },
+                { id = 'scopes',      size = 0.25 },
                 { id = 'breakpoints', size = 0.25 },
-                { id = 'stacks', size = 0.25 },
-                { id = 'watches', size = 0.25 },
+                { id = 'stacks',      size = 0.25 },
+                { id = 'watches',     size = 0.25 },
             },
             size = 40,
             position = 'left',
         },
         {
             elements = {
-                { id = 'repl', size = 0.5 },
+                { id = 'repl',    size = 0.5 },
                 { id = 'console', size = 0.5 },
             },
             size = 10,
