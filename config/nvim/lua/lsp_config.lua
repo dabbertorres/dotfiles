@@ -710,10 +710,10 @@ lsp.omnisharp.setup {
     end,
 }
 
-lsp.pyright.setup {
+lsp.basedpyright.setup {
     capabilities = capabilities,
     settings = {
-        python = {
+        basedpyright = {
             disableLanguageServices = false,
             disableOrganizeImports = false,
             analysis = {
