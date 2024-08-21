@@ -1,4 +1,4 @@
-local uv = vim.loop
+local uv = vim.uv
 
 local M = {}
 
@@ -215,63 +215,14 @@ function M.escape_json(text)
     end
 end
 
-vim.api.nvim_create_user_command("EscapeJSON", function(opts)
-    M.replace_visual_range(0, function(text)
-        local output = M.escape_json(text)
-        if opts.args == "q" or opts.args == "quote" then
-            output = "\"" .. output .. "\""
-        end
-        return output
-    end)
-end, {
-    desc = "Escape some text for use as as JSON string.",
-    nargs = "?",
-    range = true,
-})
+function M.make_augroup(name, clear, ...)
+    local id = vim.api.nvim_create_augroup(name, { clear = clear })
 
-local function convert_number(text, format)
-    if string.find(text, ".", 1, true) ~= nil then return nil end
-
-    local num = tonumber(text)
-    if num == nil then return nil end
-
-    return string.format(format, num)
-end
-
-local function number_conversion(format)
-    return function(text)
-        if type(text) == "table" and #text == 1 then
-            text = text[1]
-        else
-            return nil
-        end
-
-        return convert_number(text, format)
+    for _, make_cmd in ipairs({ ... }) do
+        local event, opts = make_cmd()
+        opts.group = id
+        vim.api.nvim_create_autocmd(event, opts)
     end
 end
-
-vim.api.nvim_create_user_command("ToDec", function(opts)
-    M.replace_visual_range_or_word(0, number_conversion("%d"))
-end, {
-    desc = "Convert a number via visual selection or under the cursor to hexadecimal.",
-    nargs = 0,
-    range = true,
-})
-
-vim.api.nvim_create_user_command("ToHex", function(opts)
-    M.replace_visual_range_or_word(0, number_conversion("%#x"))
-end, {
-    desc = "Convert a number via visual selection or under the cursor to hexadecimal.",
-    nargs = 0,
-    range = true,
-})
-
-vim.api.nvim_create_user_command("ToOct", function(opts)
-    M.replace_visual_range_or_word(0, number_conversion("%#o"))
-end, {
-    desc = "Convert a number via visual selection or under the cursor to hexadecimal.",
-    nargs = 0,
-    range = true,
-})
 
 return M
