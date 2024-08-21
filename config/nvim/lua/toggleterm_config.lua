@@ -8,7 +8,7 @@ local terminals = require("toggleterm.terminal")
 --     }
 -- end
 
-toggleterm.setup{
+toggleterm.setup {
     -- on_open = on_open,
     -- open_mapping = [[<C-\>]],
     hide_numbers = true,
@@ -19,8 +19,8 @@ toggleterm.setup{
     close_on_exit = true,
     float_opts = {
         border = "single",
-        width = math.floor(vim.o.columns * 0.9),
-        height = math.floor(vim.o.lines * 0.9),
+        width = function() return math.floor(vim.o.columns * 0.9) end,
+        height = function() return math.floor(vim.o.lines * 0.9) end,
     },
 }
 
