@@ -201,6 +201,10 @@ if [ "${commands[yarn]}" ]; then
     prepend_to_path "${HOME}/.config/yarn/global/node_modules/.bin"
 fi
 
+if [ "${commands[forge]}" ] && [ ! -f "${fpath[1]}/_forge" ]; then
+    forge --completion > "${fpath[1]}/_forge"
+fi
+
 # fancy completion
 if [ -d "${HOME}/.local/share/zsh-autosuggestions" ]; then
     source "${HOME}/.local/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
