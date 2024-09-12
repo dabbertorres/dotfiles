@@ -234,11 +234,11 @@ if [[ ${IS_OSX} ]]; then
 
     # Since I want to use Homebrew Clang, I have to specify where the system root is, for finding system headers and libraries.
     # In order for Go to be able to compile C code, I need to set a few of its CGO_* env vars for it to work properly.
-    export CGO_CFLAGS="$(go env CGO_CFLAGS) -isysroot ${MAC_SDK_SYSROOT}"
-    export CGO_CPPFLAGS="$(go env CGO_CPPFLAGS) -isysroot ${MAC_SDK_SYSROOT}"
-    export CGO_CXXFLAGS="$(go env CGO_CXXFLAGS) -isysroot ${MAC_SDK_SYSROOT}"
-    export CGO_FFLAGS="$(go env CGO_FFLAGS) -isysroot ${MAC_SDK_SYSROOT}"
-    export CGO_LDFLAGS="$(go env CGO_LDFLAGS) -isysroot ${MAC_SDK_SYSROOT} -L${BREW_PREFIX}/opt/llvm/lib -Wl,-rpath,${BREW_PREFIX}/opt/llvm/lib"
+    export CGO_CFLAGS="-O2 -g -isysroot ${MAC_SDK_SYSROOT}"
+    export CGO_CPPFLAGS="-O2 -g -isysroot ${MAC_SDK_SYSROOT}"
+    export CGO_CXXFLAGS="-O2 -g -isysroot ${MAC_SDK_SYSROOT}"
+    export CGO_FFLAGS="-O2 -g -isysroot ${MAC_SDK_SYSROOT}"
+    export CGO_LDFLAGS="-O2 -g -isysroot ${MAC_SDK_SYSROOT} -L${BREW_PREFIX}/opt/llvm/lib -Wl,-rpath,${BREW_PREFIX}/opt/llvm/lib"
 elif [[ ${IS_WSL} ]]; then
     export DISPLAY=$(awk '/nameserver/ { print $2 }' < /etc/resolv.conf):0.0
 fi
