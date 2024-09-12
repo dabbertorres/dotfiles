@@ -60,7 +60,8 @@ Plug 'averms/black-nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'ThePrimeagen/refactoring.nvim'
 
 " autocompletion
-Plug 'hrsh7th/nvim-cmp'
+"Plug 'hrsh7th/nvim-cmp'
+Plug 'yioneko/nvim-cmp', { 'branch': 'perf' }
 Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-calc'
 Plug 'hrsh7th/cmp-cmdline'

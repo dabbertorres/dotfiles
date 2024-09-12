@@ -37,6 +37,10 @@ navbuddy.setup {
     },
 }
 
+-- Prefer treesitter over LSP for highlighting - this is temporary until I actually decide what I want.
+-- For some ideas, see: https://gist.github.com/swarn/fb37d9eefe1bc616c2a7e476c0bc0316
+vim.highlight.priorities.semantic_tokens = 95
+
 vim.keymap.set("n", "gsb", navbuddy.open, mappings_opts)
 
 local capabilities = cmp_lsp.default_capabilities()
