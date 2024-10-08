@@ -1,0 +1,18 @@
+root = true
+
+[*]
+end_of_line              = lf
+insert_final_bewline     = true
+indent_style             = space
+indent_size              = 4
+trim_trailing_whitespace = true
+spelling_language        = en-US
+
+[[shell]]
+binary_next_line   = true
+switch_case_indent = false
+simplify           = true
+posix              = true
+keep_padding       = false
+function_next_line = true
+space_redirects    = true
