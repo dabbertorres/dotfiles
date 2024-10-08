@@ -28,7 +28,8 @@ Plug 'nvim-neotest/nvim-nio'
 "Plug 'nvim-neorg/neorg'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-Plug 'rest-nvim/rest.nvim', { 'commit': '91badd46c60df6bd9800c809056af2d80d33da4c' }
+"Plug 'rest-nvim/rest.nvim', { 'commit': '91badd46c60df6bd9800c809056af2d80d33da4c' }
+Plug 'mistweaverco/kulala.nvim'
 
 " git
 Plug 'lewis6991/gitsigns.nvim'
@@ -83,7 +84,8 @@ Plug 'windwp/nvim-autopairs'
 Plug 'tpope/vim-repeat'
 Plug 'editorconfig/editorconfig-vim'
 Plug 'tpope/vim-abolish'
-Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
+"Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
+Plug 'wallpants/github-preview.nvim'
 Plug 'tpope/vim-eunuch'
 Plug 'sindrets/diffview.nvim'
 Plug 'tpope/vim-surround'
@@ -232,10 +234,12 @@ require("gitsigns_config")
 require("neotest_config")
 require("toggleterm_config")
 require("refactoring_config")
-require("rest_config")
+-- require("rest_config")
+require("kulala_config")
 require("dotenv").setup()
 require("dbee_config")
 require("flatten_config")
+require("github_preview_config")
 require("uuid")
 require("commands")
 require("keymaps")
