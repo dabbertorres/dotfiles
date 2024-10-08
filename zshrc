@@ -7,6 +7,26 @@ function prepend_to_path()
     fi
 }
 
+function file_mtime()
+{
+    stat -f %m -t %Y "$1"
+}
+
+function now()
+{
+    date -j +%s
+}
+
+function yesterday()
+{
+    date -j -v-24H +%s
+}
+
+function was_modified_since_yesterday()
+{
+    (($(file_mtime "$1") < $(yesterday)))
+}
+
 prepend_to_path "${HOME}/.local/bin"
 prepend_to_path "/usr/local/bin"
 prepend_to_path "/usr/local/sbin"
@@ -14,7 +34,7 @@ prepend_to_path "/usr/local/sbin"
 if [[ $(uname) == "Linux" ]]; then
     IS_LINUX=true
 
-    if [[ $(uname -a | grep "microsoft") ]]; then
+    if uname -a | grep -q "microsoft"; then
         IS_WSL=true
     fi
 elif [[ $(uname) == "Darwin" ]]; then
@@ -77,7 +97,9 @@ fi
 
 autoload -Uz compinit
 
-if [[ -n ${HOME}/.zcompdump(N.mh+24) ]]; then
+ZCOMPDUMP=$HOME/.zcompdump
+
+if [[ -f ${ZCOMPDUMP} ]] && was_modified_since_yesterday "${ZCOMPDUMP}"; then
     compinit
 else
     compinit -C
@@ -86,7 +108,7 @@ fi
 # autoload -U +X bashcompinit && bashcompinit
 
 if [ -d "${HOME}/.zsh/completion" ]; then
-    fpath=(${HOME}/.zsh/completion ${fpath[@]})
+    fpath=("${HOME}/.zsh/completion" "${fpath[@]}")
 fi
 
 if [ "${commands[dotnet]}" ]; then
@@ -104,8 +126,8 @@ if [ "${commands[gcloud]}" ]; then
     function list_compute_instances()
     {
         gcloud --project "${1:-cbclaims-dev2}" compute instances list \
-            --format='table(name, disks[0].licenses[0])'              \
-            --filter='name !~ ".*gke.*"'                              \
+            --format='table(name, disks[0].licenses[0])' \
+            --filter='name !~ ".*gke.*"' \
             | awk 'sub(".*/", "", $2) { printf "%s:\t%s\n", $1, $2 }'
     }
 fi
@@ -122,6 +144,7 @@ fi
 if [ "${commands[java]}" ]; then
     if [ ${IS_OSX} ]; then
         # export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-17.jdk/Contents/Home
+        true
     fi
 
     export _JAVA_AWT_WM_NONREPARENTING=1
@@ -180,9 +203,9 @@ if [ "${commands[poetry]}" ] && [ ! -f "${fpath[1]}/_poetry" ]; then
     poetry completions zsh > "${fpath[1]}/_poetry"
 fi
 
-if [ "${commands[terraform]}" ] && [ ! -f "${fpath[1]}/_terraform" ]; then
-    complete -o nospace -C "${commands[terraform]}" terraform
-fi
+# if [ "${commands[terraform]}" ] && [ ! -f "${fpath[1]}/_terraform" ]; then
+#     complete -o nospace -C "${commands[terraform]}" terraform
+# fi
 
 if [ "${commands[upterm]}" ] && [ ! -f "${fpath[1]}/_upterm" ]; then
     upterm completion zsh > "${fpath[1]}/_upterm"
@@ -282,7 +305,7 @@ function show-jobs()
 
 function show-dirs()
 {
-    local num_dirs=$(( $(dirs | sed -e 's/ /\n/g' | wc -l) - 1))
+    local num_dirs=$(($(dirs | sed -e 's/ /\n/g' | wc -l) - 1))
     if [[ ${num_dirs} -gt 0 ]]; then
         printf " %%F{magenta}[%d dir(s)]%%f" ${num_dirs}
     fi
@@ -297,7 +320,7 @@ function show-pyvenv()
 
 function precmd
 {
-    read job_sts < <(show-jobs)
+    read -r job_sts < <(show-jobs)
     job_sts="${job_sts:+ $job_sts}"
     PROMPT="%U%n@%m%u$(show-pwd)$(show-git-status)$(show-pyvenv)${job_sts}$(show-dirs)
 > "
@@ -346,7 +369,7 @@ function view_path()
 }
 
 ## kitty specific stuff
-if [[ "${TERM}" == 'xterm-kitty' ]]; then
+if [[ ${TERM} == 'xterm-kitty' ]]; then
     alias icat='kitty +kitten icat'
 
     kitty + complete setup zsh | source /dev/stdin
