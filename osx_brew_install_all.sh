@@ -5,7 +5,7 @@
 #
 # Probably needs some cleanup.
 
-${SHELL} -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#${SHELL} -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 brew install \
     ali \
@@ -57,7 +57,6 @@ brew install \
     krew \
     ktlint \
     kubebuilder \
-    kubefwd \
     kustomize \
     libass \
     libassuan \
@@ -113,7 +112,7 @@ brew install \
     sdl2_ttf \
     shellcheck \
     shfmt \
-    skhd \
+    koekeishiya/formulae/skhd \
     socat \
     sshpass \
     terraform \
@@ -124,12 +123,11 @@ brew install \
     tree \
     trivy \
     unbound \
-    visidata \
     watch \
     wget \
     wrk \
     xz \
-    yabai \
+    koekeishiya/formulae/yabai \
     yamllint \
     yq \
     zsh \
