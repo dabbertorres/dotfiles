@@ -287,6 +287,21 @@ lsp.bashls.setup {
         "sh",
         "zsh",
     },
+    settings = {
+        bashIde = {
+            globPattern = "**/*@(.sh|.inc|.bash|.command|.zsh|zshrc|bashrc)",
+            shellcheckPath = home .. "/.local/share/nvim/mason/bin/shellcheck",
+            shfmt = {
+                path = home .. "/.local/share/nvim/mason/bin/shfmt",
+                ignoreEditorConfig = false,
+                binaryNextLine = true,
+                caseIndent = false,
+                funcNextLine = true,
+                simplifyCode = true,
+                spaceRedirects = true,
+            },
+        },
+    },
 }
 
 lsp.clangd.setup {
@@ -766,7 +781,7 @@ lsp.basedpyright.setup {
 -- official Ruby LSP
 -- lsp.typeprof.setup {}
 
-lsp.tsserver.setup {
+lsp.ts_ls.setup {
     capabilities = capabilities,
 }
 
