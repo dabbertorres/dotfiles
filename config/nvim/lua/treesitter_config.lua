@@ -3,6 +3,7 @@
 local treesitter = require("nvim-treesitter")
 local configs = require("nvim-treesitter.configs")
 
+---@diagnostic disable-next-line: missing-fields
 configs.setup {
     -- ensure_installed = "all",
     sync_install = false,
@@ -70,7 +71,7 @@ configs.setup {
         },
     },
     playground = {
-        enable = false,
+        enable = true,
         disable = {},
         updatime = 25,
         persist_queries = false,

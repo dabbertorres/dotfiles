@@ -1,14 +1,12 @@
 --local profile_start_time = vim.loop.hrtime()
 
-require("mason").setup {
-}
+require("mason").setup {}
 
 require("mason-lspconfig").setup {
     automatic_installation = true,
 }
 
 local lsp = require("lspconfig")
-local log = require("vim.lsp.log")
 local notifications = require("notifications")
 
 local cmp_lsp = require("cmp_nvim_lsp")
@@ -22,7 +20,7 @@ local util = require("my_util")
 local schemastore = require("schemastore")
 
 vim.o.updatetime = 250
-vim.lsp.set_log_level(log.levels.ERROR)
+vim.lsp.set_log_level(vim.lsp.log_levels.ERROR)
 
 local home = os.getenv("HOME")
 
@@ -37,27 +35,55 @@ navbuddy.setup {
     },
 }
 
+local _keymap_mt = {
+    __call = function(km, f, buffer)
+        local mode = km.mode or "n"
+        local opts = mappings_opts
+        if buffer ~= nil then
+            opts = util.copy_with(opts, { buffer = buffer })
+        end
+
+        vim.keymap.set(mode, km.keys, f, opts)
+    end,
+}
+
+local keymaps = {
+    navbuddy            = { keys = "gsb" },
+    preview_defintion   = { keys = "<leader>pd" },
+    goto_defintion      = { keys = "gd" },
+    goto_declaration    = { keys = "gD" },
+    goto_implementation = { keys = "gi" },
+    signature_help      = { keys = "<leader>k" },
+    goto_usages         = { keys = "gu" },
+    rename              = { keys = "<leader>rn" },
+    format              = { keys = "<leader>fa" },
+    codelens            = { keys = "<leader>cl" },
+    codeaction          = { keys = "<leader>ca" },
+    prev_diag           = { keys = "<c-k>" },
+    next_diag           = { keys = "<c-j>" },
+}
+
+for _, km in pairs(keymaps) do
+    setmetatable(km, _keymap_mt)
+end
+
 -- Prefer treesitter over LSP for highlighting - this is temporary until I actually decide what I want.
 -- For some ideas, see: https://gist.github.com/swarn/fb37d9eefe1bc616c2a7e476c0bc0316
 vim.highlight.priorities.semantic_tokens = 95
 
-vim.keymap.set("n", "gsb", navbuddy.open, mappings_opts)
+keymaps.navbuddy(navbuddy.open)
 
-local capabilities = cmp_lsp.default_capabilities()
-capabilities.textDocument.completion.completionItem.snippetSupport = true
-if not capabilities.workspace then
-    capabilities.workspace = {
-        didChangeWatchedFiles = {
-            dynamicRegistration = true,
+local capabilities = vim.tbl_deep_extend(
+    "force",
+    cmp_lsp.default_capabilities(),
+    {
+        workspace = {
+            didChangeWatchedFiles = {
+                dynamicRegistration = true,
+            },
         },
     }
-elseif not capabilities.workspace.didChangeWatchedFiles then
-    capabilities.workspace.didChangeWatchedFiles = {
-        dynamicRegistration = true,
-    }
-else
-    capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
-end
+)
 
 lightbulb.setup {
     sign = {
@@ -88,6 +114,15 @@ local function create_buf_augroup(name, bufnr, cmds)
     return au
 end
 
+local function set_lsp_format_autocmd(bufnr, do_format)
+    create_buf_augroup("lsp_document_format", bufnr, {
+        {
+            events = { "BufWritePre" },
+            opts = { callback = do_format },
+        },
+    })
+end
+
 local lsp_autocmds_au = vim.api.nvim_create_augroup("lsp_user_config", {})
 
 vim.api.nvim_create_autocmd("LspAttach", {
@@ -96,63 +131,62 @@ vim.api.nvim_create_autocmd("LspAttach", {
         local telescope = require("telescope.builtin")
 
         local client = vim.lsp.get_client_by_id(args.data.client_id)
-        if client == nil then return end
-
-        local map_opts = util.copy_with(mappings_opts, { buffer = args.buf })
+        -- if client == nil then return end
+        assert(client ~= nil)
 
         vim.bo[args.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
 
-        if client.supports_method("textDocument_definition") and client.server_capabilities.definitionProvider ~= nil then
-            vim.keymap.set("n", "<leader>pd", function()
+        if client.supports_method("textDocument_definition") and client.server_capabilities.definitionProvider then
+            keymaps.preview_defintion(function()
                 local params = vim.lsp.util.make_position_params()
                 return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
                     if result == nil or vim.tbl_isempty(result) then return nil end
                     vim.lsp.util.preview_location(result[1], {})
                 end)
-            end, map_opts)
+            end, args.buf)
 
-            vim.keymap.set("n", "gd", function()
+            keymaps.goto_defintion(function()
                 telescope.lsp_definitions {
                     jump_type = nil,
                     fname_width = 120,
                     ignore_filename = false,
                     trim_text = false,
                 }
-            end, map_opts)
+            end, args.buf)
         end
 
-        if client.supports_method("textDocument_declaration") and client.server_capabilities.declarationProvider ~= nil then
-            vim.keymap.set("n", "gD", vim.lsp.buf.declaration, map_opts)
+        if client.supports_method("textDocument_declaration") and client.server_capabilities.declarationProvider then
+            keymaps.goto_declaration(vim.lsp.buf.declaration, args.buf)
         end
 
-        if client.supports_method("textDocument_implementation") and client.server_capabilities.implementationProvider ~= nil then
-            vim.keymap.set("n", "gi", function()
+        if client.supports_method("textDocument_implementation") and client.server_capabilities.implementationProvider then
+            keymaps.goto_implementation(function()
                 telescope.lsp_implementations {
                     jump_type = nil,
                     fname_width = 120,
                     ignore_filename = false,
                     trim_text = false,
                 }
-            end, map_opts)
+            end, args.buf)
         end
 
-        if client.supports_method("textDocument_signatureHelp") and client.server_capabilities.signatureHelpProvider ~= nil then
-            vim.keymap.set("n", "<leader>k", vim.lsp.buf.signature_help, map_opts)
+        if client.supports_method("textDocument_signatureHelp") and client.server_capabilities.signatureHelpProvider then
+            keymaps.signature_help(vim.lsp.buf.signature_help, args.buf)
         end
 
-        if client.supports_method("textDocument_references") and client.server_capabilities.referencesProvider ~= nil then
-            vim.keymap.set("n", "gu", function()
-                telescope.lsp_references({
+        if client.supports_method("textDocument_references") and client.server_capabilities.referencesProvider then
+            keymaps.goto_usages(function()
+                telescope.lsp_references {
                     fname_width = 120,
                     include_declaration = true,
                     include_current_line = true,
                     trim_text = false,
-                })
-            end, map_opts)
+                }
+            end, args.buf)
         end
 
-        if client.supports_method("textDocument_rename") and client.server_capabilities.renameProvider ~= nil then
-            vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, map_opts)
+        if client.supports_method("textDocument_rename") and client.server_capabilities.renameProvider then
+            keymaps.rename(vim.lsp.buf.rename, args.buf)
         end
 
         -- if client.supports_method("textDocument_diagnostic") then
@@ -170,11 +204,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
             },
         })
 
-        vim.keymap.set("n", "<c-k>", vim.diagnostic.goto_prev, map_opts)
-        vim.keymap.set("n", "<c-j>", vim.diagnostic.goto_next, map_opts)
+        keymaps.prev_diag(vim.diagnostic.goto_prev, args.buf)
+        keymaps.next_diag(vim.diagnostic.goto_next, args.buf)
         -- end
 
-        if client.supports_method("textDocument_codeAction") and client.server_capabilities.codeActionProvider ~= nil then
+        if client.supports_method("textDocument_codeAction") and client.server_capabilities.codeActionProvider then
             create_buf_augroup("lsp_code_actions", args.buf, {
                 {
                     events = { "BufEnter", "CursorHold", "InsertLeave" },
@@ -182,10 +216,12 @@ vim.api.nvim_create_autocmd("LspAttach", {
                 },
             })
 
-            vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, map_opts)
+            keymaps.codeaction(vim.lsp.buf.code_action, args.buf)
         end
 
-        if client.supports_method("textDocument_codeLens") and client.server_capabilities.codeLensProvider ~= nil then
+        if client.supports_method("textDocument_codeLens")
+            and client.server_capabilities.codeLensProvider ~= nil
+            and client.server_capabilities.codeLensProvider.resolveProvider then
             create_buf_augroup("lsp_codelens", args.buf, {
                 {
                     events = { "BufEnter", "CursorHold", "InsertLeave" },
@@ -197,69 +233,31 @@ vim.api.nvim_create_autocmd("LspAttach", {
                 },
             })
 
-            vim.keymap.set("n", "<leader>cl", vim.lsp.codelens.run, map_opts)
+            keymaps.codelens(vim.lsp.codelens.run, args.buf)
         end
 
-        if client.supports_method("textDocument_formatting") and client.server_capabilities.documentFormattingProvider ~= nil then
-            local do_format = nil
-            if client.name == "gopls" then
-                do_format = function(async)
-                    return function()
-                        local params = vim.lsp.util.make_range_params()
-                        params.context = { only = { "source.organizeImports" } }
-
-                        local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params)
-                        for cid, res in pairs(result or {}) do
-                            for _, r in pairs(res.result or {}) do
-                                if r.edit then
-                                    local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
-                                    vim.lsp.util.apply_workspace_edit(r.edit, enc)
-                                end
-                            end
-                        end
-
-                        vim.lsp.buf.format {
-                            formatting_options = {
-                                tabSize                = vim.bo.tabstop,
-                                insertSpaces           = true,
-                                trimTrailingWhitespace = true,
-                                insertFinalNewline     = true,
-                                trimFinalNewlines      = true,
-                            },
-                            bufnr = args.buf,
-                            async = async,
-                        }
-                    end
-                end
-            else
-                do_format = function(async)
-                    return function()
-                        vim.lsp.buf.format {
-                            formatting_options = {
-                                tabSize                = vim.bo.tabstop,
-                                insertSpaces           = true,
-                                trimTrailingWhitespace = true,
-                                insertFinalNewline     = true,
-                                trimFinalNewlines      = true,
-                            },
-                            bufnr = args.buf,
-                            async = async,
-                        }
-                    end
+        if client.supports_method("textDocument_formatting") and client.server_capabilities.documentFormattingProvider then
+            local do_format = function(async)
+                return function()
+                    vim.lsp.buf.format {
+                        formatting_options = {
+                            tabSize                = vim.bo.tabstop,
+                            insertSpaces           = true,
+                            trimTrailingWhitespace = true,
+                            insertFinalNewline     = true,
+                            trimFinalNewlines      = true,
+                        },
+                        bufnr = args.buf,
+                        async = async,
+                    }
                 end
             end
 
-            create_buf_augroup("lsp_document_format", args.buf, {
-                {
-                    events = { "BufWritePre" },
-                    opts = { callback = do_format(false) },
-                },
-            })
-
-            vim.keymap.set("n", "<leader>fa", do_format(true), map_opts)
+            set_lsp_format_autocmd(args.buf, do_format(false))
+            keymaps.format(do_format(true), args.buf)
         end
 
-        if client.supports_method("textDocument_documentHighlight") and client.server_capabilities.documentHighlightProvider ~= nil then
+        if client.supports_method("textDocument_documentHighlight") and client.server_capabilities.documentHighlightProvider then
             create_buf_augroup("lsp_document_highlight", args.buf, {
                 {
                     events = { "CursorHold", "CursorHoldI" },
@@ -277,6 +275,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
                 hi! LspReferenceWrite guibg=#5b5e5b
             ]]
         end
+
+        -- Semantic tokens can be slow! Disable them.
+        client.server_capabilities.semanticTokensProvider = nil
     end,
 })
 
@@ -365,6 +366,54 @@ lsp.dockerls.setup {
 }
 
 lsp.dotls.setup {
+    capabilities = capabilities,
+}
+
+lsp.efm.setup {
+    capabilities = capabilities,
+    init_options = {
+        documentFormatting = true,
+        documentRangeFormatting = true,
+    },
+    settings = {
+        rootMarkers = {
+            ".git/",
+        },
+        languages = {
+            typescript = {
+                {
+                    -- https://github.com/creativenull/efmls-configs-nvim/blob/e44e39c962dc1629a341fc71cfc8feaa09cefa6f/lua/efmls-configs/formatters/prettier_d.lua
+                    formatCanRange = true,
+                    formatCommand = table.concat({
+                        "prettierd",
+                        "'${INPUT}'",
+                        "${--range-start=charStart}",
+                        "${--range-end=charEnd}",
+                        "${--tab-width=tabWidth}",
+                        "${--use-tabs=!insertSpaces}",
+                    }, " "),
+                    formatStdin = true,
+                    rootMarkers = {
+                        ".prettierrc",
+                        ".prettierrc.cjs",
+                        ".prettierrc.js",
+                        ".prettierrc.json",
+                        ".prettierrc.json5",
+                        ".prettierrc.mjs",
+                        ".prettierrc.toml",
+                        ".prettierrc.yml",
+                        ".prettierrc.yaml",
+                        "prettier.config.js",
+                        "prettier.config.cjs",
+                        "prettier.config.mjs",
+                    },
+                },
+            },
+        },
+    },
+}
+
+lsp.eslint.setup {
     capabilities = capabilities,
 }
 
@@ -505,6 +554,39 @@ lsp.gopls.setup {
             "-remote.logfile=auto",
             "-v",
         })
+    end,
+    on_attach = function(client, bufnr)
+        local do_format = function(async)
+            return function()
+                local params = vim.lsp.util.make_range_params()
+                params.context = { only = { "source.organizeImports" } }
+
+                local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params)
+                for cid, res in pairs(result or {}) do
+                    for _, r in pairs(res.result or {}) do
+                        if r.edit then
+                            local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
+                            vim.lsp.util.apply_workspace_edit(r.edit, enc)
+                        end
+                    end
+                end
+
+                vim.lsp.buf.format {
+                    formatting_options = {
+                        tabSize                = vim.bo.tabstop,
+                        insertSpaces           = true,
+                        trimTrailingWhitespace = true,
+                        insertFinalNewline     = true,
+                        trimFinalNewlines      = true,
+                    },
+                    bufnr = bufnr,
+                    async = async,
+                }
+            end
+        end
+
+        set_lsp_format_autocmd(bufnr, do_format(false))
+        keymaps.format(do_format(true), bufnr)
     end,
 }
 
@@ -701,25 +783,32 @@ lsp.marksman.setup {
     capabilities = capabilities,
 }
 
-local pid = vim.fn.getpid()
 lsp.omnisharp.setup {
     capabilities = capabilities,
-    root_dir = lsp.util.root_pattern("*.csproj"),
     flags = {
         allow_incremental_sync = true,
     },
-    filetypes = { "cs", "vb" },
-    init_options = {},
+    settings = {
+        FormattingOptions = {
+            EnableEditorConfigSupport = true,
+            OrganizeImports = true,
+        },
+        MsBuild = {
+            LoadProjectsOnDemand = false,
+        },
+        RoslynExtensionsOptions = {
+            EnableAnalyzersSupport = true,
+            EnableImportCompletion = true,
+            AnalyzeOpenDocumentsOnly = true,
+        },
+    },
     on_init = function(client)
         if client.config.settings then
             client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
         end
     end,
     on_new_config = function(new_config, new_root_dir)
-        vim.list_extend(new_config.cmd, {
-            "--languageserver",
-            "--hostPID", tostring(pid),
-        })
+        require("lspconfig.server_configurations.omnisharp").default_config.on_new_config(new_config, new_root_dir)
 
         if new_root_dir then
             vim.list_extend(new_config.cmd, {
@@ -925,7 +1014,7 @@ lint.linters.trivy = {
         if not body or body.results == vim.NIL then return {} end
 
         if body.SchemaVersion ~= 2 then
-            vim.notify("Got Version: " .. tostring(body.SchemaVersion), log.levels.WARN, {
+            vim.notify("Got Version: " .. tostring(body.SchemaVersion), vim.lsp.log_levels.WARN, {
                 title = "Unexpected Trivy Schema Version",
                 icon = "󰀪",
             })
@@ -1196,13 +1285,13 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
 
 -- local client = vim.lsp.get_client_by_id(ctx.client_id)
 -- if err then
---     vim.notify("Error: " .. err.message, vim.log.levels.ERROR, {
+--     vim.notify("Error: " .. err.message, vim.lsp.log_levels.ERROR, {
 --         title = notifications.format_title(result.command.title, client.name),
 --         icon = "󰅚 ",
 --         timeout = 5000,
 --     })
 -- else
---     vim.notify("Completed", vim.log.levels.INFO, {
+--     vim.notify("Completed", vim.lsp.log_levels.INFO, {
 --         title = notifications.format_title(result.command.title, client.name),
 --         icon = "",
 --         timeout = 5000,
@@ -1215,7 +1304,8 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
     if not result.value.kind then return end
 
     local client = vim.lsp.get_client_by_id(ctx.client_id)
-    if client == nil then return end
+    assert(client ~= nil)
+    -- if client == nil then return end
 
     -- ignore lua_ls spamming notifications
     -- if client.name == "lua_ls" then return end
@@ -1237,15 +1327,15 @@ end
 
 local function lsp_message_type_to_icon_and_neovim(message_type)
     if message_type == vim.lsp.protocol.MessageType.Error then
-        return log.levels.ERROR, "󰅚"
+        return vim.lsp.log_levels.ERROR, "󰅚"
     elseif message_type == vim.lsp.protocol.MessageType.Warning then
-        return log.levels.WARN, "󰀪"
+        return vim.lsp.log_levels.WARN, "󰀪"
     elseif message_type == vim.lsp.protocol.MessageType.Info then
-        return log.levels.INFO, ""
+        return vim.lsp.log_levels.INFO, ""
     elseif message_type == vim.lsp.protocol.MessageType.Log then
-        return log.levels.TRACE, "󰌶"
+        return vim.lsp.log_levels.TRACE, "󰌶"
     else
-        return log.levels.DEBUG, "?"
+        return vim.lsp.log_levels.DEBUG, "?"
     end
 end
 

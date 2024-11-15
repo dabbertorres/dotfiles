@@ -56,6 +56,7 @@ Plug 'nvim-treesitter/playground'
 Plug 'mfussenegger/nvim-jdtls'
 " Plug 'nanotee/sqls.nvim'
 Plug 'kndndrj/nvim-dbee', { 'do': ':lua require(\"dbee\").install()' }
+Plug 'MattiasMTS/cmp-dbee'
 Plug 'mfussenegger/nvim-lint'
 Plug 'averms/black-nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'ThePrimeagen/refactoring.nvim'

@@ -54,6 +54,7 @@ cmp.setup {
             { name = "nvim_lsp_signature_help" },
             { name = "luasnip" },
             { name = "nvim_lua" },
+            { name = "cmp-dbee" },
             {
                 name = "path",
                 option = {
