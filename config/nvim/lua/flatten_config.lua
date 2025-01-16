@@ -12,7 +12,10 @@ flatten.setup {
     window = {
         open = "alternate",
     },
-    callbacks = {
+    integrations = {
+        kitty = true,
+    },
+    hooks = {
         pre_open = function()
             -- if we have a terminal open, save it so we can close it
             -- when opening a file
@@ -21,22 +24,22 @@ flatten.setup {
             local termid = term.get_focused_id()
             saved_terminal = term.get(termid)
         end,
-        post_open = function(bufnr, winnr, ft, is_blocking)
-            if is_blocking and saved_terminal then
+        post_open = function(opts)
+            if opts.is_blocking and saved_terminal then
                 -- hide terminal while blocking
                 saved_terminal:close()
             else
                 -- norma file? switch to the window
-                vim.api.nvim_set_current_win(winnr)
+                vim.api.nvim_set_current_win(opts.winnr)
             end
 
             -- automatically delete a git buffer after writing
-            if ft == "gitcommit" or ft == "gitrebase" then
+            if opts.filetype == "gitcommit" or opts.filetype == "gitrebase" then
                 vim.api.nvim_create_autocmd("BufWritePost", {
-                    buffer = bufnr,
+                    buffer = opts.bufnr,
                     once = true,
                     callback = vim.schedule_wrap(function()
-                        vim.api.nvim_buf_delete(bufnr, {})
+                        vim.api.nvim_buf_delete(opts.bufnr, {})
                     end),
                 })
             end
