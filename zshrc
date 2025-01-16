@@ -75,6 +75,7 @@ if [ ${IS_LINUX} ]; then
     prepend_to_path "/usr/local/go/bin:${PATH}"
 elif [ ${IS_OSX} ]; then
     # export HOMEBREW_NO_AUTO_UPDATE=1
+    export HOMEBREW_NO_INSTALL_CLEANUP=1
 
     if [ -n "${BREW_PREFIX}" ]; then
         prepend_to_path "${BREW_PREFIX}/opt/llvm/bin"
@@ -109,6 +110,10 @@ fi
 
 if [ -d "${HOME}/.zsh/completion" ]; then
     fpath=("${HOME}/.zsh/completion" "${fpath[@]}")
+fi
+
+if [ -d "${HOME}/vcpkg" ]; then
+    export VCPKG_ROOT="${HOME}/vcpkg"
 fi
 
 if [ "${commands[dotnet]}" ]; then
