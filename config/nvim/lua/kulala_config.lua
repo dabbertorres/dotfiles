@@ -17,10 +17,11 @@ util.make_augroup("http_files", true,
         return { "BufFilePre", "BufNewFile", "BufReadPost" }, {
             pattern = "*.http",
             callback = function(args)
-                vim.api.nvim_buf_set_keymap(args.buf, "n", "<CR>", kulala.run, {
+                vim.keymap.set("n", "mrh", kulala.run, {
                     noremap = true,
                     silent = true,
                     desc = "Execute the request",
+                    buffer = args.buf,
                 })
             end,
         }
