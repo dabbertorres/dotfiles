@@ -281,6 +281,154 @@ vim.api.nvim_create_autocmd("LspAttach", {
     end,
 })
 
+local on_publish_diagnostics = vim.lsp.handlers["textDocument/publishDiagnostics"]
+vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
+    on_publish_diagnostics,
+    {
+        underline = true,
+        signs = true,
+        virtual_text = false,
+        severity_sort = true,
+    }
+)
+
+vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+    vim.lsp.handlers.hover,
+    {
+        border = "single",
+        focusable = true,
+    }
+)
+
+vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
+    vim.lsp.handlers.signature_help,
+    {
+        border = "single",
+        focusable = false,
+    }
+)
+
+-- local builtin_on_codelens = vim.lsp.codelens.on_codelens
+-- vim.lsp.codelens.on_codelens = function(err, result, ctx, config)
+--     builtin_on_codelens(err, result, ctx, config)
+
+-- local client = vim.lsp.get_client_by_id(ctx.client_id)
+-- if err then
+--     vim.notify("Error: " .. err.message, vim.lsp.log_levels.ERROR, {
+--         title = notifications.format_title(result.command.title, client.name),
+--         icon = "󰅚 ",
+--         timeout = 5000,
+--     })
+-- else
+--     vim.notify("Completed", vim.lsp.log_levels.INFO, {
+--         title = notifications.format_title(result.command.title, client.name),
+--         icon = "",
+--         timeout = 5000,
+--     })
+-- end
+-- end
+
+---@diagnostic disable-next-line: duplicate-set-field
+vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
+    if not result.value.kind then return end
+
+    local client = vim.lsp.get_client_by_id(ctx.client_id)
+    assert(client ~= nil)
+    -- if client == nil then return end
+
+    -- ignore lua_ls spamming notifications
+    -- if client.name == "lua_ls" then return end
+
+    local msg = notifications.format_message(result.value.message, result.value.percentage) or "Complete"
+
+    if result.value.kind == "begin" then
+        notifications.init_spinner(ctx.client_id, result.token, msg, {
+            title = notifications.format_title(result.value.title, client.name),
+        })
+    elseif result.value.kind == "report" then
+        notifications.update_spinner(ctx.client_id, result.token, msg, {})
+    elseif result.value.kind == "end" then
+        notifications.stop_spinner(ctx.client_id, result.token, msg, {
+            title = notifications.format_title(result.value.title, client.name),
+        })
+    end
+end
+
+local function lsp_message_type_to_icon_and_neovim(message_type)
+    if message_type == vim.lsp.protocol.MessageType.Error then
+        return vim.lsp.log_levels.ERROR, "󰅚"
+    elseif message_type == vim.lsp.protocol.MessageType.Warning then
+        return vim.lsp.log_levels.WARN, "󰀪"
+    elseif message_type == vim.lsp.protocol.MessageType.Info then
+        return vim.lsp.log_levels.INFO, ""
+    elseif message_type == vim.lsp.protocol.MessageType.Log then
+        return vim.lsp.log_levels.TRACE, "󰌶"
+    else
+        return vim.lsp.log_levels.DEBUG, "?"
+    end
+end
+
+---@diagnostic disable-next-line: duplicate-set-field
+vim.lsp.handlers["window/showMessage"] = function(_, result, ctx, _)
+    if not result then return end
+
+    local level, icon = lsp_message_type_to_icon_and_neovim(result.type)
+
+    if not vim.lsp.log.should_log(level) then return end
+
+    local client = vim.lsp.get_client_by_id(ctx.client_id)
+    local client_name = ""
+    if client ~= nil then
+        client_name = client.name
+    else
+        client_name = "Client " .. tostring(ctx.client_id)
+    end
+
+    vim.notify(result.message, level, {
+        title = client_name,
+        icon = icon,
+    })
+end
+
+vim.fn.sign_define("DiagnosticSignError", { text = "󰅚 ", texthl = "GruvboxRed" })
+vim.fn.sign_define("DiagnosticSignWarn", { text = "󰀪 ", texthl = "GruvboxYellow" })
+vim.fn.sign_define("DiagnosticSignInfo", { text = " ", texthl = "GruvboxBlue" })
+vim.fn.sign_define("DiagnosticSignHint", { text = "󰌶", texthl = "GruvboxAqua" })
+
+vim.diagnostic.config {
+    underline = true,
+    virtual_text = false,
+    signs = true,
+    float = {
+        border = "single",
+        header = "",
+        scope = "line",
+        focusable = false,
+        focus = false,
+        source = "if_many",
+        zindex = 1,
+        prefix = function(diagnostic, _, _)
+            if diagnostic == vim.diagnostic.severity.ERROR then
+                return "󰅚 ", ""
+            elseif diagnostic == vim.diagnostic.severity.WARN then
+                return "󰀪 ", ""
+            elseif diagnostic == vim.diagnostic.severity.INFO then
+                return " ", ""
+            elseif diagnostic == vim.diagnostic.severity.HINT then
+                return "󰌶", ""
+            else
+                return "", ""
+            end
+        end,
+    },
+    update_in_insert = false,
+    severity_sort = true,
+}
+
+--
+-- Server Configs
+--
+
 lsp.bashls.setup {
     capabilities = capabilities,
     filetypes = {
@@ -413,8 +561,34 @@ lsp.efm.setup {
     },
 }
 
+local default_on_diagnostic = vim.lsp.handlers["textDocument/diagnostic"]
+if default_on_diagnostic == nil then
+    default_on_diagnostic = vim.lsp.diagnostic.on_diagnostic
+end
+
+local default_on_publish_diagnostics = vim.lsp.handlers["textDocument/publishDiagnostics"]
+if default_on_publish_diagnostics == nil then
+    default_on_publish_diagnostics = vim.lsp.diagnostic.on_publish_diagnostics
+end
+
 lsp.eslint.setup {
     capabilities = capabilities,
+    handlers = {
+        ["textDocument/diagnostic"] = function(err, result, ctx, config)
+            -- don't underline the whole function - just the first line
+            for _, d in ipairs(result.items) do
+                if d.code == "func-style" then
+                    d.range.start.character = 0
+                    d.range["end"] = {
+                        line = d.range.start.line,
+                        character = vim.fn.charcol({ d.range.start.line + 1, "$" }) - 1,
+                    }
+                end
+            end
+
+            default_on_diagnostic(err, result, ctx, config)
+        end,
+    },
 }
 
 lsp.gopls.setup {
@@ -468,7 +642,6 @@ lsp.gopls.setup {
                 directive = true,
                 embed = true,
                 errorsas = true,
-                fieldalignment = true,
                 fillreturns = true,
                 framepointer = true,
                 httpresponse = true,
@@ -645,6 +818,7 @@ lsp.html.setup {
             },
         },
     },
+    filetypes = { "html", "templ" },
 }
 
 lsp.jsonls.setup {
@@ -835,9 +1009,9 @@ lsp.basedpyright.setup {
     },
 }
 
--- lsp.rust_analyzer.setup {
---     capabilities = capabilities,
--- }
+lsp.rust_analyzer.setup {
+    capabilities = capabilities,
+}
 
 -- lsp.sorbet.setup {
 --     capabilities = capabilities,
@@ -870,13 +1044,16 @@ lsp.basedpyright.setup {
 -- official Ruby LSP
 -- lsp.typeprof.setup {}
 
-lsp.ts_ls.setup {
+lsp.templ.setup {
     capabilities = capabilities,
 }
 
+-- TODO: move somewhere else that makes more sense
+vim.filetype.add({ extension = { templ = "templ" } })
+
 lsp.terraformls.setup {
     capabilities = capabilities,
-    settings = {
+    init_options = {
         terraform = {
             timeout = "5s",
         },
@@ -887,7 +1064,7 @@ lsp.terraformls.setup {
             },
         },
         experimentalFeatures = {
-            validateOnSave = false,
+            validateOnSave = true,
             prefillRequiredFields = true,
         },
     },
@@ -900,6 +1077,10 @@ lsp.tflint.setup {
             "--langserver",
         })
     end,
+}
+
+lsp.ts_ls.setup {
+    capabilities = capabilities,
 }
 
 lsp.vimls.setup {
@@ -1217,149 +1398,6 @@ vim.api.nvim_create_autocmd("FileType", {
 --     pattern = "java",
 --     callback = jdtls.setup,
 -- })
-
-vim.fn.sign_define("DiagnosticSignError", { text = "󰅚 ", texthl = "GruvboxRed" })
-vim.fn.sign_define("DiagnosticSignWarn", { text = "󰀪 ", texthl = "GruvboxYellow" })
-vim.fn.sign_define("DiagnosticSignInfo", { text = " ", texthl = "GruvboxBlue" })
-vim.fn.sign_define("DiagnosticSignHint", { text = "󰌶", texthl = "GruvboxAqua" })
-
-vim.diagnostic.config {
-    underline = true,
-    virtual_text = false,
-    signs = true,
-    float = {
-        border = "single",
-        header = "",
-        scope = "line",
-        focusable = false,
-        focus = false,
-        source = "if_many",
-        zindex = 1,
-        prefix = function(diagnostic, _, _)
-            if diagnostic == vim.diagnostic.severity.ERROR then
-                return "󰅚 ", ""
-            elseif diagnostic == vim.diagnostic.severity.WARN then
-                return "󰀪 ", ""
-            elseif diagnostic == vim.diagnostic.severity.INFO then
-                return " ", ""
-            elseif diagnostic == vim.diagnostic.severity.HINT then
-                return "󰌶", ""
-            else
-                return "", ""
-            end
-        end,
-    },
-    update_in_insert = false,
-    severity_sort = true,
-}
-
-vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
-    vim.lsp.diagnostic.on_publish_diagnostics,
-    {
-        underline = true,
-        signs = true,
-        virtual_text = false,
-        severity_sort = true,
-    }
-)
-
-vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-    vim.lsp.handlers.hover,
-    {
-        border = "single",
-        focusable = true,
-    }
-)
-
-vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-    vim.lsp.handlers.signature_help,
-    {
-        border = "single",
-        focusable = false,
-    }
-)
-
--- local builtin_on_codelens = vim.lsp.codelens.on_codelens
--- vim.lsp.codelens.on_codelens = function(err, result, ctx, config)
---     builtin_on_codelens(err, result, ctx, config)
-
--- local client = vim.lsp.get_client_by_id(ctx.client_id)
--- if err then
---     vim.notify("Error: " .. err.message, vim.lsp.log_levels.ERROR, {
---         title = notifications.format_title(result.command.title, client.name),
---         icon = "󰅚 ",
---         timeout = 5000,
---     })
--- else
---     vim.notify("Completed", vim.lsp.log_levels.INFO, {
---         title = notifications.format_title(result.command.title, client.name),
---         icon = "",
---         timeout = 5000,
---     })
--- end
--- end
-
----@diagnostic disable-next-line: duplicate-set-field
-vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
-    if not result.value.kind then return end
-
-    local client = vim.lsp.get_client_by_id(ctx.client_id)
-    assert(client ~= nil)
-    -- if client == nil then return end
-
-    -- ignore lua_ls spamming notifications
-    -- if client.name == "lua_ls" then return end
-
-    local msg = notifications.format_message(result.value.message, result.value.percentage) or "Complete"
-
-    if result.value.kind == "begin" then
-        notifications.init_spinner(ctx.client_id, result.token, msg, {
-            title = notifications.format_title(result.value.title, client.name),
-        })
-    elseif result.value.kind == "report" then
-        notifications.update_spinner(ctx.client_id, result.token, msg, {})
-    elseif result.value.kind == "end" then
-        notifications.stop_spinner(ctx.client_id, result.token, msg, {
-            title = notifications.format_title(result.value.title, client.name),
-        })
-    end
-end
-
-local function lsp_message_type_to_icon_and_neovim(message_type)
-    if message_type == vim.lsp.protocol.MessageType.Error then
-        return vim.lsp.log_levels.ERROR, "󰅚"
-    elseif message_type == vim.lsp.protocol.MessageType.Warning then
-        return vim.lsp.log_levels.WARN, "󰀪"
-    elseif message_type == vim.lsp.protocol.MessageType.Info then
-        return vim.lsp.log_levels.INFO, ""
-    elseif message_type == vim.lsp.protocol.MessageType.Log then
-        return vim.lsp.log_levels.TRACE, "󰌶"
-    else
-        return vim.lsp.log_levels.DEBUG, "?"
-    end
-end
-
----@diagnostic disable-next-line: duplicate-set-field
-vim.lsp.handlers["window/showMessage"] = function(_, result, ctx, _)
-    if not result then return end
-
-    local level, icon = lsp_message_type_to_icon_and_neovim(result.type)
-
-    if not log.should_log(level) then return end
-
-    local client = vim.lsp.get_client_by_id(ctx.client_id)
-    local client_name = ""
-    if client ~= nil then
-        client_name = client.name
-    else
-        client_name = "Client " .. tostring(ctx.client_id)
-    end
-
-    vim.notify(result.message, level, {
-        title = client_name,
-        icon = icon,
-    })
-end
 
 --local profile_end_time = vim.loop.hrtime()
 --print("lsp_config.lua:", profile_end_time - profile_start_time)
