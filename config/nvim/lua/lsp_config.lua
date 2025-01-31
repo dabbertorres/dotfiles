@@ -575,6 +575,8 @@ lsp.eslint.setup {
     capabilities = capabilities,
     handlers = {
         ["textDocument/diagnostic"] = function(err, result, ctx, config)
+            if result == nil then return end
+
             -- don't underline the whole function - just the first line
             for _, d in ipairs(result.items) do
                 if d.code == "func-style" then
