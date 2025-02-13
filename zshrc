@@ -287,11 +287,6 @@ fi
 
 ### prompt functions
 
-function show-pwd()
-{
-    echo " %F{green}%~%f"
-}
-
 function show-git-status()
 {
     gitstatus_prompt_update
@@ -300,17 +295,10 @@ function show-git-status()
     fi
 }
 
-function show-jobs()
-{
-    read num_jobs < <(jobs -d | wc -l | xargs printf "%d / 2\n" | bc)
-    if [[ num_jobs -gt 0 ]]; then
-        printf " %%F{cyan}[%d job(s)]%%f" "${num_jobs}"
-    fi
-}
-
 function show-dirs()
 {
-    local num_dirs=$(($(dirs | sed -e 's/ /\n/g' | wc -l) - 1))
+    local num_dirs
+    num_dirs=$(($(dirs | sed -e 's/ /\n/g' | wc -l) - 1))
     if [[ ${num_dirs} -gt 0 ]]; then
         printf " %%F{magenta}[%d dir(s)]%%f" ${num_dirs}
     fi
@@ -325,9 +313,9 @@ function show-pyvenv()
 
 function precmd
 {
-    read -r job_sts < <(show-jobs)
-    job_sts="${job_sts:+ $job_sts}"
-    PROMPT="%U%n@%m%u$(show-pwd)$(show-git-status)$(show-pyvenv)${job_sts}$(show-dirs)
+    show_pwd=" %F{green}%~%f"
+    show_jobs="%(1j. %F{cyan}[%j jobs(s)]%f.)"
+    PROMPT="%U%n@%m%u${show_pwd}$(show-git-status)$(show-pyvenv)${show_jobs}$(show-dirs)
 > "
 }
 
