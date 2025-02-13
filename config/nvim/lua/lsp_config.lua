@@ -827,6 +827,7 @@ lsp.jsonls.setup {
     capabilities = capabilities,
     settings = {
         json = {
+            format = { enable = false },
             schemas = schemastore.json.schemas(),
             validate = { enable = true },
         },
