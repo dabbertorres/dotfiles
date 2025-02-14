@@ -1,0 +1,5 @@
+theme = GruvboxDarkHard
+font-family = Input Mono Narrow
+font-size = 13.0
+window-vsync = true
+adjust-cell-height = 20%
