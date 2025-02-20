@@ -830,9 +830,12 @@ lsp.html.setup {
 
 lsp.jsonls.setup {
     capabilities = capabilities,
+    init_options = {
+        -- provideFormatter = false,
+    },
     settings = {
         json = {
-            format = { enable = false },
+            -- format = { enable = false },
             schemas = schemastore.json.schemas(),
             validate = { enable = true },
         },
