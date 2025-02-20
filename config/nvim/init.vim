@@ -83,7 +83,6 @@ Plug 'SmiteshP/nvim-navbuddy'
 Plug 'andymass/vim-matchup'
 Plug 'windwp/nvim-autopairs'
 Plug 'tpope/vim-repeat'
-Plug 'editorconfig/editorconfig-vim'
 Plug 'tpope/vim-abolish'
 "Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
 Plug 'wallpants/github-preview.nvim'
