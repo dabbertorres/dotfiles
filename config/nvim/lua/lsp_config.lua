@@ -519,6 +519,9 @@ lsp.dotls.setup {
 
 lsp.efm.setup {
     capabilities = capabilities,
+    filetypes = {
+        "typescript",
+    },
     init_options = {
         documentFormatting = true,
         documentRangeFormatting = true,
