@@ -29,7 +29,7 @@ flatten.setup {
                 -- hide terminal while blocking
                 saved_terminal:close()
             else
-                -- norma file? switch to the window
+                -- normal file? switch to the window
                 vim.api.nvim_set_current_win(opts.winnr)
             end
 
@@ -46,12 +46,12 @@ flatten.setup {
         end,
         block_end = function()
             -- reopen the terminal (if one was open)
-            if saved_terminal then
-                vim.schedule(function()
+            vim.schedule(function()
+                if saved_terminal then
                     saved_terminal:open()
                     saved_terminal = nil
-                end)
-            end
+                end
+            end)
         end,
     },
 }
