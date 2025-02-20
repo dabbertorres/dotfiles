@@ -241,7 +241,8 @@ vim.api.nvim_create_autocmd("LspAttach", {
                 return function()
                     vim.lsp.buf.format {
                         formatting_options = {
-                            tabSize                = vim.bo.tabstop,
+                            -- tabSize                = vim.bo.tabstop,
+                            tabSize                = vim.bo.shiftwidth,
                             insertSpaces           = true,
                             trimTrailingWhitespace = true,
                             insertFinalNewline     = true,
@@ -751,7 +752,8 @@ lsp.gopls.setup {
 
                 vim.lsp.buf.format {
                     formatting_options = {
-                        tabSize                = vim.bo.tabstop,
+                        -- tabSize                = vim.bo.tabstop,
+                        tabSize                = vim.bo.shiftwidth,
                         insertSpaces           = true,
                         trimTrailingWhitespace = true,
                         insertFinalNewline     = true,
