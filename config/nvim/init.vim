@@ -60,6 +60,7 @@ Plug 'MattiasMTS/cmp-dbee'
 Plug 'mfussenegger/nvim-lint'
 Plug 'averms/black-nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'ThePrimeagen/refactoring.nvim'
+Plug 'https://gitlab.com/schrieveslaach/sonarlint.nvim'
 
 " autocompletion
 "Plug 'hrsh7th/nvim-cmp'

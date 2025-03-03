@@ -1170,6 +1170,49 @@ lsp.zls.setup {
     },
 }
 
+require("sonarlint").setup {
+    server = {
+        cmd = {
+            "sonarlint-language-server",
+            "-stdio",
+            "-analyzers",
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarcfamily.jar"),
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarcsharp.jar"),
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonargo.jar"),
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarhtml.jar"),
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonariac.jar"),
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjava.jar"),
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjavasymbolicexecution.jar"),
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjs.jar"),
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarlintomnisharp.jar"),
+            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonartext.jar"),
+        },
+    },
+    filetypes = {
+        "c",
+        "cpp",
+        "cs",
+        "docker",
+        "go",
+        "html",
+        "java",
+        "javascript",
+        "javascriptreact",
+        "kotlin",
+        "terraform",
+        "text",
+        "typescript",
+        "typescriptreact",
+    },
+    settings = {
+        sonarlint = {
+            -- Get list of rules with :SonarlintListRules
+            -- rules = {
+            -- },
+        },
+    },
+}
+
 local trivy_root_dir = lsp.util.root_pattern("trivy.yaml", ".trivyignore", ".trivyignore.yaml")
 
 lint.linters.trivy = {
