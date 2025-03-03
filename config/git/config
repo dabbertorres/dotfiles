@@ -3,9 +3,14 @@
     longpaths = true
     ignorecase = false
     pager = delta
+    fsmonitor = true
+    untrackedCache = true
 
 [color]
     advice = auto
+
+[commit]
+    verbose = true
 
 [delta]
     features = gruvbox-dark
@@ -15,7 +20,14 @@
 
 [diff]
     algorithm = histogram
-    colorMoved = default
+    colorMoved = plain
+    mnemonicPrefix = true
+    renames = true
+
+[fetch]
+    prune = true
+    pruneTags = true
+    all = true
 
 [init]
     defaultBranch = master
@@ -24,7 +36,7 @@
     diffFilter = delta --color-only
 
 [merge]
-    conflictstyle = diff3
+    conflictstyle = zdiff3
 
 [pager]
     branch = false
@@ -33,8 +45,19 @@
     ff = only
     rebase = true
 
+[push]
+    autoSetupRemote = true
+    followTags = true
+
 [rebase]
     missingCommitsCheck = error
+    updateRefs = true
+    autoStash = true
+    autoSquash = true
+
+[rerere]
+    enabled = true
+    autoupdate = true
 
 [url "git@bitbucket.org:"]
     insteadOf = https://bitbucket.org/
