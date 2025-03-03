@@ -1235,8 +1235,8 @@ lint.linters.trivy = {
         end,
         function()
             local root_path = vim.api.nvim_buf_get_name(0)
-            if not lsp.util.path.is_dir(root_path) then
-                root_path = lsp.util.path.dirname(root_path)
+            if vim.fn.isdirectory(root_path) == 0 then
+                root_path = vim.fs.dirname(root_path)
             end
             return root_path
         end,
