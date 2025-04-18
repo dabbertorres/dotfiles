@@ -686,12 +686,6 @@ lsp.gopls.setup {
                 unusedwrite = true,
                 useany = true,
             },
-            annotations = {
-                bounds = true,
-                escape = true,
-                inline = true,
-                ["nil"] = true,
-            },
             -- Documentation
             hoverKind = "FullDocumentation",
             linkTarget = "pkg.go.dev",
