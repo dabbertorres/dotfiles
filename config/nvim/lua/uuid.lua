@@ -2,7 +2,7 @@ math.randomseed(os.time())
 
 local uuid_metatable = {
     __tostring = function(value)
-        return string.format("%x%x%x%x-%x%x-%x%x-%x%x-%x%x%x%x%x%x", unpack(value))
+        return string.format("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", unpack(value))
     end,
 }
 
