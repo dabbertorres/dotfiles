@@ -337,8 +337,8 @@ vim.lsp.handlers["$/progress"] = function(_, result, ctx, _)
     assert(client ~= nil)
     -- if client == nil then return end
 
-    -- ignore lua_ls spamming notifications
-    -- if client.name == "lua_ls" then return end
+    -- ignore sonarlint spamming notifications
+    if client.name == "sonarlint.nvim" then return end
 
     local msg = notifications.format_message(result.value.message, result.value.percentage) or "Complete"
 
