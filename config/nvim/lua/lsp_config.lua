@@ -4,11 +4,12 @@ require("mason").setup {}
 
 require("mason-lspconfig").setup {
     automatic_installation = true,
+    automatic_enable = false,
 }
 
-local lsp = require("lspconfig")
 local notifications = require("notifications")
 
+local lsp = require("lspconfig")
 local cmp_lsp = require("cmp_nvim_lsp")
 local lint = require("lint")
 local lightbulb = require("nvim-lightbulb")
@@ -39,11 +40,12 @@ local _keymap_mt = {
     __call = function(km, f, buffer)
         local mode = km.mode or "n"
         local opts = mappings_opts
+
         if buffer ~= nil then
             opts = util.copy_with(opts, { buffer = buffer })
         end
 
-        vim.keymap.set(mode, km.keys, f, opts)
+        vim.keymap.set(mode, km.keys, f)
     end,
 }
 
@@ -69,13 +71,13 @@ end
 
 -- Prefer treesitter over LSP for highlighting - this is temporary until I actually decide what I want.
 -- For some ideas, see: https://gist.github.com/swarn/fb37d9eefe1bc616c2a7e476c0bc0316
-vim.highlight.priorities.semantic_tokens = 95
+vim.hl.priorities.semantic_tokens = 95
 
 keymaps.navbuddy(navbuddy.open)
 
 local capabilities = vim.tbl_deep_extend(
     "force",
-    cmp_lsp.default_capabilities(),
+    cmp_lsp.default_capabilities() or {},
     {
         workspace = {
             didChangeWatchedFiles = {
@@ -114,8 +116,8 @@ local function create_buf_augroup(name, bufnr, cmds)
     return au
 end
 
-local function set_lsp_format_autocmd(bufnr, do_format)
-    create_buf_augroup("lsp_document_format", bufnr, {
+local function set_lsp_format_autocmd(bufnr, client, do_format)
+    create_buf_augroup("lsp_document_format_" .. client, bufnr, {
         {
             events = { "BufWritePre" },
             opts = { callback = do_format },
@@ -124,6 +126,11 @@ local function set_lsp_format_autocmd(bufnr, do_format)
 end
 
 local lsp_autocmds_au = vim.api.nvim_create_augroup("lsp_user_config", {})
+
+local lsps_to_disable_native_formatting = {
+    ["efm"] = false,
+    ["ts_ls"] = true,
+}
 
 vim.api.nvim_create_autocmd("LspAttach", {
     group = lsp_autocmds_au,
@@ -136,9 +143,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
         vim.bo[args.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
 
-        if client.supports_method("textDocument_definition") and client.server_capabilities.definitionProvider then
+        if client:supports_method("textDocument_definition", args.buf) and client.server_capabilities.definitionProvider then
             keymaps.preview_defintion(function()
-                local params = vim.lsp.util.make_position_params()
+                local params = vim.lsp.util.make_position_params(args.buf, "utf-8")
                 return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
                     if result == nil or vim.tbl_isempty(result) then return nil end
                     vim.lsp.util.preview_location(result[1], {})
@@ -155,11 +162,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, args.buf)
         end
 
-        if client.supports_method("textDocument_declaration") and client.server_capabilities.declarationProvider then
+        if client:supports_method("textDocument_declaration", args.buf) and client.server_capabilities.declarationProvider then
             keymaps.goto_declaration(vim.lsp.buf.declaration, args.buf)
         end
 
-        if client.supports_method("textDocument_implementation") and client.server_capabilities.implementationProvider then
+        if client:supports_method("textDocument_implementation", args.buf) and client.server_capabilities.implementationProvider then
             keymaps.goto_implementation(function()
                 telescope.lsp_implementations {
                     jump_type = nil,
@@ -170,11 +177,14 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, args.buf)
         end
 
-        if client.supports_method("textDocument_signatureHelp") and client.server_capabilities.signatureHelpProvider then
-            keymaps.signature_help(vim.lsp.buf.signature_help, args.buf)
+        if client:supports_method("textDocument_signatureHelp", args.buf) and client.server_capabilities.signatureHelpProvider then
+            keymaps.signature_help(vim.lsp.buf.signature_help, args.buf, {
+                border = "single",
+                focusable = false,
+            })
         end
 
-        if client.supports_method("textDocument_references") and client.server_capabilities.referencesProvider then
+        if client:supports_method("textDocument_references", args.buf) and client.server_capabilities.referencesProvider then
             keymaps.goto_usages(function()
                 telescope.lsp_references {
                     fname_width = 120,
@@ -185,7 +195,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, args.buf)
         end
 
-        if client.supports_method("textDocument_rename") and client.server_capabilities.renameProvider then
+        if client:supports_method("textDocument_rename", args.buf) and client.server_capabilities.renameProvider then
             keymaps.rename(vim.lsp.buf.rename, args.buf)
         end
 
@@ -204,11 +214,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
             },
         })
 
-        keymaps.prev_diag(vim.diagnostic.goto_prev, args.buf)
-        keymaps.next_diag(vim.diagnostic.goto_next, args.buf)
+        keymaps.prev_diag(function() vim.diagnostic.jump({ count = -1, float = true }) end, args.buf)
+        keymaps.next_diag(function() vim.diagnostic.jump({ count = 1, float = true }) end, args.buf)
         -- end
 
-        if client.supports_method("textDocument_codeAction") and client.server_capabilities.codeActionProvider then
+        if client:supports_method("textDocument_codeAction", args.buf) and client.server_capabilities.codeActionProvider then
             create_buf_augroup("lsp_code_actions", args.buf, {
                 {
                     events = { "BufEnter", "CursorHold", "InsertLeave" },
@@ -219,7 +229,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
             keymaps.codeaction(vim.lsp.buf.code_action, args.buf)
         end
 
-        if client.supports_method("textDocument_codeLens")
+        if client:supports_method("textDocument_codeLens", args.buf)
             and client.server_capabilities.codeLensProvider ~= nil
             and client.server_capabilities.codeLensProvider.resolveProvider then
             create_buf_augroup("lsp_codelens", args.buf, {
@@ -236,29 +246,35 @@ vim.api.nvim_create_autocmd("LspAttach", {
             keymaps.codelens(vim.lsp.codelens.run, args.buf)
         end
 
-        if client.supports_method("textDocument_formatting") and client.server_capabilities.documentFormattingProvider then
+        if lsps_to_disable_native_formatting[client.name] then
+            -- NOTE: might not actually need to set anything here - just don't do what's in the elseif below
+            client.capabilities.textDocument.formatting.dynamicRegistration = false
+        elseif client:supports_method("textDocument_formatting", args.buf) and client.server_capabilities.documentFormattingProvider then
             local do_format = function(async)
                 return function()
                     vim.lsp.buf.format {
                         formatting_options = {
                             -- tabSize                = vim.bo.tabstop,
                             tabSize                = vim.bo.shiftwidth,
-                            insertSpaces           = true,
+                            -- efm overrides any config file setting with this. Makes sense given typical config precedence,
+                            -- although it is kinda annoying.
+                            insertSpaces           = client.name ~= "efm",
                             trimTrailingWhitespace = true,
                             insertFinalNewline     = true,
                             trimFinalNewlines      = true,
                         },
+                        name = client.name,
                         bufnr = args.buf,
                         async = async,
                     }
                 end
             end
 
-            set_lsp_format_autocmd(args.buf, do_format(false))
+            set_lsp_format_autocmd(args.buf, client.name, do_format(false))
             keymaps.format(do_format(true), args.buf)
         end
 
-        if client.supports_method("textDocument_documentHighlight") and client.server_capabilities.documentHighlightProvider then
+        if client:supports_method("textDocument_documentHighlight", args.buf) and client.server_capabilities.documentHighlightProvider then
             create_buf_augroup("lsp_document_highlight", args.buf, {
                 {
                     events = { "CursorHold", "CursorHoldI" },
@@ -282,32 +298,15 @@ vim.api.nvim_create_autocmd("LspAttach", {
     end,
 })
 
-local on_publish_diagnostics = vim.lsp.handlers["textDocument/publishDiagnostics"]
-vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
-    on_publish_diagnostics,
-    {
-        underline = true,
-        signs = true,
-        virtual_text = false,
-        severity_sort = true,
-    }
-)
+-- vim.lsp.buf.hover()
 
-vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-    vim.lsp.handlers.hover,
-    {
-        border = "single",
-        focusable = true,
-    }
-)
-
-vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-    vim.lsp.handlers.signature_help,
-    {
-        border = "single",
-        focusable = false,
-    }
-)
+-- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+--     vim.lsp.handlers.hover,
+--     {
+--         border = "single",
+--         focusable = true,
+--     }
+-- )
 
 -- local builtin_on_codelens = vim.lsp.codelens.on_codelens
 -- vim.lsp.codelens.on_codelens = function(err, result, ctx, config)
@@ -391,15 +390,23 @@ vim.lsp.handlers["window/showMessage"] = function(_, result, ctx, _)
     })
 end
 
-vim.fn.sign_define("DiagnosticSignError", { text = "󰅚 ", texthl = "GruvboxRed" })
-vim.fn.sign_define("DiagnosticSignWarn", { text = "󰀪 ", texthl = "GruvboxYellow" })
-vim.fn.sign_define("DiagnosticSignInfo", { text = " ", texthl = "GruvboxBlue" })
-vim.fn.sign_define("DiagnosticSignHint", { text = "󰌶", texthl = "GruvboxAqua" })
-
 vim.diagnostic.config {
     underline = true,
     virtual_text = false,
-    signs = true,
+    signs = {
+        text = {
+            [vim.diagnostic.severity.ERROR] = "󰅚 ",
+            [vim.diagnostic.severity.WARN] = "󰀪 ",
+            [vim.diagnostic.severity.INFO] = " ",
+            [vim.diagnostic.severity.HINT] = "󰌶 ",
+        },
+        numhl = {
+            [vim.diagnostic.severity.ERROR] = "GruvboxRed",
+            [vim.diagnostic.severity.WARN] = "GruvboxYellow",
+            [vim.diagnostic.severity.INFO] = "GruvboxBlue",
+            [vim.diagnostic.severity.HINT] = "GruvboxAqua",
+        },
+    },
     float = {
         border = "single",
         header = "",
@@ -430,7 +437,7 @@ vim.diagnostic.config {
 -- Server Configs
 --
 
-lsp.bashls.setup {
+vim.lsp.config("bashls", {
     capabilities = capabilities,
     filetypes = {
         "bash",
@@ -452,9 +459,11 @@ lsp.bashls.setup {
             },
         },
     },
-}
+})
 
-lsp.clangd.setup {
+vim.lsp.enable("bashls")
+
+vim.lsp.config("clangd", {
     capabilities = capabilities,
     on_new_config = function(new_config, new_root_dir)
         vim.list_extend(new_config.cmd, {
@@ -469,17 +478,23 @@ lsp.clangd.setup {
             "--log=error",
         })
     end,
-}
+})
 
-lsp.cmake.setup {
+vim.lsp.enable("clangd")
+
+vim.lsp.config("cmake", {
     capabilities = capabilities,
-}
+})
 
-lsp.cssls.setup {
+vim.lsp.enable("cmake")
+
+vim.lsp.config("cssls", {
     capabilities = capabilities,
-}
+})
 
-lsp.dockerls.setup {
+vim.lsp.enable("cssls")
+
+vim.lsp.config("dockerls", {
     capabilities = capabilities,
     settings = {
         docker = {
@@ -512,13 +527,48 @@ lsp.dockerls.setup {
             })
         end
     end,
-}
+})
 
-lsp.dotls.setup {
+vim.lsp.enable("dockerls")
+
+vim.lsp.config("dotls", {
     capabilities = capabilities,
+})
+
+vim.lsp.enable("dotls")
+
+local prettierConfigs = {
+    ".prettierrc",
+    ".prettierrc.cjs",
+    ".prettierrc.js",
+    ".prettierrc.json",
+    ".prettierrc.json5",
+    ".prettierrc.mjs",
+    ".prettierrc.toml",
+    ".prettierrc.yml",
+    ".prettierrc.yaml",
+    "prettier.config.js",
+    "prettier.config.cjs",
+    "prettier.config.mjs",
 }
 
-lsp.efm.setup {
+local efmPrettierConfig = {
+    env = {
+        string.format(
+            "PRETTIERD_DEFAULT_CONFIG=%s",
+            (function()
+                local configs = vim.fs.find(prettierConfigs,
+                    { upward = true, limit = 1, stop = vim.fn.expand('$HOME') })
+                return configs[1]
+            end)()),
+    },
+    -- formatCanRange = true,
+    formatCommand = 'prettierd "${INPUT}"',
+    formatStdin = true,
+    -- ["root-markers"] = prettierConfigs,
+}
+
+vim.lsp.config("efm", {
     capabilities = capabilities,
     filetypes = {
         "typescript",
@@ -527,43 +577,23 @@ lsp.efm.setup {
         documentFormatting = true,
         documentRangeFormatting = true,
     },
+    single_file_support = true,
     settings = {
         rootMarkers = {
             ".git/",
         },
         languages = {
+            javascript = {
+                efmPrettierConfig,
+            },
             typescript = {
-                {
-                    -- https://github.com/creativenull/efmls-configs-nvim/blob/e44e39c962dc1629a341fc71cfc8feaa09cefa6f/lua/efmls-configs/formatters/prettier_d.lua
-                    formatCanRange = true,
-                    formatCommand = table.concat({
-                        "prettierd",
-                        "'${INPUT}'",
-                        "${--range-start=charStart}",
-                        "${--range-end=charEnd}",
-                        "${--tab-width=tabWidth}",
-                        "${--use-tabs=!insertSpaces}",
-                    }, " "),
-                    formatStdin = true,
-                    rootMarkers = {
-                        ".prettierrc",
-                        ".prettierrc.cjs",
-                        ".prettierrc.js",
-                        ".prettierrc.json",
-                        ".prettierrc.json5",
-                        ".prettierrc.mjs",
-                        ".prettierrc.toml",
-                        ".prettierrc.yml",
-                        ".prettierrc.yaml",
-                        "prettier.config.js",
-                        "prettier.config.cjs",
-                        "prettier.config.mjs",
-                    },
-                },
+                efmPrettierConfig,
             },
         },
     },
-}
+})
+
+vim.lsp.enable("efm")
 
 local default_on_diagnostic = vim.lsp.handlers["textDocument/diagnostic"]
 if default_on_diagnostic == nil then
@@ -575,7 +605,7 @@ if default_on_publish_diagnostics == nil then
     default_on_publish_diagnostics = vim.lsp.diagnostic.on_publish_diagnostics
 end
 
-lsp.eslint.setup {
+vim.lsp.config("eslint", {
     capabilities = capabilities,
     handlers = {
         ["textDocument/diagnostic"] = function(err, result, ctx, config)
@@ -595,9 +625,11 @@ lsp.eslint.setup {
             default_on_diagnostic(err, result, ctx, config)
         end,
     },
-}
+})
 
-lsp.gopls.setup {
+vim.lsp.enable("eslint")
+
+vim.lsp.config("gopls", {
     capabilities = capabilities,
     flags = {
         debounce_text_changes = 250,
@@ -731,7 +763,7 @@ lsp.gopls.setup {
     on_attach = function(client, bufnr)
         local do_format = function(async)
             return function()
-                local params = vim.lsp.util.make_range_params()
+                local params = vim.lsp.util.make_range_params(0, "utf-8")
                 params.context = { only = { "source.organizeImports" } }
 
                 local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params)
@@ -748,7 +780,7 @@ lsp.gopls.setup {
                     formatting_options = {
                         -- tabSize                = vim.bo.tabstop,
                         tabSize                = vim.bo.shiftwidth,
-                        insertSpaces           = true,
+                        insertSpaces           = vim.bo.expandtab,
                         trimTrailingWhitespace = true,
                         insertFinalNewline     = true,
                         trimFinalNewlines      = true,
@@ -759,12 +791,14 @@ lsp.gopls.setup {
             end
         end
 
-        set_lsp_format_autocmd(bufnr, do_format(false))
+        set_lsp_format_autocmd(bufnr, client.name, do_format(false))
         keymaps.format(do_format(true), bufnr)
     end,
-}
+})
 
-lsp.gradle_ls.setup {
+vim.lsp.enable("gopls")
+
+vim.lsp.config("gradle_ls", {
     capabilities = capabilities,
     filetypes = { "groovy" }, -- TODO: kotlin-script files (e.g. build.gradle.kts)
     root_dir = lsp.util.root_pattern("build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"),
@@ -773,9 +807,11 @@ lsp.gradle_ls.setup {
             gradleWrapperEnabled = true,
         },
     },
-}
+})
 
-lsp.html.setup {
+vim.lsp.enable("gradle_ls")
+
+vim.lsp.config("html", {
     capabilities = capabilities,
     init_options = {
         configurationSection = { "html", "css", "javascript" },
@@ -820,9 +856,11 @@ lsp.html.setup {
         },
     },
     filetypes = { "html", "templ" },
-}
+})
 
-lsp.jsonls.setup {
+vim.lsp.enable("html")
+
+vim.lsp.config("jsonls", {
     capabilities = capabilities,
     init_options = {
         -- provideFormatter = false,
@@ -834,9 +872,11 @@ lsp.jsonls.setup {
             validate = { enable = true },
         },
     },
-}
+})
 
-lsp.kotlin_language_server.setup {
+vim.lsp.enable("jsonls")
+
+vim.lsp.config("kotlin_language_server", {
     capabilities = capabilities,
     filetypes = { "kotlin" },
     root_dir = function(fname)
@@ -861,23 +901,30 @@ lsp.kotlin_language_server.setup {
             autoConvertToKotlin = false,
         },
     },
-}
+})
 
-lsp.lua_ls.setup {
+vim.lsp.enable("kotlin_language_server")
+
+vim.lsp.config("lua_ls", {
     capabilities = capabilities,
-    single_file_support = true,
-    settings = {
-        Lua = {
+    on_init = function(client)
+        if client.workspace_folders then
+            local path = client.workspace_folders[1].name
+            if path ~= vim.fn.stdpath("config")
+                and (
+                    vim.uv.fs_stat(path .. "/.luarc.json")
+                    or vim.uv.fs_stat(path .. "/.luarc.jsonc")
+                ) then
+                return
+            end
+        end
+
+        client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
             completion = {
                 displayContent = 2,
                 -- nvim-cmp-buffer makes these unnecessary
                 showWord = "Disable",
                 workspaceWord = false,
-            },
-            diagnostics = {
-                globals = {
-                    "vim"
-                },
             },
             format = {
                 defaultConfig = {
@@ -939,30 +986,28 @@ lsp.lua_ls.setup {
             hover = {
                 viewStringMax = 100,
             },
-            runtime = {
-                version = "LuaJIT",
-                path = {
-                    "?.lua",
-                    "?/init.lua",
-                    home .. "/.local/share/nvim/plugged/?/lua/?.lua",
-                    home .. "/.local/share/nvim/plugged/?/lua/init.lua",
-                },
-            },
             telemetry = {
                 enable = false,
             },
             workspace = {
-                library = vim.api.nvim_get_runtime_file("", true),
+                checkThirdParty = false,
+                library = {
+                    vim.env.VIMRUNTIME,
+                },
             },
-        },
-    },
-}
+        })
+    end,
+})
 
-lsp.marksman.setup {
+vim.lsp.enable("lua_ls")
+
+vim.lsp.config("marksman", {
     capabilities = capabilities,
-}
+})
 
-lsp.omnisharp.setup {
+vim.lsp.enable("marksman")
+
+vim.lsp.config("omnisharp", {
     capabilities = capabilities,
     flags = {
         allow_incremental_sync = true,
@@ -995,9 +1040,11 @@ lsp.omnisharp.setup {
             })
         end
     end,
-}
+})
 
-lsp.basedpyright.setup {
+vim.lsp.enable("omnisharp")
+
+vim.lsp.config("basedpyright", {
     capabilities = capabilities,
     settings = {
         basedpyright = {
@@ -1012,11 +1059,15 @@ lsp.basedpyright.setup {
             },
         },
     },
-}
+})
 
-lsp.rust_analyzer.setup {
+vim.lsp.enable("basedpyright")
+
+vim.lsp.config("rust_analyzer", {
     capabilities = capabilities,
-}
+})
+
+vim.lsp.enable("rust_analyzer")
 
 -- lsp.sorbet.setup {
 --     capabilities = capabilities,
@@ -1049,14 +1100,16 @@ lsp.rust_analyzer.setup {
 -- official Ruby LSP
 -- lsp.typeprof.setup {}
 
-lsp.templ.setup {
+vim.lsp.config("templ", {
     capabilities = capabilities,
-}
+})
+
+vim.lsp.enable("templ")
 
 -- TODO: move somewhere else that makes more sense
 vim.filetype.add({ extension = { templ = "templ" } })
 
-lsp.terraformls.setup {
+vim.lsp.config("terraformls", {
     capabilities = capabilities,
     init_options = {
         terraform = {
@@ -1073,30 +1126,38 @@ lsp.terraformls.setup {
             prefillRequiredFields = true,
         },
     },
-}
+})
 
-lsp.tflint.setup {
+vim.lsp.enable("terraformls")
+
+vim.lsp.config("tflint", {
     capabilities = capabilities,
     on_new_config = function(new_config, new_root_dir)
         vim.list_extend(new_config.cmd, {
             "--langserver",
         })
     end,
-}
+})
 
-lsp.ts_ls.setup {
+vim.lsp.enable("tflint")
+
+vim.lsp.config("ts_ls", {
     capabilities = capabilities,
-}
+})
 
-lsp.vimls.setup {
+vim.lsp.enable("ts_ls")
+
+vim.lsp.config("vimls", {
     capabilities = capabilities,
-}
+})
 
-lsp.vuels.setup {
-    capabilities = capabilities,
-}
+vim.lsp.enable("vimls")
 
-lsp.yamlls.setup {
+-- vim.lsp.config("vuels", {
+--     capabilities = capabilities,
+-- })
+
+vim.lsp.config("yamlls", {
     capabilities = capabilities,
     settings = {
         redhat = {
@@ -1138,9 +1199,11 @@ lsp.yamlls.setup {
             yamlVersion = "1.2",
         },
     },
-}
+})
 
-lsp.zls.setup {
+vim.lsp.enable("yamlls")
+
+vim.lsp.config("zls", {
     root_dir = lsp.util.root_pattern("build.zig", "zls.build.json", "zls.json"),
     capabilities = capabilities,
     settings = {
@@ -1162,7 +1225,9 @@ lsp.zls.setup {
         highlight_global_var_declarations = true,
         use_comptime_interpreter = true,
     },
-}
+})
+
+vim.lsp.enable("zls")
 
 require("sonarlint").setup {
     server = {
@@ -1207,6 +1272,8 @@ require("sonarlint").setup {
     },
 }
 
+vim.lsp.enable("sonarlint")
+
 local trivy_root_dir = lsp.util.root_pattern("trivy.yaml", ".trivyignore", ".trivyignore.yaml")
 
 lint.linters.trivy = {
@@ -1225,7 +1292,7 @@ lint.linters.trivy = {
                     return "--config=" .. config_file
                 end
             end
-            return nil
+            return ""
         end,
         function()
             local root_path = vim.api.nvim_buf_get_name(0)

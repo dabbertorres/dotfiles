@@ -62,6 +62,9 @@ Plug 'averms/black-nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'ThePrimeagen/refactoring.nvim'
 Plug 'https://gitlab.com/schrieveslaach/sonarlint.nvim'
 
+" AI tooling?
+Plug 'olimorris/codecompanion.nvim'
+
 " autocompletion
 "Plug 'hrsh7th/nvim-cmp'
 Plug 'yioneko/nvim-cmp', { 'branch': 'perf' }
@@ -131,6 +134,8 @@ endif
 
 " usability
 set autowrite
+set cursorline
+set cursorlineopt=number
 set ignorecase
 set smartcase
 set backspace=indent,eol,start
@@ -152,7 +157,6 @@ set t_vb=
 set mouse=a
 set cmdheight=1
 set number
-set pastetoggle=<F12>
 
 " searching
 set hlsearch
@@ -241,6 +245,7 @@ require("dotenv").setup()
 require("dbee_config")
 require("flatten_config")
 require("github_preview_config")
+require("codecompanion_config")
 require("uuid")
 require("commands")
 require("keymaps")
