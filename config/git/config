@@ -69,4 +69,5 @@
     prune-branches = "!gp() { git fetch -p > /dev/null; (git branch --merged origin/main; git branch --merged origin/master) 2>/dev/null | grep -Ev \"^[ *]*(main|master|develop)$\" | xargs -r git branch -d ;}; gp"
     list-branches-to-prune = "!lp() { git fetch -p > /dev/null; (git branch --merged origin/main; git branch --merged origin/master) 2>/dev/null | grep -Ev \"^[ *]*(main|master|develop)$\"; }; lp"
     amend = commit --amend -C HEAD
+    fixup = "!fu() { [ $# -eq 2 ] && git commit --fixup=\"$1\" && git rebase --autosquash \"$2\"; }; fu"
     changelog = "!cl() { git log --ancestry-path --shortstat --no-decorate ${1:-master}...HEAD; }; cl"

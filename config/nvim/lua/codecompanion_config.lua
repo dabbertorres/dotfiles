@@ -11,7 +11,7 @@ require("codecompanion").setup {
                 },
                 schema = {
                     model = {
-                        default = "codellama",
+                        default = "codellama:7b",
                     },
                     num_ctx = {
                         default = 4096,

@@ -10,7 +10,8 @@ call plug#begin('~/.local/share/nvim/plugged')
 " interface
 Plug 'ellisonleao/gruvbox.nvim'
 Plug 'nvim-lualine/lualine.nvim', { 'commit': '1e53bf7386619722b7cfae0d541b45978f0152e4' }
-Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
+" Temporary pin to newer commit until a new release is made
+Plug 'nvim-telescope/telescope.nvim', { 'commit': 'b4da76be54691e854d3e0e02c36b0245f945c2c7' } ",'branch': '0.1.x' }
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
 Plug 'nvim-telescope/telescope-ui-select.nvim'
 Plug 'nvim-telescope/telescope-file-browser.nvim'
@@ -61,6 +62,7 @@ Plug 'mfussenegger/nvim-lint'
 Plug 'averms/black-nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'ThePrimeagen/refactoring.nvim'
 Plug 'https://gitlab.com/schrieveslaach/sonarlint.nvim'
+Plug 'seblyng/roslyn.nvim'
 
 " AI tooling?
 Plug 'olimorris/codecompanion.nvim'
@@ -88,8 +90,8 @@ Plug 'andymass/vim-matchup'
 Plug 'windwp/nvim-autopairs'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-abolish'
-"Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
-Plug 'wallpants/github-preview.nvim'
+Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug'] }
+"Plug 'wallpants/github-preview.nvim'
 Plug 'tpope/vim-eunuch'
 Plug 'sindrets/diffview.nvim'
 Plug 'tpope/vim-surround'
@@ -202,19 +204,28 @@ let g:mkdp_auto_start = 0
 let g:mkdp_auto_close = 0
 let g:mkdp_refresh_slow = 0
 let g:mkdp_command_for_global = 0
-let g:mkdp_open_to_the_world = 1
-let g:mkdp_browser = ''
+let g:mkdp_open_to_the_world = 0
+"let g:mkdp_browser = ''
 let g:mkdp_echo_preview_url = 1
-let g:mkdp_browserfunc = ''
-let g:mkdp_preview_options = {
-    \ 'mkit': {},
-    \ 'katex': {},
-    \ 'uml': {},
-    \ 'maid': {}
-    \ }
-let g:mkdp_markdown_css = ''
-let g:mkdp_highlight_css = ''
-let g:mkdp_port = ''
+"let g:mkdp_browserfunc = ''
+"let g:mkdp_preview_options = {
+"    \ 'mkit': {},
+"    \ 'katex': {},
+"    \ 'uml': {},
+"    \ 'maid': {},
+"    \ 'disable_sync_scroll': 0,
+"    \ 'sync_scroll_type': 'middle',
+"    \ 'hide_yaml_meta': 1,
+"    \ 'sequence_diagrams': {},
+"    \ 'content_editable': v:false,
+"    \ 'disable_filename': 0,
+"    \ 'toc': {}
+"    \ }
+"let g:mkdp_markdown_css = ''
+"let g:mkdp_highlight_css = ''
+"let g:mkdp_port = ''
+let g:mkdp_combine_preview = 1
+let g:mkdp_combine_preview_auto_refresh = 1
 
 let g:zig_fmt_autosave = 0
 
@@ -224,6 +235,7 @@ let g:prolog_swipl_timeout = 10
 lua <<EOF
 require("gruvbox_config")
 require("notifications")
+require("dotenv").setup()
 require("lsp_config")
 require("nvim-autopairs").setup{}
 require("cmp_config")
@@ -241,10 +253,9 @@ require("toggleterm_config")
 require("refactoring_config")
 -- require("rest_config")
 require("kulala_config")
-require("dotenv").setup()
 require("dbee_config")
 require("flatten_config")
-require("github_preview_config")
+-- require("github_preview_config")
 require("codecompanion_config")
 require("uuid")
 require("commands")

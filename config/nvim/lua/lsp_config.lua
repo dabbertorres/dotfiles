@@ -1,6 +1,11 @@
 --local profile_start_time = vim.loop.hrtime()
 
-require("mason").setup {}
+require("mason").setup {
+    registries = {
+        "github:mason-org/mason-registry",
+        "github:Crashdummyy/mason-registry",
+    },
+}
 
 require("mason-lspconfig").setup {
     automatic_installation = true,
@@ -55,6 +60,7 @@ local keymaps = {
     goto_defintion      = { keys = "gd" },
     goto_declaration    = { keys = "gD" },
     goto_implementation = { keys = "gi" },
+    hover               = { keys = "K" },
     signature_help      = { keys = "<leader>k" },
     goto_usages         = { keys = "gu" },
     rename              = { keys = "<leader>rn" },
@@ -145,10 +151,12 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
         if client:supports_method("textDocument_definition", args.buf) and client.server_capabilities.definitionProvider then
             keymaps.preview_defintion(function()
-                local params = vim.lsp.util.make_position_params(args.buf, "utf-8")
+                local params = vim.lsp.util.make_position_params(args.buf, client.offset_encoding)
                 return vim.lsp.buf_request(0, "textDocument/definition", params, function(_, result, _, _)
                     if result == nil or vim.tbl_isempty(result) then return nil end
-                    vim.lsp.util.preview_location(result[1], {})
+                    vim.lsp.util.preview_location(result[1], {
+                        border = "single",
+                    })
                 end)
             end, args.buf)
 
@@ -166,6 +174,17 @@ vim.api.nvim_create_autocmd("LspAttach", {
             keymaps.goto_declaration(vim.lsp.buf.declaration, args.buf)
         end
 
+        if client:supports_method("textDocument_hover", args.buf) and client.server_capabilities.hoverProvider then
+            keymaps.hover(function()
+                vim.lsp.buf.hover({
+                    border = "single",
+                    focusable = true,
+                    max_height = 20,
+                    max_width = 80,
+                })
+            end, args.buf)
+        end
+
         if client:supports_method("textDocument_implementation", args.buf) and client.server_capabilities.implementationProvider then
             keymaps.goto_implementation(function()
                 telescope.lsp_implementations {
@@ -180,7 +199,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
         if client:supports_method("textDocument_signatureHelp", args.buf) and client.server_capabilities.signatureHelpProvider then
             keymaps.signature_help(vim.lsp.buf.signature_help, args.buf, {
                 border = "single",
-                focusable = false,
+                focusable = true,
+                max_height = 20,
+                max_width = 80,
             })
         end
 
@@ -297,16 +318,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
         client.server_capabilities.semanticTokensProvider = nil
     end,
 })
-
--- vim.lsp.buf.hover()
-
--- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
---     vim.lsp.handlers.hover,
---     {
---         border = "single",
---         focusable = true,
---     }
--- )
 
 -- local builtin_on_codelens = vim.lsp.codelens.on_codelens
 -- vim.lsp.codelens.on_codelens = function(err, result, ctx, config)
@@ -737,40 +748,43 @@ vim.lsp.config("gopls", {
             -- newDiff = "new",
         },
     },
-    on_new_config = function(new_config, new_root_dir)
+    before_init = function(params, config)
         local Job = require("plenary.job")
 
-        -- identify the local package for use when sorting imports
         Job:new({
             command = "go",
             args = { "list", "-m" },
-            cwd = new_root_dir,
+            cwd = config.root_path,
             on_stdout = function(err, output, _)
                 if not err then
                     local module = string.gsub(output, "%s", "")
-                    new_config.settings.gopls["local"] = module
+                    config.settings.gopls["local"] = module
                 end
             end,
         }):sync()
 
-        vim.list_extend(new_config.cmd, {
+        vim.list_extend(config.cmd, {
             "-remote=auto",
             "-logfile=auto",
             "-remote.logfile=auto",
             "-v",
         })
+
+        return params, config
+    end,
+    on_init = function(client, result)
     end,
     on_attach = function(client, bufnr)
         local do_format = function(async)
             return function()
-                local params = vim.lsp.util.make_range_params(0, "utf-8")
+                local params = vim.lsp.util.make_range_params(0, client.offset_encoding)
                 params.context = { only = { "source.organizeImports" } }
 
                 local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params)
                 for cid, res in pairs(result or {}) do
                     for _, r in pairs(res.result or {}) do
                         if r.edit then
-                            local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
+                            local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-8"
                             vim.lsp.util.apply_workspace_edit(r.edit, enc)
                         end
                     end
@@ -1007,42 +1021,72 @@ vim.lsp.config("marksman", {
 
 vim.lsp.enable("marksman")
 
-vim.lsp.config("omnisharp", {
-    capabilities = capabilities,
-    flags = {
-        allow_incremental_sync = true,
-    },
-    settings = {
-        FormattingOptions = {
-            EnableEditorConfigSupport = true,
-            OrganizeImports = true,
-        },
-        MsBuild = {
-            LoadProjectsOnDemand = false,
-        },
-        RoslynExtensionsOptions = {
-            EnableAnalyzersSupport = true,
-            EnableImportCompletion = true,
-            AnalyzeOpenDocumentsOnly = true,
-        },
-    },
-    on_init = function(client)
-        if client.config.settings then
-            client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
-        end
-    end,
-    on_new_config = function(new_config, new_root_dir)
-        require("lspconfig.server_configurations.omnisharp").default_config.on_new_config(new_config, new_root_dir)
+-- vim.lsp.config("omnisharp", {
+--     capabilities = capabilities,
+--     flags = {
+--         allow_incremental_sync = true,
+--     },
+--     settings = {
+--         FormattingOptions = {
+--             EnableEditorConfigSupport = true,
+--             OrganizeImports = true,
+--         },
+--         MsBuild = {
+--             LoadProjectsOnDemand = false,
+--         },
+--         RoslynExtensionsOptions = {
+--             EnableAnalyzersSupport = true,
+--             EnableImportCompletion = true,
+--             AnalyzeOpenDocumentsOnly = true,
+--         },
+--     },
+--     on_init = function(client)
+--         if client.config.settings then
+--             client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+--         end
+--     end,
+--     on_new_config = function(new_config, new_root_dir)
+--         require("lspconfig.server_configurations.omnisharp").default_config.on_new_config(new_config, new_root_dir)
+--
+--         if new_root_dir then
+--             vim.list_extend(new_config.cmd, {
+--                 "--source", new_root_dir,
+--             })
+--         end
+--     end,
+-- })
 
-        if new_root_dir then
-            vim.list_extend(new_config.cmd, {
-                "--source", new_root_dir,
-            })
-        end
-    end,
+-- vim.lsp.enable("omnisharp")
+
+vim.lsp.config("roslyn", {
+    settings = {
+        ["csharp|background_analysis"] = {
+            ["background_analysis.dotnet_analyzer_diagnostics_scope"] = "openFiles",
+            ["background_analysis.dotnet_compiler_diagnostics_scope"] = "fullSolution",
+        },
+        ["csharp|code_lens"] = {
+            dotnet_enable_references_code_lens = true,
+            dotnet_enable_tests_code_lens = true,
+        },
+        ["csharp|completion"] = {
+            dotnet_provide_regex_completions = false,
+            dotnet_show_completion_items_from_unimported_namespaces = true,
+            dotnet_show_name_completion_suggestions = true,
+        },
+        -- ["csharp|inlay_hints"] = {
+        -- },
+        ["csharp|symbol_search"] = {
+            dotnet_search_reference_assemblies = true,
+        },
+        ["csharp|formatting"] = {
+            dotnet_organize_imports_on_format = true,
+        },
+    },
 })
 
-vim.lsp.enable("omnisharp")
+local roslynNVM = require("roslyn").setup {
+    opts = {},
+}
 
 vim.lsp.config("basedpyright", {
     capabilities = capabilities,
@@ -1187,11 +1231,11 @@ vim.lsp.config("yamlls", {
                     {
                         description = "Custom references to OpenAPI specs",
                         fileMatch = {
-                            "docs/**/*.yaml",
-                            "docs/**/*.yml",
+                            "openapi.yml",
+                            "openapi.yaml",
                         },
-                        name = "openapi.json",
-                        url = "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/schemas/v3.1/schema.json",
+                        name = "openapi.yaml",
+                        url = "https://spec.openapis.org/oas/3.1/schema/2022-10-07",
                     },
                 },
             },
@@ -1246,12 +1290,129 @@ require("sonarlint").setup {
             vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarlintomnisharp.jar"),
             vim.fn.expand("$MASON/share/sonarlint-analyzers/sonartext.jar"),
         },
+        settings = {
+            sonarlint = {
+                connectedMode = {
+                    connections = {
+                        sonarcloud = {
+                            {
+                                connectionId = "folxhealth",
+                                region = "US",
+                                organizationKey = "folxhealth",
+                                disableNotifications = false,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        before_init = function(params, config)
+            local sonar_project_root = vim.fs.root(vim.env.PWD, { "sonar-project.properties" })
+            if sonar_project_root == nil then return end
+
+            local file = io.open("sonar-project.properties", "r")
+            if file == nil then return end
+
+            local server_url
+            local organization
+            local project_key
+            for line in file:lines() do
+                local trimmed = vim.trim(line)
+                if trimmed == "" or vim.startswith(trimmed, "#") then goto continue end
+
+                local key, val = table.unpack(vim.split(trimmed, "=", { plain = true }))
+                if key == nil or val == nil then goto continue end
+
+                key = vim.trim(key)
+                val = vim.trim(val)
+
+                if key == "sonar.projectKey" then
+                    project_key = val
+                elseif key == "sonar.organization" then
+                    organization = val
+                elseif key == "sonar.host.url" then
+                    server_url = val
+                end
+
+                ::continue::
+            end
+
+            file:close()
+
+            if project_key == nil or organization == nil then
+                -- TODO: log if one is found, but not the other?
+                return
+            end
+
+            local connection_type
+            if server_url == nil then
+                connection_type = "sonarcloud"
+            else
+                connection_type = "sonarqube"
+            end
+
+            local connection = {
+                connectionId = organization,
+                region = "US", -- I live here, so don't need to support anything else now
+                organizationKey = organization,
+                disableNotifications = false,
+            }
+
+            local project = {
+                connectionId = organization,
+                projectKey = project_key,
+            }
+
+            config.settings = vim.tbl_deep_extend("force",
+                config.settings,
+                {
+                    sonarlint = {
+                        connectedMode = {
+                            connections = {
+                                [connection_type] = { connection },
+                            },
+                            project = project,
+                        },
+                    },
+                })
+        end,
+        connected = {
+            get_credentials = function(client_id, url)
+                -- Check env first
+                local env = vim.env["SONAR_TOKEN"]
+                if env ~= nil and env ~= "" then
+                    return vim.trim(env)
+                end
+
+                -- Look no further than the user's home directory, but include it
+                -- in the search path.
+                local stop_at = vim.fs.dirname(vim.fn.expand('$HOME'))
+                local sonar_token_file = vim.fs.find(".sonar-token", {
+                    upward = true,
+                    limit = 1,
+                    follow = false,
+                    type = "file",
+                    stop = stop_at,
+                })
+
+                if sonar_token_file == nil or sonar_token_file[1] == nil then return nil end
+
+                local file = io.open(sonar_token_file[1], "r")
+                if file == nil then return nil end
+
+                local token = file:read("*l")
+                file:close()
+
+                return vim.trim(token)
+            end,
+        },
     },
     filetypes = {
         "c",
         "cpp",
         "cs",
         "docker",
+        "dockerfile",
         "go",
         "html",
         "java",
@@ -1272,7 +1433,7 @@ require("sonarlint").setup {
     },
 }
 
-vim.lsp.enable("sonarlint")
+-- vim.lsp.enable("sonarlint-language-server")
 
 local trivy_root_dir = lsp.util.root_pattern("trivy.yaml", ".trivyignore", ".trivyignore.yaml")
 

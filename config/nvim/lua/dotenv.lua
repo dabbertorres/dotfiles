@@ -46,11 +46,24 @@ local function load_data(data, is_json, key_value_callback)
             if key ~= "" then
                 local val = vim.trim(line:sub(eq_idx + 1))
 
+                local skip_env_repl = false
                 local val_start = 1
                 local val_end = #val
-                if val[val_start] == '"' then val_start = val_start + 1 end
-                if val[val_end] == '"' then val_end = val_end - 1 end
+                if val[val_start] == '"' and val[val_end] == '"' then
+                    val_start = val_start + 1
+                    val_end = val_end - 1
+                elseif val[val_start] == "'" and val[val_end] == "'" then
+                    val_start = val_start + 1
+                    val_end = val_end - 1
+
+                    skip_env_repl = true
+                end
+
                 val = val:sub(val_start, val_end)
+                if not skip_env_repl then
+                    -- Not perfect, but it gets the job done
+                    val = val:gsub("%${?([%w_]+)}?", vim.env)
+                end
 
                 key_value_callback(key, val)
             end
@@ -62,7 +75,7 @@ end
 
 local function find_and_load_dotenv()
     util.find_file(
-        vim.loop.cwd(),
+        vim.uv.cwd(),
         function(name) return name:find("%.env$") or name:find("%.env%.json$") end,
         function(data, is_json, path)
             vim.schedule(function()
