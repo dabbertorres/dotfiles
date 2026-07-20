@@ -5,7 +5,6 @@ local dapui = require("dapui")
 local dapgo = require("dap-go")
 local dappy = require("dap-python")
 local notifications = require("notifications")
-local dapvs = require("dap.ext.vscode")
 
 local home = os.getenv("HOME")
 
@@ -73,7 +72,6 @@ dap.configurations.cpp = {
 
 dapgo.setup()
 dappy.setup(home .. "/.python-venvs/debugpy/bin/python")
-dapvs.load_launchjs()
 
 dap.defaults.fallback.terminal_win_cmd = '50vsplit new'
 dap.set_log_level("INFO")

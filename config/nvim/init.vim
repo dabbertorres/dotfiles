@@ -52,8 +52,7 @@ Plug 'williamboman/mason.nvim'
 Plug 'williamboman/mason-lspconfig.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
-Plug 'nvim-treesitter/nvim-treesitter-textobjects'
-Plug 'nvim-treesitter/playground'
+"Plug 'nvim-treesitter/nvim-treesitter-textobjects'
 Plug 'mfussenegger/nvim-jdtls'
 " Plug 'nanotee/sqls.nvim'
 Plug 'kndndrj/nvim-dbee', { 'do': ':lua require(\"dbee\").install()' }
@@ -68,8 +67,8 @@ Plug 'seblyng/roslyn.nvim'
 Plug 'olimorris/codecompanion.nvim'
 
 " autocompletion
-"Plug 'hrsh7th/nvim-cmp'
-Plug 'yioneko/nvim-cmp', { 'branch': 'perf' }
+Plug 'hrsh7th/nvim-cmp'
+"Plug 'yioneko/nvim-cmp', { 'branch': 'perf' }
 Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-calc'
 Plug 'hrsh7th/cmp-cmdline'
@@ -264,8 +263,6 @@ require("autocmds")
 EOF
 
 " enable folding, but disable it by default
-set foldmethod=expr
-set foldexpr=nvim_treesitter#foldexpr()
 set nofoldenable
 set foldlevelstart=99
 

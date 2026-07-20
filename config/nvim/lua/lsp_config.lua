@@ -618,6 +618,7 @@ end
 
 vim.lsp.config("eslint", {
     capabilities = capabilities,
+    init_options = { "--max-old-space-size=4096" },
     handlers = {
         ["textDocument/diagnostic"] = function(err, result, ctx, config)
             if result == nil then return end
@@ -1058,6 +1059,8 @@ vim.lsp.enable("marksman")
 
 -- vim.lsp.enable("omnisharp")
 
+vim.lsp.enable("postgres_lsp")
+
 vim.lsp.config("roslyn", {
     settings = {
         ["csharp|background_analysis"] = {
@@ -1189,7 +1192,33 @@ vim.lsp.config("ts_ls", {
     capabilities = capabilities,
 })
 
-vim.lsp.enable("ts_ls")
+-- vim.lsp.enable("ts_ls")
+
+vim.lsp.config("ts_go_ls", {
+    capabilities = capabilities,
+    cmd = function(dispatchers, config)
+        local cmd = "tsgo"
+        local local_cmd = (config or {}).root_dir and config.root_dir .. "/node_modules/.bin/tsgo"
+        if local_cmd and vim.fn.executable(local_cmd) == 1 then
+            cmd = local_cmd
+        end
+
+        return vim.lsp.rpc.start({ cmd, "--lsp", "-stdio" }, dispatchers)
+    end,
+    filetypes = {
+        "javascript",
+        "javascriptreact",
+        "javascript.jsx",
+        "jsx",
+        "typescript",
+        "typescriptreact",
+        "typescript.tsx",
+        "tsx",
+    },
+    root_markers = { "tsconfig.json", "package.json", ".git" },
+})
+
+vim.lsp.enable("ts_go_ls")
 
 vim.lsp.config("vimls", {
     capabilities = capabilities,
@@ -1273,165 +1302,170 @@ vim.lsp.config("zls", {
 
 vim.lsp.enable("zls")
 
-require("sonarlint").setup {
-    server = {
-        cmd = {
-            "sonarlint-language-server",
-            "-stdio",
-            "-analyzers",
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarcfamily.jar"),
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarcsharp.jar"),
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonargo.jar"),
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarhtml.jar"),
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonariac.jar"),
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjava.jar"),
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjavasymbolicexecution.jar"),
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjs.jar"),
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarlintomnisharp.jar"),
-            vim.fn.expand("$MASON/share/sonarlint-analyzers/sonartext.jar"),
-        },
-        settings = {
-            sonarlint = {
-                connectedMode = {
-                    connections = {
-                        sonarcloud = {
-                            {
-                                connectionId = "folxhealth",
-                                region = "US",
-                                organizationKey = "folxhealth",
-                                disableNotifications = false,
-                            },
-                        },
-                    },
-                },
-            },
-        },
-        before_init = function(params, config)
-            local sonar_project_root = vim.fs.root(vim.env.PWD, { "sonar-project.properties" })
-            if sonar_project_root == nil then return end
-
-            local file = io.open("sonar-project.properties", "r")
-            if file == nil then return end
-
-            local server_url
-            local organization
-            local project_key
-            for line in file:lines() do
-                local trimmed = vim.trim(line)
-                if trimmed == "" or vim.startswith(trimmed, "#") then goto continue end
-
-                local key, val = table.unpack(vim.split(trimmed, "=", { plain = true }))
-                if key == nil or val == nil then goto continue end
-
-                key = vim.trim(key)
-                val = vim.trim(val)
-
-                if key == "sonar.projectKey" then
-                    project_key = val
-                elseif key == "sonar.organization" then
-                    organization = val
-                elseif key == "sonar.host.url" then
-                    server_url = val
-                end
-
-                ::continue::
-            end
-
-            file:close()
-
-            if project_key == nil or organization == nil then
-                -- TODO: log if one is found, but not the other?
-                return
-            end
-
-            local connection_type
-            if server_url == nil then
-                connection_type = "sonarcloud"
-            else
-                connection_type = "sonarqube"
-            end
-
-            local connection = {
-                connectionId = organization,
-                region = "US", -- I live here, so don't need to support anything else now
-                organizationKey = organization,
-                disableNotifications = false,
-            }
-
-            local project = {
-                connectionId = organization,
-                projectKey = project_key,
-            }
-
-            config.settings = vim.tbl_deep_extend("force",
-                config.settings,
-                {
-                    sonarlint = {
-                        connectedMode = {
-                            connections = {
-                                [connection_type] = { connection },
-                            },
-                            project = project,
-                        },
-                    },
-                })
-        end,
-        connected = {
-            get_credentials = function(client_id, url)
-                -- Check env first
-                local env = vim.env["SONAR_TOKEN"]
-                if env ~= nil and env ~= "" then
-                    return vim.trim(env)
-                end
-
-                -- Look no further than the user's home directory, but include it
-                -- in the search path.
-                local stop_at = vim.fs.dirname(vim.fn.expand('$HOME'))
-                local sonar_token_file = vim.fs.find(".sonar-token", {
-                    upward = true,
-                    limit = 1,
-                    follow = false,
-                    type = "file",
-                    stop = stop_at,
-                })
-
-                if sonar_token_file == nil or sonar_token_file[1] == nil then return nil end
-
-                local file = io.open(sonar_token_file[1], "r")
-                if file == nil then return nil end
-
-                local token = file:read("*l")
-                file:close()
-
-                return vim.trim(token)
-            end,
-        },
-    },
-    filetypes = {
-        "c",
-        "cpp",
-        "cs",
-        "docker",
-        "dockerfile",
-        "go",
-        "html",
-        "java",
-        "javascript",
-        "javascriptreact",
-        "kotlin",
-        "terraform",
-        "text",
-        "typescript",
-        "typescriptreact",
-    },
-    settings = {
-        sonarlint = {
-            -- Get list of rules with :SonarlintListRules
-            -- rules = {
-            -- },
-        },
-    },
-}
+-- local sonar_project_root = vim.fs.root(vim.env.PWD, { "sonar-project.properties" })
+--
+-- if sonar_project_root ~= nil then
+--     require("sonarlint").setup {
+--         server = {
+--             cmd = {
+--                 "sonarlint-language-server",
+--                 "-stdio",
+--                 "-analyzers",
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarcfamily.jar"),
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarcsharp.jar"),
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonargo.jar"),
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarhtml.jar"),
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonariac.jar"),
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjava.jar"),
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjavasymbolicexecution.jar"),
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjs.jar"),
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarlintomnisharp.jar"),
+--                 vim.fn.expand("$MASON/share/sonarlint-analyzers/sonartext.jar"),
+--             },
+--             settings = {
+--                 sonarlint = {
+--                     connectedMode = {
+--                         connections = {
+--                             sonarqube = {},
+--                             sonarcloud = {
+--                                 {
+--                                     connectionId = "folxhealth",
+--                                     region = "US",
+--                                     organizationKey = "folxhealth",
+--                                     disableNotifications = false,
+--                                 },
+--                             },
+--                         },
+--                     },
+--                 },
+--             },
+--             before_init = function(params, config)
+--                 if sonar_project_root == nil then return end
+--
+--                 local file = io.open("sonar-project.properties", "r")
+--                 if file == nil then return end
+--
+--                 local server_url
+--                 local organization
+--                 local project_key
+--                 for line in file:lines() do
+--                     local trimmed = vim.trim(line)
+--                     if trimmed == "" or vim.startswith(trimmed, "#") then goto continue end
+--
+--                     local key, val = table.unpack(vim.split(trimmed, "=", { plain = true }))
+--                     if key == nil or val == nil then goto continue end
+--
+--                     key = vim.trim(key)
+--                     val = vim.trim(val)
+--
+--                     if key == "sonar.projectKey" then
+--                         project_key = val
+--                     elseif key == "sonar.organization" then
+--                         organization = val
+--                     elseif key == "sonar.host.url" then
+--                         server_url = val
+--                     end
+--
+--                     ::continue::
+--                 end
+--
+--                 file:close()
+--
+--                 if project_key == nil or organization == nil then
+--                     -- TODO: log if one is found, but not the other?
+--                     return
+--                 end
+--
+--                 local connection_type
+--                 if server_url == nil then
+--                     connection_type = "sonarcloud"
+--                 else
+--                     connection_type = "sonarqube"
+--                 end
+--
+--                 local connection = {
+--                     connectionId = organization,
+--                     region = "US", -- I live here, so don't need to support anything else now
+--                     organizationKey = organization,
+--                     disableNotifications = false,
+--                     serverUrl = server_url or "",
+--                 }
+--
+--                 local project = {
+--                     connectionId = organization,
+--                     projectKey = project_key,
+--                 }
+--
+--                 config.settings = vim.tbl_deep_extend("force",
+--                     config.settings,
+--                     {
+--                         sonarlint = {
+--                             connectedMode = {
+--                                 connections = {
+--                                     [connection_type] = { connection },
+--                                 },
+--                                 project = project,
+--                             },
+--                         },
+--                     })
+--             end,
+--             connected = {
+--                 get_credentials = function(client_id, url)
+--                     -- Check env first
+--                     local env = vim.env["SONAR_TOKEN"]
+--                     if env ~= nil and env ~= "" then
+--                         return vim.trim(env)
+--                     end
+--
+--                     -- Look no further than the user's home directory, but include it
+--                     -- in the search path.
+--                     local stop_at = vim.fs.dirname(vim.fn.expand('$HOME'))
+--                     local sonar_token_file = vim.fs.find(".sonar-token", {
+--                         upward = true,
+--                         limit = 1,
+--                         follow = false,
+--                         type = "file",
+--                         stop = stop_at,
+--                     })
+--
+--                     if sonar_token_file == nil or sonar_token_file[1] == nil then return nil end
+--
+--                     local file = io.open(sonar_token_file[1], "r")
+--                     if file == nil then return nil end
+--
+--                     local token = file:read("*l")
+--                     file:close()
+--
+--                     return vim.trim(token)
+--                 end,
+--             },
+--         },
+--         filetypes = {
+--             "c",
+--             "cpp",
+--             "cs",
+--             "docker",
+--             "dockerfile",
+--             "go",
+--             "html",
+--             "java",
+--             "javascript",
+--             "javascriptreact",
+--             "kotlin",
+--             "terraform",
+--             "text",
+--             "typescript",
+--             "typescriptreact",
+--         },
+--         settings = {
+--             sonarlint = {
+--                 -- Get list of rules with :SonarlintListRules
+--                 -- rules = {
+--                 -- },
+--             },
+--         },
+--     }
+-- end
 
 -- vim.lsp.enable("sonarlint-language-server")
 
@@ -1471,7 +1505,7 @@ lint.linters.trivy = {
         if not body or body.results == vim.NIL then return {} end
 
         if body.SchemaVersion ~= 2 then
-            vim.notify("Got Version: " .. tostring(body.SchemaVersion), vim.lsp.log_levels.WARN, {
+            vim.notify_once("Got Version: " .. tostring(body.SchemaVersion), vim.lsp.log_levels.WARN, {
                 title = "Unexpected Trivy Schema Version",
                 icon = "󰀪",
             })
@@ -1650,7 +1684,7 @@ lint.linters_by_ft = {
     markdown = { "markdownlint", },
     ruby = { "ruby", "rubocop", },
     sh = { "shellcheck", },
-    terraform = { "terraform_validate", "trivy", },
+    terraform = { --[["terraform_validate",]] "trivy", },
 }
 
 -- plugins for specific LSP servers

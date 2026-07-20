@@ -130,7 +130,7 @@ if [ "${commands[gcloud]}" ]; then
 
     function list_compute_instances()
     {
-        gcloud --project "${1:-cbclaims-dev2}" compute instances list \
+        gcloud --project "${1}" compute instances list \
             --format='table(name, disks[0].licenses[0])' \
             --filter='name !~ ".*gke.*"' \
             | awk 'sub(".*/", "", $2) { printf "%s:\t%s\n", $1, $2 }'
@@ -180,7 +180,7 @@ if [ "${commands[kubectl]}" ]; then
     function watch_pods()
     {
         if [ $# -gt 0 ]; then
-            watch kubectl get pods -n $1 -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase
+            watch kubectl get pods -n "$1" -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase
         else
             watch kubectl get pods --all-namespaces -o=custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,STATUS:.status.phase
         fi
@@ -195,6 +195,10 @@ fi
 # neovim version manager (https://github.com/MordechaiHadad/bob)
 if [ "${commands[bob]}" ]; then
     export PATH="${HOME}/.local/share/bob/nvim-bin:${PATH}"
+fi
+
+if [ "${commands[fx]}" ]; then
+    source <(fx --comp zsh)
 fi
 
 if [ "${commands[nvim]}" ]; then
@@ -280,11 +284,6 @@ export CLICOLOR="1"
 alias cl=clear
 alias grep='grep --color=auto'
 
-LUAMAKE_DIR="${HOME}/Code/lsps/lua-language-server/3rd/luamake"
-if [ -d "${LUAMAKE_DIR}" ]; then
-    alias luamake="${LUAMAKE_DIR}/luamake"
-fi
-
 ### prompt functions
 
 function show-git-status()
@@ -358,7 +357,7 @@ fi
 
 function view_path()
 {
-    echo "${PATH}" | sed 's/:/\n/g'
+    echo "${PATH//:/\n}"
 }
 
 ## kitty specific stuff

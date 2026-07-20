@@ -185,6 +185,12 @@ util.make_augroup("different_indent_filetypes", true,
             pattern = "yaml",
             command = "setlocal tabstop=2 softtabstop=2 shiftwidth=2",
         }
+    end,
+    function()
+        return "FileType", {
+            pattern = "hurl",
+            command = "setlocal tabstop=2 softtabstop=2 shiftwidth=2"
+        }
     end
 )
 
