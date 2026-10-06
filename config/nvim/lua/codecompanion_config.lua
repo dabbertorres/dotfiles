@@ -1,48 +1,48 @@
-local default_adapter = "gemini_cli"
+local default_adapter = "anthropic"
 
 require("codecompanion").setup {
-    adapters = {
-        opts = {
-            show_defaults = false,
-        },
-        acp = {
-            gemini_cli = function()
-                return require("codecompanion.adapters").extend("gemini_cli", {
-                    defaults = {
-                        auth_method = "oauth-personal"
-                    },
-                })
-            end,
-        },
-        http = {
-            ollama = function()
-                return require("codecompanion.adapters").extend("ollama", {
-                    name = "my ollama",
-                    env = {
-                        url = "http://192.168.0.25:11434",
-                    },
-                    headers = {
-                        ["Content-Type"] = "application/json",
-                    },
-                    parameters = {
-                        sync = true,
-                    },
-                    schema = {
-                        model = {
-                            default = "qwen2.5-coder:7b",
-                        },
-                        num_ctx = {
-                            default = 131072,
-                        },
-                    },
-                })
-            end,
-            opts = {
-                show_defaults = false,
-                show_presets = false,
-            },
-        },
-    },
+    -- adapters = {
+    --     opts = {
+    --         show_defaults = false,
+    --     },
+    --     acp = {
+    --         gemini_cli = function()
+    --             return require("codecompanion.adapters").extend("gemini_cli", {
+    --                 defaults = {
+    --                     auth_method = "oauth-personal"
+    --                 },
+    --             })
+    --         end,
+    --     },
+    --     http = {
+    --         ollama = function()
+    --             return require("codecompanion.adapters").extend("ollama", {
+    --                 name = "my ollama",
+    --                 env = {
+    --                     url = "http://192.168.0.25:11434",
+    --                 },
+    --                 headers = {
+    --                     ["Content-Type"] = "application/json",
+    --                 },
+    --                 parameters = {
+    --                     sync = true,
+    --                 },
+    --                 schema = {
+    --                     model = {
+    --                         default = "qwen2.5-coder:7b",
+    --                     },
+    --                     num_ctx = {
+    --                         default = 131072,
+    --                     },
+    --                 },
+    --             })
+    --         end,
+    --         opts = {
+    --             show_defaults = false,
+    --             show_presets = false,
+    --         },
+    --     },
+    -- },
     interactions = {
         background = {
             adapter = default_adapter,
@@ -80,6 +80,17 @@ require("codecompanion").setup {
                 prompt_decorator = function(message, adapter, context)
                     return string.format([[<prompt>%s</prompt>]], message)
                 end,
+            },
+        },
+        cli = {
+            agent = "claude_code",
+            agents = {
+                claude_code = {
+                    cmd = "claude",
+                    args = {},
+                    description = "Claude Code CLI",
+                    provider = "terminal",
+                },
             },
         },
         cmd = {
