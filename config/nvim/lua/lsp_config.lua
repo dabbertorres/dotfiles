@@ -26,7 +26,7 @@ local util = require("my_util")
 local schemastore = require("schemastore")
 
 vim.o.updatetime = 250
-vim.lsp.set_log_level(vim.lsp.log_levels.ERROR)
+vim.lsp.log.set_level(vim.lsp.log_levels.ERROR)
 
 local home = os.getenv("HOME")
 
@@ -253,16 +253,17 @@ vim.api.nvim_create_autocmd("LspAttach", {
         if client:supports_method("textDocument_codeLens", args.buf)
             and client.server_capabilities.codeLensProvider ~= nil
             and client.server_capabilities.codeLensProvider.resolveProvider then
-            create_buf_augroup("lsp_codelens", args.buf, {
-                {
-                    events = { "BufEnter", "CursorHold", "InsertLeave" },
-                    opts = {
-                        callback = function()
-                            vim.lsp.codelens.refresh({ bufnr = args.buf })
-                        end,
-                    },
-                },
-            })
+            vim.lsp.codelens.enable({ bufnr = args.buf })
+            -- create_buf_augroup("lsp_codelens", args.buf, {
+            --     {
+            --         events = { "BufEnter", "CursorHold", "InsertLeave" },
+            --         opts = {
+            --             callback = function()
+            --                 vim.lsp.codelens.enable({ bufnr = args.buf })
+            --             end,
+            --         },
+            --     },
+            -- })
 
             keymaps.codelens(vim.lsp.codelens.run, args.buf)
         end

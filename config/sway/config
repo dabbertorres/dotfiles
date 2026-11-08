@@ -9,7 +9,7 @@
     set $right Right
 
     # terminal emulator
-    set $term kitty -1
+    set $term ghostty
 
     # application launcher
     set $menu dmenu_run -i -fn "pango:Font Awesome 11"
@@ -175,7 +175,6 @@ bindsym $mod+shift+delete mode "$mode_system"
 ### Executables
 exec --no-startup-id pcmanfm -d
 exec --no-startup-id redshift -m wayland
-exec --no-startup-id kitty -1 &
 
 # include any secondary extra config files 
 include __SYSCONFDIR__/sway/config.d/*

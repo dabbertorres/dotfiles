@@ -59,7 +59,7 @@ Plug 'kndndrj/nvim-dbee', { 'do': ':lua require(\"dbee\").install()' }
 Plug 'MattiasMTS/cmp-dbee'
 Plug 'mfussenegger/nvim-lint'
 Plug 'averms/black-nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'ThePrimeagen/refactoring.nvim'
+"Plug 'ThePrimeagen/refactoring.nvim'
 Plug 'https://gitlab.com/schrieveslaach/sonarlint.nvim'
 Plug 'seblyng/roslyn.nvim'
 
@@ -249,7 +249,7 @@ require("neogit_config")
 require("gitsigns_config")
 require("neotest_config")
 require("toggleterm_config")
-require("refactoring_config")
+-- require("refactoring_config")
 -- require("rest_config")
 require("kulala_config")
 require("dbee_config")

@@ -9,6 +9,8 @@ local function start(bufnr, parser)
     -- vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
 end
 
+require("nvim-treesitter").setup({ install_dir = vim.fn.stdpath("data") .. "/site" })
+
 local installed_parsers = require("nvim-treesitter").get_installed()
 
 vim.api.nvim_create_autocmd({ "Filetype" }, {

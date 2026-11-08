@@ -7,26 +7,6 @@ function prepend_to_path()
     fi
 }
 
-function file_mtime()
-{
-    stat -f %m -t %Y "$1"
-}
-
-function now()
-{
-    date -j +%s
-}
-
-function yesterday()
-{
-    date -j -v-24H +%s
-}
-
-function was_modified_since_yesterday()
-{
-    (($(file_mtime "$1") < $(yesterday)))
-}
-
 prepend_to_path "${HOME}/.local/bin"
 prepend_to_path "/usr/local/bin"
 prepend_to_path "/usr/local/sbin"
@@ -72,7 +52,7 @@ zstyle :compinstall filename "${HOME}/.zshrc"
 export KEYTIMEOUT=1 # https://zsh.sourceforge.io/Doc/Release/Parameters.html#:~:text=set%20to%20empty.-,KEYTIMEOUT,-The%20time%20the
 
 if [ ${IS_LINUX} ]; then
-    prepend_to_path "/usr/local/go/bin:${PATH}"
+    prepend_to_path "/usr/lib/go/bin:${PATH}"
 elif [ ${IS_OSX} ]; then
     # export HOMEBREW_NO_AUTO_UPDATE=1
     export HOMEBREW_NO_INSTALL_CLEANUP=1
@@ -99,6 +79,33 @@ fi
 autoload -Uz compinit
 
 ZCOMPDUMP=$HOME/.zcompdump
+
+if [ ${IS_OSX} ]; then
+    function yesterday()
+    {
+        date -j -v-24H +%s
+    }
+
+    function file_mtime()
+    {
+        stat -f %m -t %Y "$1"
+    }
+elif [ ${IS_LINUX} ]; then
+    function yesterday()
+    {
+        date +%s
+    }
+
+    function file_mtime()
+    {
+        stat -c %Y "$1"
+    }
+fi
+
+function was_modified_since_yesterday()
+{
+    (($(file_mtime "$1") < $(yesterday)))
+}
 
 if [[ -f ${ZCOMPDUMP} ]] && was_modified_since_yesterday "${ZCOMPDUMP}"; then
     compinit
@@ -137,8 +144,12 @@ if [ "${commands[gcloud]}" ]; then
     }
 fi
 
-if [ ! "${commands[go]}" ] && [ -d "/usr/local/go" ]; then
-    prepend_to_path "/usr/local/go/bin"
+if [ ! "${commands[go]}" ] ; then
+    if [ -d "/usr/local/go" ]; then
+        prepend_to_path "/usr/local/go/bin"
+    elif [-d "/usr/lib/go" ]; then
+        prepend_to_path "/usr/lib/go/bin"
+    fi
 fi
 
 if [ "${commands[go]}" ]; then
@@ -283,6 +294,7 @@ export CLICOLOR="1"
 
 alias cl=clear
 alias grep='grep --color=auto'
+alias ls='ls --color=auto'
 
 ### prompt functions
 

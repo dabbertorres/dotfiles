@@ -14,16 +14,16 @@ order += "volume master"
 order += "tztime local"
 
 wireless _first_ {
-    format_up   = "%essid -%quality - %bitrate - %ip"
-    format_down = "No Wifi Connection"
+    format_up   = "  %essid -%quality - %bitrate - %ip"
+    format_down = "  No Wifi Connection"
     min_width = 335
 }
 
 battery 0 {
     format = "%status%percentage %remaining"
-    status_chr = ""
-    status_bat = ""
-    status_full = ""
+    status_chr = "  "
+    status_bat = "  "
+    status_full = "  "
     hide_seconds = true
     integer_battery_capacity = true
     path = "/sys/class/power_supply/BAT%d/uevent"
@@ -32,8 +32,8 @@ battery 0 {
 }
 
 volume master {
-    format       = "%volume"
-    format_muted = "%volume"
+    format       = "  %volume"
+    format_muted = "  %volume"
     device = "pulse"
 }
 
@@ -48,4 +48,3 @@ disk "/" {
 disk "/home" {
     format = "/home: %free"
 }
-
