@@ -1,0 +1,46 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "includeCoAuthoredBy": false,
+  "model": "opus",
+  "respondToBashCommands": false,
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "cc-skills-golang@samber": true,
+    "cc-skills@samber": false,
+    "terraform@claude-plugins-official": false,
+    "frontend-design@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "samber": {
+      "source": {
+        "source": "github",
+        "repo": "samber/cc"
+      }
+    }
+  },
+  "effortLevel": "high",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high",
+      "autoCompactWindow": "auto"
+    }
+  },
+  "autoCompactWindow": 500000,
+  "theme": "auto",
+  "editorMode": "vim",
+  "autoContinueAtUsageLimit": true,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true
+}
