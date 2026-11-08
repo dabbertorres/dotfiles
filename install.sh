@@ -46,6 +46,12 @@ CONFIG_HOME=${XDG_CONFIG_HOME:-${HOME}/.config}
 link "${DOTFILES_ROOT}/zshrc" "${HOME}/.zshrc"
 link "${DOTFILES_ROOT}/vimrc" "${HOME}/.vimrc"
 
+# Claude Code reads its global files from ~/.claude, not ~/.config.
+mkdir -p "${HOME}/.claude"
+for file in CLAUDE.md statusline-command.sh; do
+    link "${DOTFILES_ROOT}/claude/${file}" "${HOME}/.claude/${file}"
+done
+
 for app in "${DOTFILES_ROOT}"/config/*; do
     app_dir="${CONFIG_HOME}/$(basename "${app}")"
     mkdir -p "${app_dir}"
