@@ -30,12 +30,12 @@ done
 if [ -n "${APPLY}" ]; then
     link()
     {
-        ln -sf "$1" "$2"
+        ln -sfn "$1" "$2"
     }
 else
     link()
     {
-        echo "ln -sf $1 $2"
+        echo "ln -sfn $1 $2"
     }
 fi
 
